@@ -2,8 +2,6 @@
 
 A Golang package to create Stratumn fossilizers.
 
-[![build status](https://travis-ci.org/stratumn/fossilizer.svg)](https://travis-ci.org/stratumn/fossilizer.svg)
-
 ## Adapters
 
 An adapter must implement this interface:

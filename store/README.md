@@ -2,8 +2,6 @@
 
 A Golang package to create Stratumn stores.
 
-[![build status](https://travis-ci.org/stratumn/store.svg)](https://travis-ci.org/stratumn/store.svg)
-
 ## Adapters
 
 An adapter must implement this interface:
