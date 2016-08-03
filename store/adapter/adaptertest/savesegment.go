@@ -4,9 +4,9 @@ import (
 	"sync/atomic"
 	"testing"
 
+	. "github.com/stratumn/go/segment"
+	. "github.com/stratumn/go/segment/segmenttest"
 	. "github.com/stratumn/go/store/adapter"
-	. "github.com/stratumn/go/store/segment"
-	. "github.com/stratumn/go/store/segment/segmenttest"
 )
 
 // Tests what happens when you save a new segment.

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	. "github.com/stratumn/go/store/segment"
+	. "github.com/stratumn/go/segment"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")

@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"sort"
 
+	. "github.com/stratumn/go/segment"
 	. "github.com/stratumn/go/store/adapter"
-	. "github.com/stratumn/go/store/segment"
 )
 
 const (

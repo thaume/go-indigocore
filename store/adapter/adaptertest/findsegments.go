@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
+	. "github.com/stratumn/go/segment/segmenttest"
 	. "github.com/stratumn/go/store/adapter"
-	. "github.com/stratumn/go/store/segment/segmenttest"
 )
 
 // Tests what happens when you search for all segments.

@@ -3,7 +3,7 @@ package segmentvalidation
 import (
 	"testing"
 
-	. "github.com/stratumn/go/store/segment/segmenttest"
+	. "github.com/stratumn/go/segment/segmenttest"
 )
 
 func TestValidateValid(t *testing.T) {

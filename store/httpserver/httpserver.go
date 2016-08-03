@@ -10,9 +10,9 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
+	. "github.com/stratumn/go/segment"
+	. "github.com/stratumn/go/segment/segmentvalidation"
 	. "github.com/stratumn/go/store/adapter"
-	. "github.com/stratumn/go/store/segment"
-	. "github.com/stratumn/go/store/segment/segmentvalidation"
 )
 
 const (

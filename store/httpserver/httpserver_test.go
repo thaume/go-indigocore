@@ -9,10 +9,10 @@ import (
 	"reflect"
 	"testing"
 
+	. "github.com/stratumn/go/segment"
+	. "github.com/stratumn/go/segment/segmenttest"
 	. "github.com/stratumn/go/store/adapter"
 	"github.com/stratumn/go/store/adapter/adaptertest"
-	. "github.com/stratumn/go/store/segment"
-	. "github.com/stratumn/go/store/segment/segmenttest"
 )
 
 // Tests the root route if successful.

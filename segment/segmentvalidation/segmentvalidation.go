@@ -4,7 +4,7 @@ package segmentvalidation
 import (
 	"errors"
 
-	. "github.com/stratumn/go/store/segment"
+	. "github.com/stratumn/go/segment"
 )
 
 // Validates a segment by checking for standard attributes.

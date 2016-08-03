@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/stratumn/go/store/segment"
-	. "github.com/stratumn/go/store/segment/segmenttest"
+	. "github.com/stratumn/go/segment"
+	. "github.com/stratumn/go/segment/segmenttest"
 )
 
 func TestMockAdapter(t *testing.T) {

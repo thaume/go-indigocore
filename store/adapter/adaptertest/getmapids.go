@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	. "github.com/stratumn/go/segment/segmenttest"
 	. "github.com/stratumn/go/store/adapter"
-	. "github.com/stratumn/go/store/segment/segmenttest"
 )
 
 // Tests what happens when you get all the map IDs.

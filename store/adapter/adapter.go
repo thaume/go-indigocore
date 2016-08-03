@@ -2,7 +2,7 @@
 package adapter
 
 import (
-	. "github.com/stratumn/go/store/segment"
+	. "github.com/stratumn/go/segment"
 )
 
 // An adapter handles creating and fetching segments.
