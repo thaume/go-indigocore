@@ -22,6 +22,9 @@ rm -rf dist
 echo "==> Running tests"
 go test ./...
 
+echo "==> Running linter"
+golint -set_exit_status ./...
+
 echo "==> Building"
 ./build.sh
 
