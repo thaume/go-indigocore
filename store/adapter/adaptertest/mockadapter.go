@@ -10,9 +10,9 @@ import (
 // Example usage:
 //
 // 	adapter := &MockAdapter{}
-//	segment1 := RandomSegment()
-//	adapter.MockGetSegment.Fn = func(linkHash string) (*Segment, error) { return segment1, nil }
-//	segment2, err := adapter.GetSegment("abcdef")     // Should be segment1, nil
+//	s1 := RandomSegment()
+//	adapter.MockGetSegment.Fn = func(linkHash string) (*Segment, error) { return s1, nil }
+//	s2, err := adapter.GetSegment("abcdef")     // Should be s1, nil
 //	lastArg := adapter.MockGetSegment.LastCalledWith  // Should be "abcdef"
 type MockAdapter struct {
 	MockGetInfo       MockGetInfo

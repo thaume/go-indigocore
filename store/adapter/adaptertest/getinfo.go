@@ -7,8 +7,8 @@ import (
 )
 
 // Tests what happens when you get information about the adapter.
-func TestGetInfo(t *testing.T, adapter Adapter) {
-	info, err := adapter.GetInfo()
+func TestGetInfo(t *testing.T, a Adapter) {
+	info, err := a.GetInfo()
 
 	if info == nil {
 		t.Fatal("info is nil")

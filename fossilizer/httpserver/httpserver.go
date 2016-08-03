@@ -1,4 +1,4 @@
-// Provides functionality to create an HTTP server from an adapter.
+// Provides functionality to create an HTTP server from an
 package httpserver
 
 import (
@@ -11,6 +11,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	. "github.com/stratumn/go/fossilizer/adapter"
+	"github.com/stratumn/go/jsonhttp"
 )
 
 const (
@@ -23,75 +24,56 @@ const (
 
 // A server configuration.
 type Config struct {
-	Port             string
-	CertFile         string
-	KeyFile          string
+	jsonhttp.Config
 	NumResultWorkers int
 	MinDataLen       int
 	MaxDataLen       int
-	Verbose          bool
 }
 
-// A server.
-type Server struct {
-	config *Config
-	router *httprouter.Router
+// A server context.
+type context struct {
+	adapter Adapter
+	config  *Config
 }
 
-// Implements HTTP server.
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.router.ServeHTTP(w, r)
+// A server handle.
+type handle func(http.ResponseWriter, *http.Request, httprouter.Params, *context) (interface{}, error)
+
+// A server handler.
+type handler struct {
+	context *context
+	handle  handle
+}
+
+func (h handler) serve(w http.ResponseWriter, r *http.Request, p httprouter.Params, _ *jsonhttp.Config) (interface{}, error) {
+	return h.handle(w, r, p, h.context)
 }
 
 // Makes a new server.
-func New(adapter Adapter, config *Config) *Server {
-	if config.NumResultWorkers < 1 {
-		config.NumResultWorkers = DEFAULT_NUM_RESULT_WORKERS
+func New(a Adapter, c *Config) *jsonhttp.Server {
+	if c.NumResultWorkers < 1 {
+		c.NumResultWorkers = DEFAULT_NUM_RESULT_WORKERS
 	}
 
-	resultChan := make(chan *Result)
-	adapter.AddResultChan(resultChan)
+	s := jsonhttp.New(&c.Config)
+	ctx := &context{a, c}
+
+	s.Get("/", handler{ctx, root}.serve)
+	s.Post("/fossils", handler{ctx, fossilize}.serve)
 
 	// Launch result workers.
-	for i := 0; i < config.NumResultWorkers; i++ {
-		go HandleResults(resultChan)
+	rc := make(chan *Result)
+	a.AddResultChan(rc)
+	for i := 0; i < c.NumResultWorkers; i++ {
+		go handleResults(rc)
 	}
 
-	r := httprouter.New()
-	c := Context{adapter, config}
-
-	r.NotFound = NotFoundHandler{JSONHandler{&c, NotFound}}
-
-	r.GET("/", JSONHandler{&c, Root}.ServeHTTP)
-	r.POST("/fossils", JSONHandler{&c, Fossilize}.ServeHTTP)
-
-	return &Server{config, r}
-}
-
-// Starts listening and serving.
-func (s *Server) ListenAndServe() error {
-	port := s.config.Port
-	if port == "" {
-		port = DEFAULT_PORT
-	}
-
-	log.Printf("listening on %s\n", port)
-
-	if s.config.CertFile != "" && s.config.KeyFile != "" {
-		return http.ListenAndServeTLS(port, s.config.CertFile, s.config.KeyFile, s)
-	}
-
-	return http.ListenAndServe(port, s)
-}
-
-// HTTP handle for 404s.
-func NotFound(w http.ResponseWriter, r *http.Request, _ *Context, _ httprouter.Params) (interface{}, error) {
-	return nil, &ErrNotFound
+	return s
 }
 
 // HTTP handle for the root route.
-func Root(w http.ResponseWriter, r *http.Request, c *Context, _ httprouter.Params) (interface{}, error) {
-	info, err := c.Adapter.GetInfo()
+func root(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *context) (interface{}, error) {
+	info, err := c.adapter.GetInfo()
 	if err != nil {
 		return nil, err
 	}
@@ -102,13 +84,13 @@ func Root(w http.ResponseWriter, r *http.Request, c *Context, _ httprouter.Param
 }
 
 // HTTP handle to fossilize data.
-func Fossilize(w http.ResponseWriter, r *http.Request, c *Context, p httprouter.Params) (interface{}, error) {
-	data, callbackURL, err := parseFossilizeValues(r, c)
+func fossilize(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *context) (interface{}, error) {
+	data, url, err := parseFossilizeValues(r, c)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := c.Adapter.Fossilize(data, []byte(callbackURL)); err != nil {
+	if err := c.adapter.Fossilize(data, []byte(url)); err != nil {
 		return nil, err
 	}
 
@@ -116,29 +98,29 @@ func Fossilize(w http.ResponseWriter, r *http.Request, c *Context, p httprouter.
 }
 
 // Handles fossilization results
-func HandleResults(resultChan chan *Result) {
+func handleResults(resultChan chan *Result) {
 	for {
-		result := <-resultChan
+		r := <-resultChan
 
-		body, err := json.Marshal(result.Evidence)
+		body, err := json.Marshal(r.Evidence)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 
-		callbackURL := string(result.Meta)
-		res, err := http.Post(callbackURL, "application/json", bytes.NewReader(body))
+		url := string(r.Meta)
+		res, err := http.Post(url, "application/json", bytes.NewReader(body))
 
 		if err != nil {
 			log.Println(err)
 		} else if res.StatusCode >= 300 {
-			log.Printf("%s: %d\n", callbackURL, res.StatusCode)
+			log.Printf("%s: %d\n", url, res.StatusCode)
 		}
 	}
 }
 
 // Parses the data and callback URL from a request.
-func parseFossilizeValues(r *http.Request, c *Context) ([]byte, string, error) {
+func parseFossilizeValues(r *http.Request, c *context) ([]byte, string, error) {
 	if err := r.ParseForm(); err != nil {
 		return nil, "", err
 	}
@@ -148,23 +130,23 @@ func parseFossilizeValues(r *http.Request, c *Context) ([]byte, string, error) {
 		return nil, "", &ErrData
 	}
 
-	length := len(datastr)
-	if length < c.Config.MinDataLen {
+	l := len(datastr)
+	if l < c.config.MinDataLen {
 		return nil, "", &ErrDataLen
 	}
-	if c.Config.MaxDataLen > 0 && length > c.Config.MaxDataLen {
+	if c.config.MaxDataLen > 0 && l > c.config.MaxDataLen {
 		return nil, "", &ErrDataLen
 	}
 
 	data, err := hex.DecodeString(datastr)
 	if err != nil {
-		return nil, "", &ErrHTTP{err.Error(), 400}
+		return nil, "", &jsonhttp.ErrHTTP{err.Error(), 400}
 	}
 
-	callbackURL := r.Form.Get("callbackUrl")
-	if callbackURL == "" {
+	url := r.Form.Get("callbackUrl")
+	if url == "" {
 		return nil, "", &ErrCallbackURL
 	}
 
-	return data, callbackURL, nil
+	return data, url, nil
 }

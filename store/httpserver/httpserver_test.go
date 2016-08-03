@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stratumn/go/jsonhttp"
 	. "github.com/stratumn/go/segment"
 	. "github.com/stratumn/go/segment/segmenttest"
 	. "github.com/stratumn/go/store/adapter"
@@ -17,13 +18,13 @@ import (
 
 // Tests the root route if successful.
 func TestRootOK(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	adapter.MockGetInfo.Fn = func() (interface{}, error) { return "test", nil }
+	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", nil }
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL, &dict)
+	res, err := getJSON(s.URL, &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -34,309 +35,309 @@ func TestRootOK(t *testing.T) {
 	if dict["adapter"].(string) != "test" {
 		t.Fatal("unexpected adapter dict")
 	}
-	if adapter.MockGetInfo.CalledCount != 1 {
+	if a.MockGetInfo.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to GetInfo()")
 	}
 }
 
 // Tests the root route if an error occured in the adapter.
 func TestRootErr(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	adapter.MockGetInfo.Fn = func() (interface{}, error) { return "test", errors.New("error") }
+	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", errors.New("error") }
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL, &dict)
+	res, err := getJSON(s.URL, &dict)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockGetInfo.CalledCount != 1 {
+	if a.MockGetInfo.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to GetInfo()")
 	}
 }
 
 // Tests the save segment route if the segment was successful.
 func TestSaveSegmentOK(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	adapter.MockSaveSegment.Fn = func(*Segment) error { return nil }
+	a.MockSaveSegment.Fn = func(*Segment) error { return nil }
 
-	segment1 := RandomSegment()
-	var segment2 Segment
-	res, err := postJSON(server.URL+"/segments", &segment2, segment1)
+	s1 := RandomSegment()
+	var s2 Segment
+	res, err := postJSON(s.URL+"/segments", &s2, s1)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(adapter.MockSaveSegment.LastCalledWith, segment1) {
+	if !reflect.DeepEqual(a.MockSaveSegment.LastCalledWith, s1) {
 		t.Fatal("unexpected argument passed to SaveSegment()")
 	}
 	if res.StatusCode != 200 {
 		t.Fatal("unexpected status code")
 	}
-	if !reflect.DeepEqual(segment1, &segment2) {
+	if !reflect.DeepEqual(s1, &s2) {
 		t.Fatal("expected segments to be equal")
 	}
-	if adapter.MockSaveSegment.CalledCount != 1 {
+	if a.MockSaveSegment.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to SaveSegment()")
 	}
 }
 
 // Tests the save segment route if an error occured in the adapter.
 func TestSaveSegmentErr(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	adapter.MockSaveSegment.Fn = func(*Segment) error { return errors.New("test") }
+	a.MockSaveSegment.Fn = func(*Segment) error { return errors.New("test") }
 
 	var dict map[string]interface{}
-	res, err := postJSON(server.URL+"/segments", &dict, RandomSegment())
+	res, err := postJSON(s.URL+"/segments", &dict, RandomSegment())
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockSaveSegment.CalledCount != 1 {
+	if a.MockSaveSegment.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to SaveSegment()")
 	}
 }
 
 // Tests the save segment route if a segment validation error occured.
 func TestSaveSegmentInvalidSegment(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	segment := RandomSegment()
-	segment.Meta["linkHash"] = true
+	s1 := RandomSegment()
+	s1.Meta["linkHash"] = true
 
 	var dict map[string]interface{}
-	res, err := postJSON(server.URL+"/segments", &dict, segment)
+	res, err := postJSON(s.URL+"/segments", &dict, s1)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrBadRequest.Status {
+	if res.StatusCode != jsonhttp.ErrBadRequest.Status {
 		t.Fatal("unexpected status code")
 	}
 	if dict["error"].(string) != "meta.linkHash should be a non empty string" {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockSaveSegment.CalledCount != 0 {
+	if a.MockSaveSegment.CalledCount != 0 {
 		t.Fatal("unexpected number of calls to SaveSegment()")
 	}
 }
 
 // Tests the save segment route if a JSON error error occured.
 func TestSaveSegmentInvalidJSON(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := postJSON(server.URL+"/segments", &dict, "1234567890azertyui")
+	res, err := postJSON(s.URL+"/segments", &dict, "1234567890azertyui")
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrBadRequest.Status {
+	if res.StatusCode != jsonhttp.ErrBadRequest.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrBadRequest.Msg {
+	if dict["error"].(string) != jsonhttp.ErrBadRequest.Msg {
 		t.Log(dict["error"].(string))
-		t.Log(ErrBadRequest.Msg)
+		t.Log(jsonhttp.ErrBadRequest.Msg)
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockSaveSegment.CalledCount != 0 {
+	if a.MockSaveSegment.CalledCount != 0 {
 		t.Fatal("unexpected number of calls to SaveSegment()")
 	}
 }
 
 // Tests the get segment route if the segment was found.
 func TestGetSegmentFound(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	segment1 := RandomSegment()
-	adapter.MockGetSegment.Fn = func(string) (*Segment, error) { return segment1, nil }
+	s1 := RandomSegment()
+	a.MockGetSegment.Fn = func(string) (*Segment, error) { return s1, nil }
 
-	var segment2 Segment
-	res, err := getJSON(server.URL+"/segments/abcde", &segment2)
+	var s2 Segment
+	res, err := getJSON(s.URL+"/segments/abcde", &s2)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(adapter.MockGetSegment.LastCalledWith, "abcde") {
+	if !reflect.DeepEqual(a.MockGetSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to GetSegment()")
 	}
 	if res.StatusCode != 200 {
 		t.Fatal("unexpected status code")
 	}
-	if !reflect.DeepEqual(segment1, &segment2) {
+	if !reflect.DeepEqual(s1, &s2) {
 		t.Fatal("expected segments to be equal")
 	}
-	if adapter.MockGetSegment.CalledCount != 1 {
+	if a.MockGetSegment.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to GetSegment()")
 	}
 }
 
 // Tests the get segment route if the segment was not found.
 func TestGetSegmentNotFound(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL+"/segments/abcde", &dict)
+	res, err := getJSON(s.URL+"/segments/abcde", &dict)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(adapter.MockGetSegment.LastCalledWith, "abcde") {
+	if !reflect.DeepEqual(a.MockGetSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to GetSegment()")
 	}
-	if res.StatusCode != ErrNotFound.Status {
+	if res.StatusCode != jsonhttp.ErrNotFound.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrNotFound.Msg {
+	if dict["error"].(string) != jsonhttp.ErrNotFound.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockGetSegment.CalledCount != 1 {
+	if a.MockGetSegment.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to GetSegment()")
 	}
 }
 
 // Tests the get segment route if an error occured in the adapter.
 func TestGetSegmentErr(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	adapter.MockGetSegment.Fn = func(string) (*Segment, error) { return nil, errors.New("error") }
+	a.MockGetSegment.Fn = func(string) (*Segment, error) { return nil, errors.New("error") }
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL+"/segments/abcde", &dict)
+	res, err := getJSON(s.URL+"/segments/abcde", &dict)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(adapter.MockGetSegment.LastCalledWith, "abcde") {
+	if !reflect.DeepEqual(a.MockGetSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to GetSegment()")
 	}
-	if res.StatusCode != ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockGetSegment.CalledCount != 1 {
+	if a.MockGetSegment.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to GetSegment()")
 	}
 }
 
 // Tests the delete segment route if the segment was found.
 func TestDeleteSegmentFound(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	segment1 := RandomSegment()
-	adapter.MockDeleteSegment.Fn = func(string) (*Segment, error) { return segment1, nil }
+	s1 := RandomSegment()
+	a.MockDeleteSegment.Fn = func(string) (*Segment, error) { return s1, nil }
 
-	var segment2 Segment
-	res, err := deleteJSON(server.URL+"/segments/abcde", &segment2)
+	var s2 Segment
+	res, err := deleteJSON(s.URL+"/segments/abcde", &s2)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(adapter.MockDeleteSegment.LastCalledWith, "abcde") {
+	if !reflect.DeepEqual(a.MockDeleteSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to DeleteSegment()")
 	}
 	if res.StatusCode != 200 {
 		t.Fatal("unexpected status code")
 	}
-	if !reflect.DeepEqual(segment1, &segment2) {
+	if !reflect.DeepEqual(s1, &s2) {
 		t.Fatal("expected segments to be equal")
 	}
-	if adapter.MockDeleteSegment.CalledCount != 1 {
+	if a.MockDeleteSegment.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to DeleteSegment()")
 	}
 }
 
 // Tests the delete segment route if the segment was not found.
 func TestDeleteSegmentNotFound(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := deleteJSON(server.URL+"/segments/abcde", &dict)
+	res, err := deleteJSON(s.URL+"/segments/abcde", &dict)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(adapter.MockDeleteSegment.LastCalledWith, "abcde") {
+	if !reflect.DeepEqual(a.MockDeleteSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to DeleteSegment()")
 	}
-	if res.StatusCode != ErrNotFound.Status {
+	if res.StatusCode != jsonhttp.ErrNotFound.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrNotFound.Msg {
+	if dict["error"].(string) != jsonhttp.ErrNotFound.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockDeleteSegment.CalledCount != 1 {
+	if a.MockDeleteSegment.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to DeleteSegment()")
 	}
 }
 
 // Tests the delete segment route if an error occured in the adapter.
 func TestDeleteSegmentErr(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	adapter.MockDeleteSegment.Fn = func(string) (*Segment, error) { return nil, errors.New("error") }
+	a.MockDeleteSegment.Fn = func(string) (*Segment, error) { return nil, errors.New("error") }
 
 	var dict map[string]interface{}
-	res, err := deleteJSON(server.URL+"/segments/abcde", &dict)
+	res, err := deleteJSON(s.URL+"/segments/abcde", &dict)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(adapter.MockDeleteSegment.LastCalledWith, "abcde") {
+	if !reflect.DeepEqual(a.MockDeleteSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to DeleteSegment()")
 	}
-	if res.StatusCode != ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockDeleteSegment.CalledCount != 1 {
+	if a.MockDeleteSegment.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to DeleteSegment()")
 	}
 }
 
 // Tests the get segment route if successful.
 func TestFindSegmentsOK(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	var segments1 SegmentSlice
+	var s1 SegmentSlice
 	for i := 0; i < 10; i++ {
-		segments1 = append(segments1, RandomSegment())
+		s1 = append(s1, RandomSegment())
 	}
-	adapter.MockFindSegments.Fn = func(*Filter) (SegmentSlice, error) { return segments1, nil }
+	a.MockFindSegments.Fn = func(*Filter) (SegmentSlice, error) { return s1, nil }
 
-	var segments2 SegmentSlice
-	res, err := getJSON(server.URL+"/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one+two", &segments2)
+	var s2 SegmentSlice
+	res, err := getJSON(s.URL+"/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one+two", &s2)
 
 	if err != nil {
 		t.Fatal(err)
@@ -344,62 +345,62 @@ func TestFindSegmentsOK(t *testing.T) {
 	if res.StatusCode != 200 {
 		t.Fatal("unexpected status code")
 	}
-	if !reflect.DeepEqual(segments1, segments2) {
+	if !reflect.DeepEqual(s1, s2) {
 		t.Fatal("expected segment slices to be equal")
 	}
-	if adapter.MockFindSegments.CalledCount != 1 {
+	if a.MockFindSegments.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to FindSegments()")
 	}
 
-	filter := adapter.MockFindSegments.LastCalledWith
-	if filter.Offset != 1 {
+	f := a.MockFindSegments.LastCalledWith
+	if f.Offset != 1 {
 		t.Fatal("unexpected offset")
 	}
-	if filter.Limit != 2 {
+	if f.Limit != 2 {
 		t.Fatal("unexpected limit")
 	}
-	if filter.MapID != "123" {
+	if f.MapID != "123" {
 		t.Fatal("unexpected map ID")
 	}
-	if filter.PrevLinkHash != "abc" {
+	if f.PrevLinkHash != "abc" {
 		t.Fatal("unexpected previous link hash")
 	}
-	if !reflect.DeepEqual(filter.Tags, []string{"one", "two"}) {
+	if !reflect.DeepEqual(f.Tags, []string{"one", "two"}) {
 		t.Fatal("unexpected tags")
 	}
 }
 
 // Tests the get segment route if an error occured in the adapter.
 func TestFindSegmentsErr(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	adapter.MockFindSegments.Fn = func(*Filter) (SegmentSlice, error) { return nil, errors.New("test") }
+	a.MockFindSegments.Fn = func(*Filter) (SegmentSlice, error) { return nil, errors.New("test") }
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL+"/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one,two", &dict)
+	res, err := getJSON(s.URL+"/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one,two", &dict)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockFindSegments.CalledCount != 1 {
+	if a.MockFindSegments.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to FindSegments()")
 	}
 }
 
 // Tests the get segment route if an error occured in the query.
 func TestFindSegmentsValidation(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL+"/segments?offset=hello", &dict)
+	res, err := getJSON(s.URL+"/segments?offset=hello", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -410,21 +411,21 @@ func TestFindSegmentsValidation(t *testing.T) {
 	if dict["error"].(string) != ErrOffset.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockFindSegments.CalledCount != 0 {
+	if a.MockFindSegments.CalledCount != 0 {
 		t.Fatal("unexpected number of calls to FindSegments()")
 	}
 }
 
 // Tests the get map IDs route if successful.
 func TestGetMapIDsOK(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
 	slice1 := []string{"one", "two", "three"}
-	adapter.MockGetMapIDs.Fn = func(*Pagination) ([]string, error) { return slice1, nil }
+	a.MockGetMapIDs.Fn = func(*Pagination) ([]string, error) { return slice1, nil }
 
 	var slice2 []string
-	res, err := getJSON(server.URL+"/maps?offset=20&limit=10", &slice2)
+	res, err := getJSON(s.URL+"/maps?offset=20&limit=10", &slice2)
 
 	if err != nil {
 		t.Fatal(err)
@@ -440,11 +441,11 @@ func TestGetMapIDsOK(t *testing.T) {
 			t.Fatal("expected map ID slices to have same elements")
 		}
 	}
-	if adapter.MockGetMapIDs.CalledCount != 1 {
+	if a.MockGetMapIDs.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to FindSegments()")
 	}
 
-	pagination := adapter.MockGetMapIDs.LastCalledWith
+	pagination := a.MockGetMapIDs.LastCalledWith
 	if pagination.Offset != 20 {
 		t.Fatal("unexpected offset")
 	}
@@ -455,35 +456,35 @@ func TestGetMapIDsOK(t *testing.T) {
 
 // Tests the get map IDs route if an error occured in the adapter.
 func TestGetMapIDsErr(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	adapter.MockGetMapIDs.Fn = func(*Pagination) ([]string, error) { return nil, errors.New("test") }
+	a.MockGetMapIDs.Fn = func(*Pagination) ([]string, error) { return nil, errors.New("test") }
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL+"/maps", &dict)
+	res, err := getJSON(s.URL+"/maps", &dict)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockGetMapIDs.CalledCount != 1 {
+	if a.MockGetMapIDs.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to FindSegments()")
 	}
 }
 
 // Tests the get segment route if an error occured in the query.
 func TestGetMapIDsValidation(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL+"/maps?limit=-1", &dict)
+	res, err := getJSON(s.URL+"/maps?limit=-1", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -494,35 +495,35 @@ func TestGetMapIDsValidation(t *testing.T) {
 	if dict["error"].(string) != ErrLimit.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockGetMapIDs.CalledCount != 0 {
+	if a.MockGetMapIDs.CalledCount != 0 {
 		t.Fatal("unexpected number of calls to FindSegments()")
 	}
 }
 
 // Tests the not found route.
 func TestRootNotFound(t *testing.T) {
-	server, _ := createServer()
-	defer server.Close()
+	s, _ := createServer()
+	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL+"/dsfsdf", &dict)
+	res, err := getJSON(s.URL+"/dsfsdf", &dict)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrNotFound.Status {
+	if res.StatusCode != jsonhttp.ErrNotFound.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrNotFound.Msg {
+	if dict["error"].(string) != jsonhttp.ErrNotFound.Msg {
 		t.Fatal("unexpected error message")
 	}
 }
 
 func createServer() (*httptest.Server, *adaptertest.MockAdapter) {
-	adapter := &adaptertest.MockAdapter{}
-	server := httptest.NewServer(New(adapter, &Config{}))
+	a := &adaptertest.MockAdapter{}
+	s := httptest.NewServer(New(a, &jsonhttp.Config{}))
 
-	return server, adapter
+	return s, a
 }
 
 func getJSON(url string, target interface{}) (*http.Response, error) {

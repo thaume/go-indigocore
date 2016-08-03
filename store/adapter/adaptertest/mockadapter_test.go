@@ -9,12 +9,12 @@ import (
 )
 
 func TestMockAdapter(t *testing.T) {
-	adapter := &MockAdapter{}
-	segment1 := RandomSegment()
-	adapter.MockGetSegment.Fn = func(linkHash string) (*Segment, error) { return segment1, nil }
-	segment2, err := adapter.GetSegment("abcdef")
+	a := &MockAdapter{}
+	s1 := RandomSegment()
+	a.MockGetSegment.Fn = func(linkHash string) (*Segment, error) { return s1, nil }
+	s2, err := a.GetSegment("abcdef")
 
-	if segment1 != segment2 {
+	if s1 != s2 {
 		t.Fatal("expected segments to be equal")
 	}
 
@@ -22,17 +22,17 @@ func TestMockAdapter(t *testing.T) {
 		t.Fatal("unexpected error")
 	}
 
-	adapter.GetSegment("ghij")
+	a.GetSegment("ghij")
 
-	if adapter.MockGetSegment.CalledCount != 2 {
+	if a.MockGetSegment.CalledCount != 2 {
 		t.Fatal("unexpected MockGetSegment.CalledCount value")
 	}
 
-	if !reflect.DeepEqual(adapter.MockGetSegment.CalledWith, []string{"abcdef", "ghij"}) {
+	if !reflect.DeepEqual(a.MockGetSegment.CalledWith, []string{"abcdef", "ghij"}) {
 		t.Fatal("unexpected MockGetSegment.LastCalledWith value")
 	}
 
-	if adapter.MockGetSegment.LastCalledWith != "ghij" {
+	if a.MockGetSegment.LastCalledWith != "ghij" {
 		t.Fatal("unexpected MockGetSegment.LastCalledWith value")
 	}
 }

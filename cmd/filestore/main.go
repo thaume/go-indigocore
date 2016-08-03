@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/stratumn/go/jsonhttp"
 	"github.com/stratumn/go/store/fileadapter"
 	"github.com/stratumn/go/store/httpserver"
 )
@@ -25,14 +26,15 @@ func init() {
 func main() {
 	flag.Parse()
 
-	adapter := fileadapter.New(&fileadapter.Config{Path: *path, Version: version})
-	config := &httpserver.Config{
+	a := fileadapter.New(&fileadapter.Config{Path: *path, Version: version})
+	c := &jsonhttp.Config{
 		Port:     *port,
 		CertFile: *certFile,
 		KeyFile:  *keyFile,
 		Verbose:  *verbose,
 	}
-	h := httpserver.New(adapter, config)
+	h := httpserver.New(a, c)
 
+	log.Printf("Listening on %s", *port)
 	log.Fatal(h.ListenAndServe())
 }

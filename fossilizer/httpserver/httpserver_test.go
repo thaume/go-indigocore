@@ -13,18 +13,19 @@ import (
 	"time"
 
 	. "github.com/stratumn/go/fossilizer/adapter"
-	"github.com/stratumn/go/fossilizer/adapter/adaptertest"
+	. "github.com/stratumn/go/fossilizer/adapter/adaptertest"
+	"github.com/stratumn/go/jsonhttp"
 )
 
 // Tests the root route if successful.
 func TestRootOK(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	adapter.MockGetInfo.Fn = func() (interface{}, error) { return "test", nil }
+	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", nil }
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL, &dict)
+	res, err := getJSON(s.URL, &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -35,54 +36,54 @@ func TestRootOK(t *testing.T) {
 	if dict["adapter"].(string) != "test" {
 		t.Fatal("unexpected adapter dict")
 	}
-	if adapter.MockGetInfo.CalledCount != 1 {
+	if a.MockGetInfo.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to GetInfo()")
 	}
 }
 
 // Tests the root route if an error occured in the adapter.
 func TestRootErr(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	adapter.MockGetInfo.Fn = func() (interface{}, error) { return "test", errors.New("error") }
+	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", errors.New("error") }
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL, &dict)
+	res, err := getJSON(s.URL, &dict)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
 		t.Fatal("unexpected error message")
 	}
-	if adapter.MockGetInfo.CalledCount != 1 {
+	if a.MockGetInfo.CalledCount != 1 {
 		t.Fatal("unexpected number of calls to GetInfo()")
 	}
 }
 
 // Tests the fossilize route.
 func TestFossilizeOK(t *testing.T) {
-	server, adapter := createServer()
-	defer server.Close()
+	s, a := createServer()
+	defer s.Close()
 
-	listener, err := net.Listen("tcp", ":6666")
+	l, err := net.Listen("tcp", ":6666")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	handler := &ResultHandler{T: t, Listener: listener, Expected: "\"it is known\""}
+	h := &ResultHandler{T: t, Listener: l, Expected: "\"it is known\""}
 
 	go func() {
-		defer listener.Close()
+		defer l.Close()
 
-		resultChan := adapter.MockAddResultChan.LastCalledWith
+		rc := a.MockAddResultChan.LastCalledWith
 
-		adapter.MockFossilize.Fn = func(data []byte, meta []byte) error {
-			resultChan <- &Result{
+		a.MockFossilize.Fn = func(data []byte, meta []byte) error {
+			rc <- &Result{
 				Evidence: "it is known",
 				Data:     data,
 				Meta:     meta,
@@ -90,10 +91,10 @@ func TestFossilizeOK(t *testing.T) {
 			return nil
 		}
 
-		values := url.Values{}
-		values.Set("data", "1234567890")
-		values.Set("callbackUrl", "http://localhost:6666")
-		res, err := http.PostForm(server.URL+"/fossils", values)
+		v := url.Values{}
+		v.Set("data", "1234567890")
+		v.Set("callbackUrl", "http://localhost:6666")
+		res, err := http.PostForm(s.URL+"/fossils", v)
 
 		if err != nil {
 			t.Fatal(err)
@@ -107,17 +108,17 @@ func TestFossilizeOK(t *testing.T) {
 		t.Fatal("callback URL not called")
 	}()
 
-	http.Serve(listener, handler)
+	http.Serve(l, h)
 }
 
 // Tests the fossilize without data.
 func TestFossilizeNoData(t *testing.T) {
-	server, _ := createServer()
-	defer server.Close()
+	s, _ := createServer()
+	defer s.Close()
 
-	values := url.Values{}
-	values.Set("callbackUrl", "http://localhost:6666")
-	res, err := http.PostForm(server.URL+"/fossils", values)
+	v := url.Values{}
+	v.Set("callbackUrl", "http://localhost:6666")
+	res, err := http.PostForm(s.URL+"/fossils", v)
 
 	if err != nil {
 		t.Fatal(err)
@@ -130,12 +131,12 @@ func TestFossilizeNoData(t *testing.T) {
 
 // Tests the fossilize without a callback.
 func TestFossilizeNoCallback(t *testing.T) {
-	server, _ := createServer()
-	defer server.Close()
+	s, _ := createServer()
+	defer s.Close()
 
-	values := url.Values{}
-	values.Set("data", "1234567890")
-	res, err := http.PostForm(server.URL+"/fossils", values)
+	v := url.Values{}
+	v.Set("data", "1234567890")
+	res, err := http.PostForm(s.URL+"/fossils", v)
 
 	if err != nil {
 		t.Fatal(err)
@@ -148,10 +149,10 @@ func TestFossilizeNoCallback(t *testing.T) {
 
 // Tests the fossilize without body.
 func TestFossilizeNoBody(t *testing.T) {
-	server, _ := createServer()
-	defer server.Close()
+	s, _ := createServer()
+	defer s.Close()
 
-	url := server.URL + "/fossils?callbackUrl=http%3A%2F%2Flocalhost%3A6666"
+	url := s.URL + "/fossils?callbackUrl=http%3A%2F%2Flocalhost%3A6666"
 	res, err := http.Post(url, "application/octet-stream", nil)
 
 	if err != nil {
@@ -165,28 +166,28 @@ func TestFossilizeNoBody(t *testing.T) {
 
 // Tests the not found route.
 func TestNotFound(t *testing.T) {
-	server, _ := createServer()
-	defer server.Close()
+	s, _ := createServer()
+	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := getJSON(server.URL+"/dsfsdf", &dict)
+	res, err := getJSON(s.URL+"/dsfsdf", &dict)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrNotFound.Status {
+	if res.StatusCode != jsonhttp.ErrNotFound.Status {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrNotFound.Msg {
+	if dict["error"].(string) != jsonhttp.ErrNotFound.Msg {
 		t.Fatal("unexpected error message")
 	}
 }
 
-func createServer() (*httptest.Server, *adaptertest.MockAdapter) {
-	adapter := &adaptertest.MockAdapter{}
-	server := httptest.NewServer(New(adapter, &Config{MinDataLen: 1}))
+func createServer() (*httptest.Server, *MockAdapter) {
+	a := &MockAdapter{}
+	s := httptest.NewServer(New(a, &Config{MinDataLen: 1}))
 
-	return server, adapter
+	return s, a
 }
 
 func getJSON(url string, target interface{}) (*http.Response, error) {

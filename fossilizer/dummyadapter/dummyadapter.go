@@ -44,7 +44,7 @@ func (a *DummyAdapter) AddResultChan(resultChan chan *Result) {
 // Implements github.com/stratumn/go/fossilizer/adapter.
 func (a *DummyAdapter) Fossilize(data []byte, meta []byte) error {
 	defer func() {
-		result := &Result{
+		r := &Result{
 			Evidence: map[string]interface{}{
 				"authority": "dummy",
 				"timestamp": time.Now().UTC().Format("20060102150405"),
@@ -55,7 +55,7 @@ func (a *DummyAdapter) Fossilize(data []byte, meta []byte) error {
 
 		for _, c := range a.resultChans {
 			go func() {
-				c <- result
+				c <- r
 			}()
 		}
 	}()

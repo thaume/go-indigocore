@@ -10,25 +10,25 @@ import (
 )
 
 // Tests what happens when you search for all segments.
-func TestFindSegmentsAll(t *testing.T, adapter Adapter) {
+func TestFindSegmentsAll(t *testing.T, a Adapter) {
 	for i := 0; i < 100; i++ {
-		adapter.SaveSegment(RandomSegment())
+		a.SaveSegment(RandomSegment())
 	}
 
-	segments, err := adapter.FindSegments(&Filter{})
+	slice, err := a.FindSegments(&Filter{})
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(segments) != 100 {
+	if len(slice) != 100 {
 		t.Fatal("expected segments length to be 100")
 	}
 
 	lastPriority := 100.0
 
-	for _, segment := range segments {
-		priority := segment.Link.Meta["priority"].(float64)
+	for _, s := range slice {
+		priority := s.Link.Meta["priority"].(float64)
 
 		if priority > lastPriority {
 			t.Fatal("segments not ordered by priority")
@@ -39,14 +39,14 @@ func TestFindSegmentsAll(t *testing.T, adapter Adapter) {
 }
 
 // Tests what happens when you search with pagination.
-func TestFindSegmentsPagination(t *testing.T, adapter Adapter) {
+func TestFindSegmentsPagination(t *testing.T, a Adapter) {
 	for i := 0; i < 100; i++ {
-		adapter.SaveSegment(RandomSegment())
+		a.SaveSegment(RandomSegment())
 	}
 
 	limit := 10 + rand.Intn(10)
 
-	segments, err := adapter.FindSegments(&Filter{
+	slice, err := a.FindSegments(&Filter{
 		Pagination: Pagination{
 			Offset: rand.Intn(40),
 			Limit:  limit,
@@ -57,14 +57,14 @@ func TestFindSegmentsPagination(t *testing.T, adapter Adapter) {
 		t.Fatal(err)
 	}
 
-	if len(segments) != limit {
+	if len(slice) != limit {
 		t.Fatalf("expected segments length to be %d", limit)
 	}
 
 	lastPriority := 100.0
 
-	for _, segment := range segments {
-		priority := segment.Link.Meta["priority"].(float64)
+	for _, s := range slice {
+		priority := s.Link.Meta["priority"].(float64)
 
 		if priority > lastPriority {
 			t.Fatal("segments not ordered by priority")
@@ -75,12 +75,12 @@ func TestFindSegmentsPagination(t *testing.T, adapter Adapter) {
 }
 
 // Tests what happens when there are no matches.
-func TestFindSegmentsEmpty(t *testing.T, adapter Adapter) {
+func TestFindSegmentsEmpty(t *testing.T, a Adapter) {
 	for i := 0; i < 100; i++ {
-		adapter.SaveSegment(RandomSegment())
+		a.SaveSegment(RandomSegment())
 	}
 
-	segments, err := adapter.FindSegments(&Filter{
+	slice, err := a.FindSegments(&Filter{
 		Tags: []string{"blablabla"},
 	})
 
@@ -88,29 +88,29 @@ func TestFindSegmentsEmpty(t *testing.T, adapter Adapter) {
 		t.Fatal(err)
 	}
 
-	if len(segments) != 0 {
+	if len(slice) != 0 {
 		t.Fatal("expected segments length to be 0")
 	}
 }
 
 // Tests what happens when you search with only one tag.
-func TestFindSegmentsSingleTag(t *testing.T, adapter Adapter) {
+func TestFindSegmentsSingleTag(t *testing.T, a Adapter) {
 	tag1 := RandomString(5)
 	tag2 := RandomString(5)
 
 	for i := 0; i < 10; i++ {
-		segment := RandomSegment()
-		segment.Link.Meta["tags"] = []interface{}{tag1, RandomString(5)}
-		adapter.SaveSegment(segment)
+		s := RandomSegment()
+		s.Link.Meta["tags"] = []interface{}{tag1, RandomString(5)}
+		a.SaveSegment(s)
 	}
 
 	for i := 0; i < 10; i++ {
-		segment := RandomSegment()
-		segment.Link.Meta["tags"] = []interface{}{tag1, tag2, RandomString(5)}
-		adapter.SaveSegment(segment)
+		s := RandomSegment()
+		s.Link.Meta["tags"] = []interface{}{tag1, tag2, RandomString(5)}
+		a.SaveSegment(s)
 	}
 
-	segments, err := adapter.FindSegments(&Filter{
+	slice, err := a.FindSegments(&Filter{
 		Tags: []string{tag1},
 	})
 
@@ -118,29 +118,29 @@ func TestFindSegmentsSingleTag(t *testing.T, adapter Adapter) {
 		t.Fatal(err)
 	}
 
-	if len(segments) != 20 {
+	if len(slice) != 20 {
 		t.Fatalf("expected segments length to be 20")
 	}
 }
 
 // Tests what happens when you search with more than one tag.
-func TestFindSegmentsMultipleTags(t *testing.T, adapter Adapter) {
+func TestFindSegmentsMultipleTags(t *testing.T, a Adapter) {
 	tag1 := RandomString(5)
 	tag2 := RandomString(5)
 
 	for i := 0; i < 10; i++ {
-		segment := RandomSegment()
-		segment.Link.Meta["tags"] = []interface{}{tag1, RandomString(5)}
-		adapter.SaveSegment(segment)
+		s := RandomSegment()
+		s.Link.Meta["tags"] = []interface{}{tag1, RandomString(5)}
+		a.SaveSegment(s)
 	}
 
 	for i := 0; i < 10; i++ {
-		segment := RandomSegment()
-		segment.Link.Meta["tags"] = []interface{}{tag1, tag2, RandomString(5)}
-		adapter.SaveSegment(segment)
+		s := RandomSegment()
+		s.Link.Meta["tags"] = []interface{}{tag1, tag2, RandomString(5)}
+		a.SaveSegment(s)
 	}
 
-	segments, err := adapter.FindSegments(&Filter{
+	slice, err := a.FindSegments(&Filter{
 		Tags: []string{tag2, tag1},
 	})
 
@@ -148,22 +148,22 @@ func TestFindSegmentsMultipleTags(t *testing.T, adapter Adapter) {
 		t.Fatal(err)
 	}
 
-	if len(segments) != 10 {
+	if len(slice) != 10 {
 		t.Fatalf("expected segments length to be 10")
 	}
 }
 
 // Tests whan happens when you search for an existing map ID.
-func TestFindSegmentsMapIDFound(t *testing.T, adapter Adapter) {
+func TestFindSegmentsMapIDFound(t *testing.T, a Adapter) {
 	for i := 0; i < 2; i++ {
 		for j := 0; j < 10; j++ {
-			segment := RandomSegment()
-			segment.Link.Meta["mapId"] = fmt.Sprintf("map%d", i)
-			adapter.SaveSegment(segment)
+			s := RandomSegment()
+			s.Link.Meta["mapId"] = fmt.Sprintf("map%d", i)
+			a.SaveSegment(s)
 		}
 	}
 
-	segments, err := adapter.FindSegments(&Filter{
+	slice, err := a.FindSegments(&Filter{
 		MapID: "map1",
 	})
 
@@ -171,18 +171,18 @@ func TestFindSegmentsMapIDFound(t *testing.T, adapter Adapter) {
 		t.Fatal(err)
 	}
 
-	if segments == nil {
+	if slice == nil {
 		t.Fatal("expected segments not to be nil")
 	}
 
-	if len(segments) != 10 {
+	if len(slice) != 10 {
 		t.Fatal("expected segments length to be 10")
 	}
 }
 
 // Tests whan happens when you search for a nonexistent map ID.
-func TestFindSegmentsMapIDNotFound(t *testing.T, adapter Adapter) {
-	segments, err := adapter.FindSegments(&Filter{
+func TestFindSegmentsMapIDNotFound(t *testing.T, a Adapter) {
+	slice, err := a.FindSegments(&Filter{
 		MapID: RandomString(10),
 	})
 
@@ -190,40 +190,40 @@ func TestFindSegmentsMapIDNotFound(t *testing.T, adapter Adapter) {
 		t.Fatal(err)
 	}
 
-	if len(segments) != 0 {
+	if len(slice) != 0 {
 		t.Fatal("expected segments length to be 0")
 	}
 }
 
 // Tests whan happens when you search for an existing previous link hash.
-func TestFindSegmentsPrevLinkHashFound(t *testing.T, adapter Adapter) {
-	segment := RandomSegment()
-	adapter.SaveSegment(segment)
+func TestFindSegmentsPrevLinkHashFound(t *testing.T, a Adapter) {
+	s := RandomSegment()
+	a.SaveSegment(s)
 
 	for i := 0; i < 10; i++ {
-		adapter.SaveSegment(RandomBranch(segment))
+		a.SaveSegment(RandomBranch(s))
 	}
 
-	segments, err := adapter.FindSegments(&Filter{
-		PrevLinkHash: segment.Meta["linkHash"].(string),
+	slice, err := a.FindSegments(&Filter{
+		PrevLinkHash: s.Meta["linkHash"].(string),
 	})
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if segments == nil {
+	if slice == nil {
 		t.Fatal("expected segments not to be nil")
 	}
 
-	if len(segments) != 10 {
+	if len(slice) != 10 {
 		t.Fatal("expected segments length to be 10")
 	}
 }
 
 // Tests whan happens when you search for a nonexistent previous link hash.
-func TestFindSegmentsPrevLinkHashNotFound(t *testing.T, adapter Adapter) {
-	segments, err := adapter.FindSegments(&Filter{
+func TestFindSegmentsPrevLinkHashNotFound(t *testing.T, a Adapter) {
+	slice, err := a.FindSegments(&Filter{
 		PrevLinkHash: RandomString(32),
 	})
 
@@ -231,7 +231,7 @@ func TestFindSegmentsPrevLinkHashNotFound(t *testing.T, adapter Adapter) {
 		t.Fatal(err)
 	}
 
-	if len(segments) != 0 {
+	if len(slice) != 0 {
 		t.Fatal("expected segments length to be 0")
 	}
 }

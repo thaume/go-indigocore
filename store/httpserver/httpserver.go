@@ -3,13 +3,13 @@ package httpserver
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
 
+	"github.com/stratumn/go/jsonhttp"
 	. "github.com/stratumn/go/segment"
 	. "github.com/stratumn/go/segment/segmentvalidation"
 	. "github.com/stratumn/go/store/adapter"
@@ -20,67 +20,43 @@ const (
 	DEFAULT_VERBOSE = false
 )
 
-// A server configuration.
-type Config struct {
-	Port     string
-	CertFile string
-	KeyFile  string
-	Verbose  bool
+// A server context.
+type context struct {
+	adapter Adapter
+	config  *jsonhttp.Config
 }
 
-// A server.
-type Server struct {
-	config *Config
-	router *httprouter.Router
+// A server handle.
+type handle func(http.ResponseWriter, *http.Request, httprouter.Params, *context) (interface{}, error)
+
+// A server handler.
+type handler struct {
+	context *context
+	handle  handle
 }
 
-// Implements HTTP server.
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.router.ServeHTTP(w, r)
+func (h handler) serve(w http.ResponseWriter, r *http.Request, p httprouter.Params, _ *jsonhttp.Config) (interface{}, error) {
+	return h.handle(w, r, p, h.context)
 }
 
 // Makes a new server.
-func New(adapter Adapter, config *Config) *Server {
-	r := httprouter.New()
-	c := Context{adapter, config}
+func New(a Adapter, c *jsonhttp.Config) *jsonhttp.Server {
+	server := jsonhttp.New(c)
+	context := &context{a, c}
 
-	r.NotFound = NotFoundHandler{JSONHandler{&c, NotFound}}
+	server.Get("/", handler{context, root}.serve)
+	server.Post("/segments", handler{context, saveSegment}.serve)
+	server.Get("/segments/:linkHash", handler{context, getSegment}.serve)
+	server.Delete("/segments/:linkHash", handler{context, deleteSegment}.serve)
+	server.Get("/segments", handler{context, findSegments}.serve)
+	server.Get("/maps", handler{context, getMapIDs}.serve)
 
-	r.GET("/", JSONHandler{&c, Root}.ServeHTTP)
-	r.POST("/segments", JSONHandler{&c, SaveSegment}.ServeHTTP)
-	r.GET("/segments/:linkHash", JSONHandler{&c, GetSegment}.ServeHTTP)
-	r.DELETE("/segments/:linkHash", JSONHandler{&c, DeleteSegment}.ServeHTTP)
-	r.GET("/segments", JSONHandler{&c, FindSegments}.ServeHTTP)
-	r.GET("/maps", JSONHandler{&c, GetMapIDs}.ServeHTTP)
-
-	return &Server{config, r}
-}
-
-// Starts listening and serving.
-func (s *Server) ListenAndServe() error {
-	port := s.config.Port
-
-	if port == "" {
-		port = DEFAULT_PORT
-	}
-
-	log.Printf("listening on %s\n", port)
-
-	if s.config.CertFile != "" && s.config.KeyFile != "" {
-		return http.ListenAndServeTLS(port, s.config.CertFile, s.config.KeyFile, s)
-	}
-
-	return http.ListenAndServe(port, s)
-}
-
-// HTTP handle for 404s.
-func NotFound(w http.ResponseWriter, r *http.Request, _ *Context, _ httprouter.Params) (interface{}, error) {
-	return nil, &ErrNotFound
+	return server
 }
 
 // HTTP handle for the root route.
-func Root(w http.ResponseWriter, r *http.Request, c *Context, _ httprouter.Params) (interface{}, error) {
-	info, err := c.Adapter.GetInfo()
+func root(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *context) (interface{}, error) {
+	info, err := c.adapter.GetInfo()
 
 	if err != nil {
 		return nil, err
@@ -92,98 +68,98 @@ func Root(w http.ResponseWriter, r *http.Request, c *Context, _ httprouter.Param
 }
 
 // HTTP handle to save a segment.
-func SaveSegment(w http.ResponseWriter, r *http.Request, c *Context, p httprouter.Params) (interface{}, error) {
+func saveSegment(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *context) (interface{}, error) {
 	decoder := json.NewDecoder(r.Body)
 
-	var segment Segment
+	var s Segment
 
-	if err := decoder.Decode(&segment); err != nil {
-		return nil, &ErrBadRequest
+	if err := decoder.Decode(&s); err != nil {
+		return nil, &jsonhttp.ErrBadRequest
 	}
 
-	if err := Validate(&segment); err != nil {
-		return nil, &ErrHTTP{err.Error(), 400}
+	if err := Validate(&s); err != nil {
+		return nil, &jsonhttp.ErrHTTP{err.Error(), 400}
 	}
 
-	if err := c.Adapter.SaveSegment(&segment); err != nil {
+	if err := c.adapter.SaveSegment(&s); err != nil {
 		return nil, err
 	}
 
-	return segment, nil
+	return s, nil
 }
 
 // HTTP handle to get a segment.
-func GetSegment(w http.ResponseWriter, r *http.Request, c *Context, p httprouter.Params) (interface{}, error) {
-	segment, err := c.Adapter.GetSegment(p.ByName("linkHash"))
+func getSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *context) (interface{}, error) {
+	s, err := c.adapter.GetSegment(p.ByName("linkHash"))
 
 	if err != nil {
 		return nil, err
 	}
 
-	if segment == nil {
-		return nil, &ErrNotFound
+	if s == nil {
+		return nil, &jsonhttp.ErrNotFound
 	}
 
-	return segment, nil
+	return s, nil
 }
 
 // HTTP handle to delete a segment.
-func DeleteSegment(w http.ResponseWriter, r *http.Request, c *Context, p httprouter.Params) (interface{}, error) {
-	segment, err := c.Adapter.DeleteSegment(p.ByName("linkHash"))
+func deleteSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *context) (interface{}, error) {
+	s, err := c.adapter.DeleteSegment(p.ByName("linkHash"))
 
 	if err != nil {
 		return nil, err
 	}
 
-	if segment == nil {
-		return nil, &ErrNotFound
+	if s == nil {
+		return nil, &jsonhttp.ErrNotFound
 	}
 
-	return segment, nil
+	return s, nil
 }
 
 // HTTP handle to show segments.
-func FindSegments(w http.ResponseWriter, r *http.Request, c *Context, p httprouter.Params) (interface{}, error) {
-	filter, errHTTP := parseFilter(r)
+func findSegments(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *context) (interface{}, error) {
+	filter, e := parseFilter(r)
 
-	if errHTTP != nil {
-		return nil, errHTTP
+	if e != nil {
+		return nil, e
 	}
 
-	segments, err := c.Adapter.FindSegments(filter)
+	slice, err := c.adapter.FindSegments(filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return segments, nil
+	return slice, nil
 }
 
 // HTTP handle to show map ids.
-func GetMapIDs(w http.ResponseWriter, r *http.Request, c *Context, p httprouter.Params) (interface{}, error) {
-	pagination, errHTTP := parsePagination(r)
+func getMapIDs(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *context) (interface{}, error) {
+	pagination, e := parsePagination(r)
 
-	if errHTTP != nil {
-		return nil, errHTTP
+	if e != nil {
+		return nil, e
 	}
 
-	mapIDs, err := c.Adapter.GetMapIDs(pagination)
+	slice, err := c.adapter.GetMapIDs(pagination)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return mapIDs, nil
+	return slice, nil
 }
 
 // Creates an adapter filter from a request.
 func parseFilter(r *http.Request) (*Filter, error) {
 	var tags []string
 
-	pagination, errHTTP := parsePagination(r)
+	pagination, e := parsePagination(r)
 
-	if errHTTP != nil {
-		return nil, errHTTP
+	if e != nil {
+		return nil, e
 	}
 
 	mapID := r.URL.Query().Get("mapId")

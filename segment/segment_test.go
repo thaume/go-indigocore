@@ -16,8 +16,8 @@ func TestSortable(t *testing.T) {
 
 	lastPriority := 100.0
 
-	for _, segment := range slice {
-		priority := segment.Link.Meta["priority"].(float64)
+	for _, s := range slice {
+		priority := s.Link.Meta["priority"].(float64)
 
 		if priority > lastPriority {
 			t.Fatal("expected segments to be sorted by priority")
@@ -38,8 +38,8 @@ func TestSortableNoPriority(t *testing.T) {
 
 	lastPriority := 100.0
 
-	for _, segment := range slice {
-		priority, ok := segment.Link.Meta["priority"].(float64)
+	for _, s := range slice {
+		priority, ok := s.Link.Meta["priority"].(float64)
 
 		if ok {
 			if priority > lastPriority {

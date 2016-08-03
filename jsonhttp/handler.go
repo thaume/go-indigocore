@@ -1,4 +1,4 @@
-package httpserver
+package jsonhttp
 
 import (
 	"encoding/json"
@@ -6,33 +6,25 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-
-	"github.com/stratumn/go/store/adapter"
 )
 
-// A handler context.
-type Context struct {
-	Adapter adapter.Adapter
-	Config  *Config
-}
-
 // A JSON handle function.
-type JSONHandle func(http.ResponseWriter, *http.Request, *Context, httprouter.Params) (interface{}, error)
+type JSONHandle func(http.ResponseWriter, *http.Request, httprouter.Params, *Config) (interface{}, error)
 
 // A JSON handler.
 type JSONHandler struct {
-	Context *Context
-	Serve   JSONHandle
+	config *Config
+	serve  JSONHandle
 }
 
-// Implements HTTP handler.
+// Implements http.Server.
 func (h JSONHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var err error
 
-	data, err := h.Serve(w, r, h.Context, p)
+	data, err := h.serve(w, r, p, h.config)
 
 	if err != nil {
-		JSONError(h.Context, w, err)
+		JSONError(w, err, h.config)
 		return
 	}
 
@@ -58,18 +50,18 @@ func (h NotFoundHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Renders an error as JSON.
-func JSONError(c *Context, w http.ResponseWriter, err error) {
-	errHTTP, ok := err.(*ErrHTTP)
+func JSONError(w http.ResponseWriter, err error, c *Config) {
+	e, ok := err.(*ErrHTTP)
 
 	if !ok {
 		log.Println(err.Error())
-		errHTTP = &ErrInternalServer
-	} else if c.Config.Verbose {
+		e = &ErrInternalServer
+	} else if c.Verbose {
 		log.Println(err.Error())
 	}
 
-	js := errHTTP.JSONEncode()
+	js := e.JSONEncode()
 
 	w.Header().Set("Content-Type", "application/json")
-	http.Error(w, string(js), errHTTP.Status)
+	http.Error(w, string(js), e.Status)
 }

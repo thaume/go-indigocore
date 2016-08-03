@@ -10,80 +10,80 @@ import (
 )
 
 // Tests what happens when you save a new segment.
-func TestSaveSegmentNew(t *testing.T, adapter Adapter) {
-	segment := RandomSegment()
+func TestSaveSegmentNew(t *testing.T, a Adapter) {
+	s := RandomSegment()
 
-	if err := adapter.SaveSegment(segment); err != nil {
+	if err := a.SaveSegment(s); err != nil {
 		t.Fatal(err)
 	}
 }
 
 // Tests what happens when you update the state of a segment.
-func TestSaveSegmentUpdateState(t *testing.T, adapter Adapter) {
-	segment := RandomSegment()
+func TestSaveSegmentUpdateState(t *testing.T, a Adapter) {
+	s := RandomSegment()
 
-	if err := adapter.SaveSegment(segment); err != nil {
+	if err := a.SaveSegment(s); err != nil {
 		t.Fatal(err)
 	}
 
-	ChangeSegmentState(segment)
+	ChangeSegmentState(s)
 
-	if err := adapter.SaveSegment(segment); err != nil {
+	if err := a.SaveSegment(s); err != nil {
 		t.Fatal(err)
 	}
 }
 
 // Tests what happens when you update the map ID of a segment.
-func TestSaveSegmentUpdateMapID(t *testing.T, adapter Adapter) {
-	segment := RandomSegment()
+func TestSaveSegmentUpdateMapID(t *testing.T, a Adapter) {
+	s1 := RandomSegment()
 
-	if err := adapter.SaveSegment(segment); err != nil {
+	if err := a.SaveSegment(s1); err != nil {
 		t.Fatal(err)
 	}
 
-	ChangeSegmentMapID(segment)
+	s2 := ChangeSegmentMapID(s1)
 
-	if err := adapter.SaveSegment(segment); err != nil {
+	if err := a.SaveSegment(s2); err != nil {
 		t.Fatal(err)
 	}
 }
 
 // Tests what happens when you save a segment with a previous link hash.
-func TestSaveSegmentBranch(t *testing.T, adapter Adapter) {
-	segment := RandomSegment()
+func TestSaveSegmentBranch(t *testing.T, a Adapter) {
+	s := RandomSegment()
 
-	if err := adapter.SaveSegment(segment); err != nil {
+	if err := a.SaveSegment(s); err != nil {
 		t.Fatal(err)
 	}
 
-	segment = RandomBranch(segment)
+	s = RandomBranch(s)
 
-	if err := adapter.SaveSegment(segment); err != nil {
+	if err := a.SaveSegment(s); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func BenchmarkSaveSegmentNew(b *testing.B, adapter Adapter) {
-	segments := make([]*Segment, b.N)
+func BenchmarkSaveSegmentNew(b *testing.B, a Adapter) {
+	slice := make([]*Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
-		segments[i] = RandomSegment()
+		slice[i] = RandomSegment()
 	}
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		if err := adapter.SaveSegment(segments[i]); err != nil {
+		if err := a.SaveSegment(slice[i]); err != nil {
 			b.Fatal(err)
 		}
 	}
 }
 
-func BenchmarkSaveSegmentNewParallel(b *testing.B, adapter Adapter) {
-	segments := make([]*Segment, b.N)
+func BenchmarkSaveSegmentNewParallel(b *testing.B, a Adapter) {
+	slice := make([]*Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
-		segments[i] = RandomSegment()
+		slice[i] = RandomSegment()
 	}
 
 	var counter uint64
@@ -94,38 +94,38 @@ func BenchmarkSaveSegmentNewParallel(b *testing.B, adapter Adapter) {
 		for pb.Next() {
 			i := atomic.AddUint64(&counter, 1) - 1
 
-			if err := adapter.SaveSegment(segments[i]); err != nil {
+			if err := a.SaveSegment(slice[i]); err != nil {
 				b.Fatal(err)
 			}
 		}
 	})
 }
 
-func BenchmarkSaveSegmentUpdateState(b *testing.B, adapter Adapter) {
-	segments := make([]*Segment, b.N)
+func BenchmarkSaveSegmentUpdateState(b *testing.B, a Adapter) {
+	slice := make([]*Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
-		segment := RandomSegment()
-		adapter.SaveSegment(segment)
-		segments[i] = ChangeSegmentState(segment)
+		s := RandomSegment()
+		a.SaveSegment(s)
+		slice[i] = ChangeSegmentState(s)
 	}
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		if err := adapter.SaveSegment(segments[i]); err != nil {
+		if err := a.SaveSegment(slice[i]); err != nil {
 			b.Fatal(err)
 		}
 	}
 }
 
-func BenchmarkSaveSegmentUpdateStateParallel(b *testing.B, adapter Adapter) {
-	segments := make([]*Segment, b.N)
+func BenchmarkSaveSegmentUpdateStateParallel(b *testing.B, a Adapter) {
+	slice := make([]*Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
 		segment := RandomSegment()
-		adapter.SaveSegment(segment)
-		segments[i] = ChangeSegmentState(segment)
+		a.SaveSegment(segment)
+		slice[i] = ChangeSegmentState(segment)
 	}
 	var counter uint64
 
@@ -135,38 +135,38 @@ func BenchmarkSaveSegmentUpdateStateParallel(b *testing.B, adapter Adapter) {
 		for pb.Next() {
 			i := atomic.AddUint64(&counter, 1) - 1
 
-			if err := adapter.SaveSegment(segments[i]); err != nil {
+			if err := a.SaveSegment(slice[i]); err != nil {
 				b.Fatal(err)
 			}
 		}
 	})
 }
 
-func BenchmarkSaveSegmentUpdateMapID(b *testing.B, adapter Adapter) {
-	segments := make([]*Segment, b.N)
+func BenchmarkSaveSegmentUpdateMapID(b *testing.B, a Adapter) {
+	slice := make([]*Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
 		segment := RandomSegment()
-		adapter.SaveSegment(segment)
-		segments[i] = ChangeSegmentMapID(segment)
+		a.SaveSegment(segment)
+		slice[i] = ChangeSegmentMapID(segment)
 	}
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		if err := adapter.SaveSegment(segments[i]); err != nil {
+		if err := a.SaveSegment(slice[i]); err != nil {
 			b.Fatal(err)
 		}
 	}
 }
 
-func BenchmarkSaveSegmentUpdateMapIDParallel(b *testing.B, adapter Adapter) {
-	segments := make([]*Segment, b.N)
+func BenchmarkSaveSegmentUpdateMapIDParallel(b *testing.B, a Adapter) {
+	slice := make([]*Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
 		segment := RandomSegment()
-		adapter.SaveSegment(segment)
-		segments[i] = ChangeSegmentMapID(segment)
+		a.SaveSegment(segment)
+		slice[i] = ChangeSegmentMapID(segment)
 	}
 	var counter uint64
 
@@ -176,7 +176,7 @@ func BenchmarkSaveSegmentUpdateMapIDParallel(b *testing.B, adapter Adapter) {
 		for pb.Next() {
 			i := atomic.AddUint64(&counter, 1) - 1
 
-			if err := adapter.SaveSegment(segments[i]); err != nil {
+			if err := a.SaveSegment(slice[i]); err != nil {
 				b.Fatal(err)
 			}
 		}

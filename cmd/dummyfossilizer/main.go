@@ -6,6 +6,7 @@ import (
 
 	"github.com/stratumn/go/fossilizer/dummyadapter"
 	"github.com/stratumn/go/fossilizer/httpserver"
+	"github.com/stratumn/go/jsonhttp"
 )
 
 var (
@@ -26,18 +27,20 @@ func init() {
 func main() {
 	flag.Parse()
 
-	adapter := dummyadapter.New(version)
-
-	config := &httpserver.Config{
-		Port:             *port,
-		CertFile:         *certFile,
+	a := dummyadapter.New(version)
+	c := &httpserver.Config{
+		Config: jsonhttp.Config{
+			Port:     *port,
+			CertFile: *certFile,
+			KeyFile:  *keyFile,
+			Verbose:  *verbose,
+		},
 		NumResultWorkers: *numResultWorkers,
 		MinDataLen:       *minDataLen,
 		MaxDataLen:       *maxDataLen,
-		Verbose:          *verbose,
 	}
+	h := httpserver.New(a, c)
 
-	h := httpserver.New(adapter, config)
-
+	log.Printf("Listening on %s", *port)
 	log.Fatal(h.ListenAndServe())
 }

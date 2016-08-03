@@ -7,18 +7,18 @@ import (
 )
 
 func TestValidateValid(t *testing.T) {
-	segment := RandomSegment()
+	s := RandomSegment()
 
-	if err := Validate(segment); err != nil {
+	if err := Validate(s); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestValidateLinkHashNil(t *testing.T) {
-	segment := RandomSegment()
-	delete(segment.Meta, "linkHash")
+	s := RandomSegment()
+	delete(s.Meta, "linkHash")
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "meta.linkHash should be a non empty string" {
 		t.Fatal(err)
@@ -26,10 +26,10 @@ func TestValidateLinkHashNil(t *testing.T) {
 }
 
 func TestValidateLinkHashEmpty(t *testing.T) {
-	segment := RandomSegment()
-	segment.Meta["linkHash"] = ""
+	s := RandomSegment()
+	s.Meta["linkHash"] = ""
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "meta.linkHash should be a non empty string" {
 		t.Fatal(err)
@@ -37,10 +37,10 @@ func TestValidateLinkHashEmpty(t *testing.T) {
 }
 
 func TestValidateLinkHashWrongType(t *testing.T) {
-	segment := RandomSegment()
-	segment.Meta["linkHash"] = 3
+	s := RandomSegment()
+	s.Meta["linkHash"] = 3
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "meta.linkHash should be a non empty string" {
 		t.Fatal(err)
@@ -48,10 +48,10 @@ func TestValidateLinkHashWrongType(t *testing.T) {
 }
 
 func TestValidateMapIDNil(t *testing.T) {
-	segment := RandomSegment()
-	delete(segment.Link.Meta, "mapId")
+	s := RandomSegment()
+	delete(s.Link.Meta, "mapId")
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "link.meta.mapId should be a non empty string" {
 		t.Fatal(err)
@@ -59,10 +59,10 @@ func TestValidateMapIDNil(t *testing.T) {
 }
 
 func TestValidateMapIDEmpty(t *testing.T) {
-	segment := RandomSegment()
-	segment.Link.Meta["mapId"] = ""
+	s := RandomSegment()
+	s.Link.Meta["mapId"] = ""
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "link.meta.mapId should be a non empty string" {
 		t.Fatal(err)
@@ -70,10 +70,10 @@ func TestValidateMapIDEmpty(t *testing.T) {
 }
 
 func TestValidateMapIDWrongType(t *testing.T) {
-	segment := RandomSegment()
-	segment.Link.Meta["mapId"] = true
+	s := RandomSegment()
+	s.Link.Meta["mapId"] = true
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "link.meta.mapId should be a non empty string" {
 		t.Fatal(err)
@@ -81,19 +81,19 @@ func TestValidateMapIDWrongType(t *testing.T) {
 }
 
 func TestValidatePrevLinkHashNil(t *testing.T) {
-	segment := RandomSegment()
-	delete(segment.Link.Meta, "prevLinkHash")
+	s := RandomSegment()
+	delete(s.Link.Meta, "prevLinkHash")
 
-	if err := Validate(segment); err != nil {
+	if err := Validate(s); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestValidatePrevLinkHashEmpty(t *testing.T) {
-	segment := RandomSegment()
-	segment.Link.Meta["prevLinkHash"] = ""
+	s := RandomSegment()
+	s.Link.Meta["prevLinkHash"] = ""
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "link.meta.prevLinkHash should be a non empty string" {
 		t.Fatal(err)
@@ -101,10 +101,10 @@ func TestValidatePrevLinkHashEmpty(t *testing.T) {
 }
 
 func TestValidatePrevLinkHashWrongType(t *testing.T) {
-	segment := RandomSegment()
-	segment.Link.Meta["prevLinkHash"] = []string{}
+	s := RandomSegment()
+	s.Link.Meta["prevLinkHash"] = []string{}
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "link.meta.prevLinkHash should be a non empty string" {
 		t.Fatal(err)
@@ -112,19 +112,19 @@ func TestValidatePrevLinkHashWrongType(t *testing.T) {
 }
 
 func TestValidateTagsNil(t *testing.T) {
-	segment := RandomSegment()
-	delete(segment.Link.Meta, "tags")
+	s := RandomSegment()
+	delete(s.Link.Meta, "tags")
 
-	if err := Validate(segment); err != nil {
+	if err := Validate(s); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestValidateTagsWrongType(t *testing.T) {
-	segment := RandomSegment()
-	segment.Link.Meta["tags"] = 2.4
+	s := RandomSegment()
+	s.Link.Meta["tags"] = 2.4
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "link.meta.tags should be an array of non empty string" {
 		t.Fatal(err)
@@ -132,10 +132,10 @@ func TestValidateTagsWrongType(t *testing.T) {
 }
 
 func TestValidateTagsWrongElementType(t *testing.T) {
-	segment := RandomSegment()
-	segment.Link.Meta["tags"] = []int{1, 2, 3}
+	s := RandomSegment()
+	s.Link.Meta["tags"] = []int{1, 2, 3}
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "link.meta.tags should be an array of non empty string" {
 		t.Fatal(err)
@@ -143,19 +143,19 @@ func TestValidateTagsWrongElementType(t *testing.T) {
 }
 
 func TestValidatePriorityNil(t *testing.T) {
-	segment := RandomSegment()
-	delete(segment.Link.Meta, "priority")
+	s := RandomSegment()
+	delete(s.Link.Meta, "priority")
 
-	if err := Validate(segment); err != nil {
+	if err := Validate(s); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestValidatePriorityWrongType(t *testing.T) {
-	segment := RandomSegment()
-	segment.Link.Meta["priority"] = false
+	s := RandomSegment()
+	s.Link.Meta["priority"] = false
 
-	if err := Validate(segment); err == nil {
+	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
 	} else if err.Error() != "link.meta.priority should be a float64" {
 		t.Fatal(err)

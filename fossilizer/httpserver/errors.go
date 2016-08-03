@@ -1,11 +1,11 @@
 package httpserver
 
+import (
+	"github.com/stratumn/go/jsonhttp"
+)
+
 var (
-	ErrInternalServer = ErrHTTP{"internal server error", 500}
-	ErrBadRequest     = ErrHTTP{"bad request", 400}
-	ErrUnauthorized   = ErrHTTP{"unauthorized", 401}
-	ErrNotFound       = ErrHTTP{"not found", 404}
-	ErrData           = ErrHTTP{"data required", 400}
-	ErrDataLen        = ErrHTTP{"invalid data length", 400}
-	ErrCallbackURL    = ErrHTTP{"callback URL required", 400}
+	ErrData        = jsonhttp.ErrHTTP{"data required", 400}
+	ErrDataLen     = jsonhttp.ErrHTTP{"invalid data length", 400}
+	ErrCallbackURL = jsonhttp.ErrHTTP{"callback URL required", 400}
 )
