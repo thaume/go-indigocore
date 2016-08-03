@@ -5,16 +5,16 @@ import (
 	"flag"
 	"log"
 
+	"github.com/stratumn/go/dummystore"
 	"github.com/stratumn/go/jsonhttp"
-	"github.com/stratumn/go/store/dummyadapter"
-	"github.com/stratumn/go/store/httpserver"
+	"github.com/stratumn/go/store/storehttp"
 )
 
 var (
-	port     = flag.String("port", httpserver.DEFAULT_PORT, "server port")
+	port     = flag.String("port", storehttp.DefaultPort, "server port")
 	certFile = flag.String("tlscert", "", "TLS certificate file")
 	keyFile  = flag.String("tlskey", "", "TLS private key file")
-	verbose  = flag.Bool("verbose", httpserver.DEFAULT_VERBOSE, "verbose output")
+	verbose  = flag.Bool("verbose", storehttp.DefaultVerbose, "verbose output")
 	version  = ""
 )
 
@@ -25,14 +25,14 @@ func init() {
 func main() {
 	flag.Parse()
 
-	a := dummyadapter.New(version)
+	a := dummystore.New(version)
 	c := &jsonhttp.Config{
 		Port:     *port,
 		CertFile: *certFile,
 		KeyFile:  *keyFile,
 		Verbose:  *verbose,
 	}
-	h := httpserver.New(a, c)
+	h := storehttp.New(a, c)
 
 	log.Printf("Listening on %s", *port)
 	log.Fatal(h.ListenAndServe())

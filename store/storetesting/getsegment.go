@@ -1,0 +1,141 @@
+package storetesting
+
+import (
+	"reflect"
+	"sync/atomic"
+	"testing"
+
+	"github.com/stratumn/go/cs/cstesting"
+	"github.com/stratumn/go/store"
+)
+
+// TestGetSegmentFound tests what happens when you get an existing segment.
+func TestGetSegmentFound(t *testing.T, a store.Adapter) {
+	s1 := cstesting.RandomSegment()
+	linkHash := s1.Meta["linkHash"].(string)
+
+	a.SaveSegment(s1)
+
+	s2, err := a.GetSegment(linkHash)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if s2 == nil {
+		t.Fatal("expected segment not to be nil")
+	}
+
+	if !reflect.DeepEqual(s1, s2) {
+		t.Fatal("expected segments to be equal")
+	}
+}
+
+// TestGetSegmentUpdatedState tests what happens when you get a segment whose state was updated.
+func TestGetSegmentUpdatedState(t *testing.T, a store.Adapter) {
+	s1 := cstesting.RandomSegment()
+	linkHash := s1.Meta["linkHash"].(string)
+
+	a.SaveSegment(s1)
+	s1 = cstesting.ChangeSegmentState(s1)
+	a.SaveSegment(s1)
+
+	s2, err := a.GetSegment(linkHash)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if s2 == nil {
+		t.Fatal("expected segment not to be nil")
+	}
+
+	if !reflect.DeepEqual(s1, s2) {
+		t.Fatal("expected segments to be equal")
+	}
+}
+
+// TestGetSegmentUpdatedMapID tests what happens when you get a segment whose map ID was updated.
+func TestGetSegmentUpdatedMapID(t *testing.T, a store.Adapter) {
+	s1 := cstesting.RandomSegment()
+	linkHash := s1.Meta["linkHash"].(string)
+
+	a.SaveSegment(s1)
+	s1 = cstesting.ChangeSegmentMapID(s1)
+	a.SaveSegment(s1)
+
+	s2, err := a.GetSegment(linkHash)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if s2 == nil {
+		t.Fatal("expected segment not to be nil")
+	}
+
+	if !reflect.DeepEqual(s1, s2) {
+		t.Fatal("expected segments to be equal")
+	}
+}
+
+// TestGetSegmentNotFound tests what happens when you get a nonexistent segment.
+func TestGetSegmentNotFound(t *testing.T, a store.Adapter) {
+	s, err := a.GetSegment(cstesting.RandomString(32))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if s != nil {
+		t.Fatal("expected segment to be nil")
+	}
+}
+
+// BenchmarkGetSegmentFound benchmarks getting existing segments.
+func BenchmarkGetSegmentFound(b *testing.B, a store.Adapter) {
+	linkHashes := make([]string, b.N)
+
+	for i := 0; i < b.N; i++ {
+		s := cstesting.RandomSegment()
+		a.SaveSegment(s)
+		linkHashes[i] = s.Meta["linkHash"].(string)
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if s, err := a.GetSegment(linkHashes[i]); err != nil {
+			b.Fatal(err)
+		} else if s == nil {
+			b.Fatal("expected segment")
+		}
+	}
+}
+
+// BenchmarkGetSegmentFoundParallel benchmarks getting existing segments in parallel.
+func BenchmarkGetSegmentFoundParallel(b *testing.B, a store.Adapter) {
+	linkHashes := make([]string, b.N)
+
+	for i := 0; i < b.N; i++ {
+		s := cstesting.RandomSegment()
+		a.SaveSegment(s)
+		linkHashes[i] = s.Meta["linkHash"].(string)
+	}
+
+	var counter uint64
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			i := atomic.AddUint64(&counter, 1) - 1
+
+			if s, err := a.GetSegment(linkHashes[i]); err != nil {
+				b.Fatal(err)
+			} else if s == nil {
+				b.Fatal("expected segment")
+			}
+		}
+	})
+}

@@ -1,12 +1,6 @@
-# Stratumn fossilizer
+// Package fossilizer defines types to implement a fossilizer.
+package fossilizer
 
-A Golang package to create Stratumn fossilizers.
-
-## Adapters
-
-An adapter must implement this interface:
-
-```go
 // Adapter must be implemented by a fossilier.
 type Adapter interface {
 	// Returns arbitrary information about the adapter.
@@ -29,8 +23,3 @@ type Result struct {
 	// The meta data that was given to Adapter.Fossilize.
 	Meta []byte
 }
-```
-
-You can then use `github.com/stratumn/go/fossilizer/fossilizerhttp` to create an HTTP server for that adapter.
-
-See `github.com/stratumn/go/dummyfossilizer` for an example.

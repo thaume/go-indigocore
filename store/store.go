@@ -1,12 +1,10 @@
-# Stratumn store
+// Package store defines types to implement a store.
+package store
 
-A Golang package to create Stratumn stores.
+import (
+	"github.com/stratumn/go/cs"
+)
 
-## Adapters
-
-An adapter must implement this interface:
-
-```go
 // Adapter must be implemented by a store.
 type Adapter interface {
 	// Returns arbitrary information about the adapter.
@@ -48,8 +46,3 @@ type Filter struct {
 	// A slice of tags the segments must contains.
 	Tags []string
 }
-```
-
-You can then use `github.com/stratumn/go/store/storehttp` to create an HTTP server for that adapter.
-
-See `github.com/stratumn/go/filestore` or `github.com/stratumn/go/dummystore` for an example.
