@@ -5,12 +5,15 @@ import (
 )
 
 // MockAdapter is used to mock a fossilizer.
+//
 // It implements github.com/stratumn/go/fossilizer.Adapter.
 type MockAdapter struct {
 	// The mock for the GetInfo function.
 	MockGetInfo MockGetInfo
+
 	// The mock for the AddResultChan function.
 	MockAddResultChan MockAddResultChan
+
 	// The mock for the Fossilize function.
 	MockFossilize MockFossilize
 }
@@ -19,6 +22,7 @@ type MockAdapter struct {
 type MockGetInfo struct {
 	// The number of times the function was called.
 	CalledCount int
+
 	// An optional implementation of the function.
 	Fn func() (interface{}, error)
 }
@@ -27,10 +31,13 @@ type MockGetInfo struct {
 type MockAddResultChan struct {
 	// The number of times the function was called.
 	CalledCount int
+
 	// The channel that was passed to each call.
 	CalledWith []chan *fossilizer.Result
+
 	// The last channel that was passed.
 	LastCalledWith chan *fossilizer.Result
+
 	// An optional implementation of the function.
 	Fn func(chan *fossilizer.Result)
 }
@@ -39,14 +46,19 @@ type MockAddResultChan struct {
 type MockFossilize struct {
 	// The number of times the function was called.
 	CalledCount int
+
 	// The data that was passed to each call.
 	CalledWithData [][]byte
+
 	// The meta that was passed to each call.
 	CalledWithMeta [][]byte
+
 	// The last data that was passed.
 	LastCalledWithData []byte
+
 	// The last meta that was passed.
 	LastCalledWithMeta []byte
+
 	// An optional implementation of the function.
 	Fn func([]byte, []byte) error
 }

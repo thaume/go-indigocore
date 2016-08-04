@@ -1,5 +1,6 @@
 // Package dummyfossilizer implements a fossilizer that can be used for testing.
-// It doesn't do much -- it just adds a timestamp, therefore is useless for other purposes.
+//
+// It doesn't do much -- it just adds a timestamp.
 package dummyfossilizer
 
 import (
@@ -11,6 +12,7 @@ import (
 const (
 	// Name is the name set in the fossilizer's information.
 	Name = "dummy"
+
 	// Description is the description set in the fossilizer's information.
 	Description = "Stratumn Dummy Fossilizer"
 )

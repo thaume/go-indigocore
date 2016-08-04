@@ -1,4 +1,5 @@
 // Package dummystore implements a store that saves all the segments in memory.
+//
 // It can be used for testing, but it's unoptimized and not designed for production.
 package dummystore
 
@@ -13,6 +14,7 @@ import (
 const (
 	// Name is the name set in the store's information.
 	Name = "dummy"
+
 	// Description is the description set in the store's information.
 	Description = "Stratumn Dummy Adapter"
 )
@@ -58,7 +60,6 @@ func (a *DummyStore) SaveSegment(segment *cs.Segment) error {
 	mapID := segment.Link.Meta["mapId"].(string)
 
 	if curr != nil {
-		// Remove current segment from map if needed
 		currMapID := curr.Link.Meta["mapId"].(string)
 
 		if currMapID != mapID {

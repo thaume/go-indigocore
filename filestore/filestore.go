@@ -1,4 +1,5 @@
 // Package filestore implements a store that saves all the segments to the file system.
+//
 // The segments are stored as JSON files named after the link hashes.
 // It's a convenient store to use during the development of an agent.
 // However, because it doesn't use an index, it's very slow, and shouldn't be used for production.
@@ -20,8 +21,10 @@ import (
 const (
 	// Name is the name set in the store's information.
 	Name = "file"
+
 	// Description is the description set in the store's information.
 	Description = "Stratumn File Adapter"
+
 	// DefaultPath is the path where segments will be saved by default.
 	DefaultPath = "/var/filestore"
 )
@@ -35,6 +38,7 @@ type FileStore struct {
 type Config struct {
 	// A version string that will set in the store's information.
 	Version string
+
 	// Path where segments will be saved.
 	Path string
 }

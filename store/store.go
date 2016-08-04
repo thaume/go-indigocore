@@ -32,6 +32,7 @@ type Adapter interface {
 type Pagination struct {
 	// Index of the first segment.
 	Offset int
+
 	// Maximum number of segments, all if zero.
 	Limit int
 }
@@ -39,10 +40,13 @@ type Pagination struct {
 // Filter contains filtering options.
 type Filter struct {
 	Pagination
+
 	// A map ID the segments must have.
 	MapID string
+
 	// A previous link hash the segments must have.
 	PrevLinkHash string
+
 	// A slice of tags the segments must contains.
 	Tags []string
 }

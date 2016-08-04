@@ -1,16 +1,22 @@
 // Package storehttp is used to create an HTTP server from a store adapter.
+//
 // It servers the following routes:
 //	GET /
 //		Renders information about the fossilizer.
+//
 //	POST /segments
 //		Saves then renders a segment.
 //		Body should be a JSON encoded segment.
+//
 //	GET /segments/:linkHash
 //		Renders a segment.
+//
 //	DELETE /segments/:linkHash
 //		Deletes then renders a segment.
+//
 //	GET /segments?[offset=offset]&[limit=limit]&[mapId=mapId]&[prevLinkHash=prevLinkHash]&[tags=list+of+tags]
 //		Finds and renders segments.
+//
 //	GET /maps?[offset=offset]&[limit=limit]
 //		Finds and renders map IDs.
 package storehttp
@@ -32,6 +38,7 @@ import (
 const (
 	// DefaultPort is the default port of the server.
 	DefaultPort = ":5000"
+
 	// DefaultVerbose is whether verbose output should be enabled by default.
 	DefaultVerbose = false
 )
@@ -52,7 +59,7 @@ func (h handler) serve(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	return h.handle(w, r, p, h.context)
 }
 
-// New create a new instance of a server.
+// New create an instance of a server.
 func New(a store.Adapter, c *jsonhttp.Config) *jsonhttp.Server {
 	s := jsonhttp.New(c)
 	ctx := &context{a, c}

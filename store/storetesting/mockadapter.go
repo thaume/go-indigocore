@@ -6,18 +6,24 @@ import (
 )
 
 // MockAdapter is used to mock a store.
+//
 // It implements github.com/stratumn/go/store.Adapter.
 type MockAdapter struct {
 	// The mock for the GetInfo function.
 	MockGetInfo MockGetInfo
+
 	// The mock for the SaveSegment function.
 	MockSaveSegment MockSaveSegment
+
 	// The mock for the GetSegment function.
 	MockGetSegment MockGetSegment
+
 	// The mock for the DeleteSegment function.
 	MockDeleteSegment MockDeleteSegment
+
 	// The mock for the FindSegments function.
 	MockFindSegments MockFindSegments
+
 	// The mock for the GetMapIDs function.
 	MockGetMapIDs MockGetMapIDs
 }
@@ -26,6 +32,7 @@ type MockAdapter struct {
 type MockGetInfo struct {
 	// The number of times the function was called.
 	CalledCount int
+
 	// An optional implementation of the function.
 	Fn func() (interface{}, error)
 }
@@ -34,10 +41,13 @@ type MockGetInfo struct {
 type MockSaveSegment struct {
 	// The number of times the function was called.
 	CalledCount int
+
 	// The segment that was passed to each call.
 	CalledWith []*cs.Segment
+
 	// The last segment that was passed.
 	LastCalledWith *cs.Segment
+
 	// An optional implementation of the function.
 	Fn func(*cs.Segment) error
 }
@@ -46,10 +56,13 @@ type MockSaveSegment struct {
 type MockGetSegment struct {
 	// The number of times the function was called.
 	CalledCount int
+
 	// The link hash that was passed to each call.
 	CalledWith []string
+
 	// The last link hash that was passed.
 	LastCalledWith string
+
 	// An optional implementation of the function.
 	Fn func(string) (*cs.Segment, error)
 }
@@ -58,10 +71,13 @@ type MockGetSegment struct {
 type MockDeleteSegment struct {
 	// The number of times the function was called.
 	CalledCount int
+
 	// The link hash that was passed to each call.
 	CalledWith []string
+
 	// The last link hash that was passed.
 	LastCalledWith string
+
 	// An optional implementation of the function.
 	Fn func(string) (*cs.Segment, error)
 }
@@ -70,10 +86,13 @@ type MockDeleteSegment struct {
 type MockFindSegments struct {
 	// The number of times the function was called.
 	CalledCount int
+
 	// The filter that was passed to each call.
 	CalledWith []*store.Filter
+
 	// The last filter that was passed.
 	LastCalledWith *store.Filter
+
 	// An optional implementation of the function.
 	Fn func(*store.Filter) (cs.SegmentSlice, error)
 }
@@ -82,10 +101,13 @@ type MockFindSegments struct {
 type MockGetMapIDs struct {
 	// The number of times the function was called.
 	CalledCount int
+
 	// The pagination that was passed to each call.
 	CalledWith []*store.Pagination
+
 	// The last pagination that was passed.
 	LastCalledWith *store.Pagination
+
 	// An optional implementation of the function.
 	Fn func(*store.Pagination) ([]string, error)
 }

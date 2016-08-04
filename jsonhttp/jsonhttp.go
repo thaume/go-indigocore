@@ -1,4 +1,5 @@
-// Package jsonhttp defines a simple JSON HTTP server.
+// Package jsonhttp defines a simple HTTP server that renders JSON.
+//
 // Routes can be added by passing a handle that should return JSON serializable data or an error.
 package jsonhttp
 
@@ -13,6 +14,7 @@ import (
 const (
 	// DefaultPort is the default port of the server.
 	DefaultPort = ":5000"
+
 	// DefaultVerbose is whether verbose output should be enabled by default.
 	DefaultVerbose = false
 )
@@ -21,10 +23,13 @@ const (
 type Config struct {
 	// The port of the server.
 	Port string
+
 	// Optionally, the path to a TLS certificate.
 	CertFile string
+
 	// Optionally, the path to a TLS private key.
 	KeyFile string
+
 	// Whether to enable verbose output.
 	Verbose bool
 }

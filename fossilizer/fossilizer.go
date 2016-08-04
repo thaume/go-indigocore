@@ -10,6 +10,7 @@ type Adapter interface {
 	AddResultChan(resultChan chan *Result)
 
 	// Requests data to be fossilized.
+	//
 	// Meta is arbitrary data that will be sent to the result channels.
 	Fossilize(data []byte, meta []byte) error
 }
@@ -18,8 +19,10 @@ type Adapter interface {
 type Result struct {
 	// Evidence created by the fossilizer.
 	Evidence interface{}
+
 	// The data that was fossilized.
 	Data []byte
+
 	// The meta data that was given to Adapter.Fossilize.
 	Meta []byte
 }

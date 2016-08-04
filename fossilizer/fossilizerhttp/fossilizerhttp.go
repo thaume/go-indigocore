@@ -1,7 +1,9 @@
 // Package fossilizerhttp is used to create an HTTP server from a fossilizer adapter.
+//
 // It servers the following routes:
 //	GET /
 //		Renders information about the fossilizer.
+//
 //	POST /fossils
 //		Requests data to be fossilized.
 //		Form.data should be a hex encoded buffer.
@@ -24,13 +26,16 @@ import (
 const (
 	// DefaultPort is the default port of the server.
 	DefaultPort = ":6000"
-	// DefaultNumResultWorkers is the default number of goroutines that will be used
-	// to handle fossilizer results.
+
+	// DefaultNumResultWorkers is the default number of goroutines that will be used to handle fossilizer results.
 	DefaultNumResultWorkers = 8
+
 	// DefaultMinDataLen is the default minimum fossilize data length.
 	DefaultMinDataLen = 32
+
 	// DefaultMaxDataLen is the default maximum fossilize data length.
 	DefaultMaxDataLen = 64
+
 	// DefaultVerbose is whether verbose output should be enabled by default.
 	DefaultVerbose = false
 )
@@ -38,10 +43,13 @@ const (
 // Config contains configuration options for the server.
 type Config struct {
 	jsonhttp.Config
+
 	// The default number of goroutines that will be used to handle fossilizer results.
 	NumResultWorkers int
+
 	// The minimum fossilize data length.
 	MinDataLen int
+
 	// The maximum fossilize data length.
 	MaxDataLen int
 }
@@ -62,7 +70,7 @@ func (h handler) serve(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	return h.handle(w, r, p, h.context)
 }
 
-// New create a new instance of a server.
+// New create an instance of a server.
 func New(a fossilizer.Adapter, c *Config) *jsonhttp.Server {
 	if c.NumResultWorkers < 1 {
 		c.NumResultWorkers = DefaultNumResultWorkers
