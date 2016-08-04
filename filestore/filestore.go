@@ -23,7 +23,7 @@ const (
 	Name = "file"
 
 	// Description is the description set in the store's information.
-	Description = "Stratumn File Adapter"
+	Description = "Stratumn File Store"
 
 	// DefaultPath is the path where segments will be saved by default.
 	DefaultPath = "/var/filestore"

@@ -16,7 +16,7 @@ const (
 	Name = "dummy"
 
 	// Description is the description set in the store's information.
-	Description = "Stratumn Dummy Adapter"
+	Description = "Stratumn Dummy Store"
 )
 
 // DummyStore is the type that implements github.com/stratumn/go/store.Adapter.
