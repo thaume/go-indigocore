@@ -3,6 +3,7 @@
 This repo contains open source Go packages and tools for Stratumn.
 
 [![build status](https://travis-ci.org/stratumn/go.svg)](https://travis-ci.org/stratumn/go.svg)
+[![codecov](https://codecov.io/gh/stratumn/go/branch/master/graph/badge.svg)](https://codecov.io/gh/stratumn/go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/stratumn/go)](https://goreportcard.com/report/github.com/stratumn/go)
 
 Copyright 2016 Stratumn SAS
