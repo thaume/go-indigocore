@@ -41,7 +41,7 @@ func (e *ErrHTTP) JSONEncode() []byte {
 	js, err := json.Marshal(e)
 
 	if err != nil {
-		msg := `{"error:": "an internal server error occured", "status": 500}`
+		msg := `{"error:": "internal server error", "status": 500}`
 		return []byte(msg)
 	}
 
