@@ -2,7 +2,7 @@
 // Use of this source code is governed by an Apache License 2.0
 // that can be found in the LICENSE file.
 
-// filestore starts HTTP server with a filestore.
+// filestore starts an HTTP server with a filestore.
 //
 // Usage
 //
