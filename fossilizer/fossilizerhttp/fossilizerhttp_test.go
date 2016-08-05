@@ -33,7 +33,7 @@ func TestRootOK(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		t.Fatal("unexpected status code")
 	}
 	if dict["adapter"].(string) != "test" {
@@ -56,10 +56,10 @@ func TestRootErr(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockGetInfo.CalledCount != 1 {
@@ -101,7 +101,7 @@ func TestFossilizeOK(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if res.StatusCode != 200 {
+		if res.StatusCode != http.StatusOK {
 			t.Fatal("unexpected status code")
 		}
 
@@ -124,7 +124,7 @@ func TestFossilizeNoData(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res.StatusCode != 400 {
+	if res.StatusCode != http.StatusBadRequest {
 		t.Fatal("unexpected status code")
 	}
 }
@@ -141,7 +141,7 @@ func TestFossilizeNoCallback(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res.StatusCode != 400 {
+	if res.StatusCode != http.StatusBadRequest {
 		t.Fatal("unexpected status code")
 	}
 }
@@ -157,7 +157,7 @@ func TestFossilizeNoBody(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res.StatusCode != 400 {
+	if res.StatusCode != http.StatusBadRequest {
 		t.Fatal("unexpected status code")
 	}
 }
@@ -172,10 +172,10 @@ func TestNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrNotFound.Status {
+	if res.StatusCode != jsonhttp.ErrNotFound.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrNotFound.Msg {
+	if dict["error"].(string) != jsonhttp.ErrNotFound.Error() {
 		t.Fatal("unexpected error message")
 	}
 }

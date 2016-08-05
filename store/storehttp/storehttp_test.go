@@ -32,7 +32,7 @@ func TestRootOK(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		t.Fatal("unexpected status code")
 	}
 	if dict["adapter"].(string) != "test" {
@@ -55,10 +55,10 @@ func TestRootErr(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockGetInfo.CalledCount != 1 {
@@ -82,7 +82,7 @@ func TestSaveSegmentOK(t *testing.T) {
 	if !reflect.DeepEqual(a.MockSaveSegment.LastCalledWith, s1) {
 		t.Fatal("unexpected argument passed to SaveSegment()")
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		t.Fatal("unexpected status code")
 	}
 	if !reflect.DeepEqual(s1, &s2) {
@@ -105,10 +105,10 @@ func TestSaveSegmentErr(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockSaveSegment.CalledCount != 1 {
@@ -129,7 +129,7 @@ func TestSaveSegmentInvalidSegment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrBadRequest.Status {
+	if res.StatusCode != jsonhttp.ErrBadRequest.Status() {
 		t.Fatal("unexpected status code")
 	}
 	if dict["error"].(string) != "meta.linkHash should be a non empty string" {
@@ -150,12 +150,12 @@ func TestSaveSegmentInvalidJSON(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrBadRequest.Status {
+	if res.StatusCode != jsonhttp.ErrBadRequest.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrBadRequest.Msg {
+	if dict["error"].(string) != jsonhttp.ErrBadRequest.Error() {
 		t.Log(dict["error"].(string))
-		t.Log(jsonhttp.ErrBadRequest.Msg)
+		t.Log(jsonhttp.ErrBadRequest.Error())
 		t.Fatal("unexpected error message")
 	}
 	if a.MockSaveSegment.CalledCount != 0 {
@@ -179,7 +179,7 @@ func TestGetSegmentFound(t *testing.T) {
 	if !reflect.DeepEqual(a.MockGetSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to GetSegment()")
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		t.Fatal("unexpected status code")
 	}
 	if !reflect.DeepEqual(s1, &s2) {
@@ -203,10 +203,10 @@ func TestGetSegmentNotFound(t *testing.T) {
 	if !reflect.DeepEqual(a.MockGetSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to GetSegment()")
 	}
-	if res.StatusCode != jsonhttp.ErrNotFound.Status {
+	if res.StatusCode != jsonhttp.ErrNotFound.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrNotFound.Msg {
+	if dict["error"].(string) != jsonhttp.ErrNotFound.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockGetSegment.CalledCount != 1 {
@@ -229,10 +229,10 @@ func TestGetSegmentErr(t *testing.T) {
 	if !reflect.DeepEqual(a.MockGetSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to GetSegment()")
 	}
-	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockGetSegment.CalledCount != 1 {
@@ -256,7 +256,7 @@ func TestDeleteSegmentFound(t *testing.T) {
 	if !reflect.DeepEqual(a.MockDeleteSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to DeleteSegment()")
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		t.Fatal("unexpected status code")
 	}
 	if !reflect.DeepEqual(s1, &s2) {
@@ -280,10 +280,10 @@ func TestDeleteSegmentNotFound(t *testing.T) {
 	if !reflect.DeepEqual(a.MockDeleteSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to DeleteSegment()")
 	}
-	if res.StatusCode != jsonhttp.ErrNotFound.Status {
+	if res.StatusCode != jsonhttp.ErrNotFound.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrNotFound.Msg {
+	if dict["error"].(string) != jsonhttp.ErrNotFound.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockDeleteSegment.CalledCount != 1 {
@@ -306,10 +306,10 @@ func TestDeleteSegmentErr(t *testing.T) {
 	if !reflect.DeepEqual(a.MockDeleteSegment.LastCalledWith, "abcde") {
 		t.Fatal("unexpected argument passed to DeleteSegment()")
 	}
-	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockDeleteSegment.CalledCount != 1 {
@@ -333,7 +333,7 @@ func TestFindSegmentsOK(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		t.Fatal("unexpected status code")
 	}
 	if !reflect.DeepEqual(s1, s2) {
@@ -373,10 +373,10 @@ func TestFindSegmentsErr(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockFindSegments.CalledCount != 1 {
@@ -394,10 +394,10 @@ func TestFindSegmentsValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrOffset.Status {
+	if res.StatusCode != ErrOffset.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrOffset.Msg {
+	if dict["error"].(string) != ErrOffset.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockFindSegments.CalledCount != 0 {
@@ -418,7 +418,7 @@ func TestGetMapIDsOK(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		t.Fatal("unexpected status code")
 	}
 	if len(slice1) != len(slice2) {
@@ -454,10 +454,10 @@ func TestGetMapIDsErr(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrInternalServer.Status {
+	if res.StatusCode != jsonhttp.ErrInternalServer.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrInternalServer.Msg {
+	if dict["error"].(string) != jsonhttp.ErrInternalServer.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockGetMapIDs.CalledCount != 1 {
@@ -475,10 +475,10 @@ func TestGetMapIDsValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != ErrLimit.Status {
+	if res.StatusCode != ErrLimit.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != ErrLimit.Msg {
+	if dict["error"].(string) != ErrLimit.Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockGetMapIDs.CalledCount != 0 {
@@ -496,10 +496,10 @@ func TestRootNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrNotFound.Status {
+	if res.StatusCode != jsonhttp.ErrNotFound.Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrNotFound.Msg {
+	if dict["error"].(string) != jsonhttp.ErrNotFound.Error() {
 		t.Fatal("unexpected error message")
 	}
 }
