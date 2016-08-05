@@ -2,7 +2,6 @@
 // Use of this source code is governed by an Apache License 2.0
 // that can be found in the LICENSE file.
 
-// A store HTTP server with a dummy adapter.
 package main
 
 import (
