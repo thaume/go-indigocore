@@ -10,6 +10,7 @@ import (
 	"log"
 )
 
+// This example shows how to use a mock adapter.
 func ExampleMockAdapter() {
 	// Create a mock.
 	m := fossilizertesting.MockAdapter{}

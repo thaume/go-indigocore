@@ -16,6 +16,8 @@ import (
 	"github.com/stratumn/go/store/storehttp"
 )
 
+// This example shows how to create a server from a dummystore.
+// It also tests the root route of the server using net/http/httptest.
 func Example() {
 	// Create a dummy adapter.
 	a := dummystore.New("0.1.0")

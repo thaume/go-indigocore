@@ -16,6 +16,8 @@ import (
 	"github.com/stratumn/go/jsonhttp"
 )
 
+// This example shows how to create a server from a dummyfossilizer.
+// It also tests the root route of the server using net/http/httptest.
 func Example() {
 	// Create a dummy adapter.
 	a := dummyfossilizer.New("0.1.0")

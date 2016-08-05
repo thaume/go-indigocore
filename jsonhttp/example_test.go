@@ -16,6 +16,8 @@ import (
 	"github.com/stratumn/go/jsonhttp"
 )
 
+// This example shows how to create a server and add a route with a named param.
+// It also tests the route using net/http/httptest.
 func ExampleServer() {
 	// Create the server.
 	s := jsonhttp.New(&jsonhttp.Config{Port: ":3333"})
