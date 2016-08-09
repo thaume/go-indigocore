@@ -38,6 +38,36 @@ func TestMockAdapter_GetInfo(t *testing.T) {
 	}
 }
 
+func TestMockAdapter_SaveSegment(t *testing.T) {
+	a := &MockAdapter{}
+	s := cstesting.RandomSegment()
+
+	err := a.SaveSegment(s)
+
+	if err != nil {
+		t.Fatal("unexpected error")
+	}
+
+	a.MockSaveSegment.Fn = func(s *cs.Segment) error { return nil }
+	err = a.SaveSegment(s)
+
+	if err != nil {
+		t.Fatal("unexpected error")
+	}
+
+	if a.MockSaveSegment.CalledCount != 2 {
+		t.Fatal("unexpected MockSaveSegment.CalledCount value")
+	}
+
+	if !reflect.DeepEqual(a.MockSaveSegment.CalledWith, []*cs.Segment{s, s}) {
+		t.Fatal("unexpected MockSaveSegment.LastCalledWith value")
+	}
+
+	if a.MockSaveSegment.LastCalledWith != s {
+		t.Fatal("unexpected MockSaveSegment.LastCalledWith value")
+	}
+}
+
 func TestMockAdapter_GetSegment(t *testing.T) {
 	a := &MockAdapter{}
 
