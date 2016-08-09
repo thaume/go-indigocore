@@ -96,7 +96,7 @@ func saveSegment(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c 
 	var s cs.Segment
 
 	if err := decoder.Decode(&s); err != nil {
-		return nil, jsonhttp.ErrBadRequest
+		return nil, jsonhttp.NewErrBadRequest("")
 	}
 
 	if err := csvalidation.Validate(&s); err != nil {
@@ -118,7 +118,7 @@ func getSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *
 	}
 
 	if s == nil {
-		return nil, jsonhttp.ErrNotFound
+		return nil, jsonhttp.NewErrNotFound("")
 	}
 
 	return s, nil
@@ -132,7 +132,7 @@ func deleteSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 	}
 
 	if s == nil {
-		return nil, jsonhttp.ErrNotFound
+		return nil, jsonhttp.NewErrNotFound("")
 	}
 
 	return s, nil
@@ -208,7 +208,7 @@ func parsePagination(r *http.Request) (*store.Pagination, error) {
 
 	if offsetstr != "" {
 		if offset, err = strconv.Atoi(offsetstr); err != nil || offset < 0 {
-			return nil, ErrOffset
+			return nil, NewErrOffset("")
 		}
 	}
 
@@ -217,7 +217,7 @@ func parsePagination(r *http.Request) (*store.Pagination, error) {
 
 	if limitstr != "" {
 		if limit, err = strconv.Atoi(limitstr); err != nil || limit < 0 {
-			return nil, ErrLimit
+			return nil, NewErrLimit("")
 		}
 	}
 

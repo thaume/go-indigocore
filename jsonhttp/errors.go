@@ -10,32 +10,58 @@ import (
 	"net/http"
 )
 
-var (
-	// ErrInternalServer is an error for when an internal server occurs.
-	ErrInternalServer = NewErrHTTP("internal server error", http.StatusInternalServerError)
-
-	// ErrBadRequest is an error for when a bad request occurs.
-	ErrBadRequest = NewErrHTTP("bad request", http.StatusBadRequest)
-
-	// ErrUnauthorized is an error for when an unauthorized request occurs.
-	ErrUnauthorized = NewErrHTTP("unauthorized", http.StatusUnauthorized)
-
-	// ErrNotFound is an error for when something isn't found.
-	ErrNotFound = NewErrHTTP("not found", http.StatusNotFound)
-)
-
-// ErrHTTP is an error with an HTTP status.
+// ErrHTTP is an error with an HTTP status code.
 type ErrHTTP struct {
 	msg    string
 	status int
 }
 
-// NewErrHTTP creates a new error with a message and HTTP status.
+// NewErrHTTP creates a, error with a message and HTTP status code.
 func NewErrHTTP(msg string, status int) ErrHTTP {
 	return ErrHTTP{msg, status}
 }
 
-// Status returns the HTTP status of the error.
+// NewErrInternalServer creates an error with an internal server error HTTP status code.
+// If the message is empty, the default is "internal server error".
+func NewErrInternalServer(msg string) ErrHTTP {
+	if msg == "" {
+		msg = "internal server error"
+	}
+
+	return NewErrHTTP(msg, http.StatusInternalServerError)
+}
+
+// NewErrBadRequest creates an error with a bad request HTTP status code.
+// If the message is empty, the default is "bad request".
+func NewErrBadRequest(msg string) ErrHTTP {
+	if msg == "" {
+		msg = "bad request"
+	}
+
+	return NewErrHTTP(msg, http.StatusBadRequest)
+}
+
+// NewErrUnauthorized creates an error with an unauthorized HTTP status code.
+// If the message is empty, the default is "unauthorized".
+func NewErrUnauthorized(msg string) ErrHTTP {
+	if msg == "" {
+		msg = "unauthorized"
+	}
+
+	return NewErrHTTP(msg, http.StatusUnauthorized)
+}
+
+// NewErrNotFound creates an error with a not found HTTP status code.
+// If the message is empty, the default is "not found".
+func NewErrNotFound(msg string) ErrHTTP {
+	if msg == "" {
+		msg = "not found"
+	}
+
+	return NewErrHTTP(msg, http.StatusNotFound)
+}
+
+// Status returns the HTTP status code of the error.
 func (e ErrHTTP) Status() int {
 	return e.status
 }
@@ -47,8 +73,8 @@ func (e ErrHTTP) Error() string {
 
 var internalServerJSON = fmt.Sprintf(`{"error:":"internal server error","status":%d}`, http.StatusInternalServerError)
 
-// JSONEncode marshals an error to JSON.
-func (e ErrHTTP) JSONEncode() []byte {
+// JSONMarshal marshals an error to JSON.
+func (e ErrHTTP) JSONMarshal() []byte {
 	js, err := json.Marshal(map[string]interface{}{
 		"error":  e.msg,
 		"status": e.status,

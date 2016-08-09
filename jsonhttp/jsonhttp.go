@@ -120,7 +120,7 @@ func (s *Server) ListenAndServe() error {
 }
 
 func notFound(w http.ResponseWriter, r *http.Request, _ httprouter.Params, _ *Config) (interface{}, error) {
-	return nil, ErrNotFound
+	return nil, NewErrNotFound("")
 }
 
 type handler struct {
@@ -154,12 +154,12 @@ func renderErr(w http.ResponseWriter, err error, c *Config) {
 
 	if !ok {
 		log.Println(err.Error())
-		e = ErrInternalServer
+		e = NewErrInternalServer("")
 	} else if c.Verbose {
 		log.Println(err.Error())
 	}
 
-	js := e.JSONEncode()
+	js := e.JSONMarshal()
 
 	w.Header().Set("Content-Type", "application/json")
 	http.Error(w, string(js), e.Status())

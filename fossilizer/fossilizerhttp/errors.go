@@ -5,18 +5,35 @@
 package fossilizerhttp
 
 import (
-	"net/http"
-
 	"github.com/stratumn/go/jsonhttp"
 )
 
-var (
-	// ErrData is an error for when no data is given to fossilize.
-	ErrData = jsonhttp.NewErrHTTP("data required", http.StatusBadRequest)
+// NewErrData creates an error for when no data is given to fossilize.
+// If the message is empty, the default is "data required".
+func NewErrData(msg string) jsonhttp.ErrHTTP {
+	if msg == "" {
+		msg = "data required"
+	}
 
-	// ErrDataLen is an error for the data given to fossilize is either too short or too long.
-	ErrDataLen = jsonhttp.NewErrHTTP("invalid data length", http.StatusBadRequest)
+	return jsonhttp.NewErrBadRequest(msg)
+}
 
-	// ErrCallbackURL is an error for when no callback URL is given to fossilize.
-	ErrCallbackURL = jsonhttp.NewErrHTTP("callback URL required", http.StatusBadRequest)
-)
+// NewErrDataLen creates an error for when the data given to fossilize is either too short or too long.
+// If the message is empty, the default is "invalid data length".
+func NewErrDataLen(msg string) jsonhttp.ErrHTTP {
+	if msg == "" {
+		msg = "invalid data length"
+	}
+
+	return jsonhttp.NewErrBadRequest(msg)
+}
+
+// NewErrCallbackURL creates an error for when no callback URL is given.
+// If the message is empty, the default is "callback URL required".
+func NewErrCallbackURL(msg string) jsonhttp.ErrHTTP {
+	if msg == "" {
+		msg = "callback URL required"
+	}
+
+	return jsonhttp.NewErrBadRequest(msg)
+}

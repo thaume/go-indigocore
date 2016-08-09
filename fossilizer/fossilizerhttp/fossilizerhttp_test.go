@@ -56,10 +56,10 @@ func TestRootErr(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrInternalServer.Status() {
+	if res.StatusCode != jsonhttp.NewErrInternalServer("").Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrInternalServer.Error() {
+	if dict["error"].(string) != jsonhttp.NewErrInternalServer("").Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockGetInfo.CalledCount != 1 {
@@ -172,10 +172,10 @@ func TestNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.ErrNotFound.Status() {
+	if res.StatusCode != jsonhttp.NewErrNotFound("").Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != jsonhttp.ErrNotFound.Error() {
+	if dict["error"].(string) != jsonhttp.NewErrNotFound("").Error() {
 		t.Fatal("unexpected error message")
 	}
 }

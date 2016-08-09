@@ -148,15 +148,15 @@ func parseFossilizeValues(r *http.Request, c *context) ([]byte, string, error) {
 
 	datastr := r.Form.Get("data")
 	if datastr == "" {
-		return nil, "", ErrData
+		return nil, "", NewErrData("")
 	}
 
 	l := len(datastr)
 	if l < c.config.MinDataLen {
-		return nil, "", ErrDataLen
+		return nil, "", NewErrDataLen("")
 	}
 	if c.config.MaxDataLen > 0 && l > c.config.MaxDataLen {
-		return nil, "", ErrDataLen
+		return nil, "", NewErrDataLen("")
 	}
 
 	data, err := hex.DecodeString(datastr)
@@ -166,7 +166,7 @@ func parseFossilizeValues(r *http.Request, c *context) ([]byte, string, error) {
 
 	url := r.Form.Get("callbackUrl")
 	if url == "" {
-		return nil, "", ErrCallbackURL
+		return nil, "", NewErrCallbackURL("")
 	}
 
 	return data, url, nil

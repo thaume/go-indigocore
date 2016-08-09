@@ -5,15 +5,25 @@
 package storehttp
 
 import (
-	"net/http"
-
 	"github.com/stratumn/go/jsonhttp"
 )
 
-var (
-	// ErrOffset is an error for when an invalid pagination offset is given.
-	ErrOffset = jsonhttp.NewErrHTTP("offset must be a positive integer", http.StatusBadRequest)
+// NewErrOffset creates an error for when an invalid pagination offset is given.
+// If the message is empty, the default is "offset must be a positive integer".
+func NewErrOffset(msg string) jsonhttp.ErrHTTP {
+	if msg == "" {
+		msg = "offset must be a positive integer"
+	}
 
-	// ErrLimit is an error for when an invalid pagination limit is given.
-	ErrLimit = jsonhttp.NewErrHTTP("limit must be a posive integer", http.StatusBadRequest)
-)
+	return jsonhttp.NewErrBadRequest(msg)
+}
+
+// NewErrLimit creates an error for when an invalid pagination offset is given.
+// If the message is empty, the default is "limit must be a posive integer".
+func NewErrLimit(msg string) jsonhttp.ErrHTTP {
+	if msg == "" {
+		msg = "limit must be a posive integer"
+	}
+
+	return jsonhttp.NewErrBadRequest(msg)
+}
