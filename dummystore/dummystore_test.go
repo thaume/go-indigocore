@@ -7,137 +7,137 @@ package dummystore
 import (
 	"testing"
 
-	"github.com/stratumn/go/store/storetesting"
+	"github.com/stratumn/go/store/storetestcases"
 )
 
 func TestGetInfo(t *testing.T) {
-	storetesting.TestGetInfo(t, New(""))
+	storetestcases.TestGetInfo(t, New(""))
 }
 
 func TestSaveSegmentNew(t *testing.T) {
-	storetesting.TestSaveSegmentNew(t, New(""))
+	storetestcases.TestSaveSegmentNew(t, New(""))
 }
 
 func TestSaveSegmentUpdateState(t *testing.T) {
-	storetesting.TestSaveSegmentUpdateState(t, New(""))
+	storetestcases.TestSaveSegmentUpdateState(t, New(""))
 }
 
 func TestSaveSegmentUpdateMapID(t *testing.T) {
-	storetesting.TestSaveSegmentUpdateMapID(t, New(""))
+	storetestcases.TestSaveSegmentUpdateMapID(t, New(""))
 }
 
 func TestSaveSegmentBranch(t *testing.T) {
-	storetesting.TestSaveSegmentBranch(t, New(""))
+	storetestcases.TestSaveSegmentBranch(t, New(""))
 }
 
 func TestGetSegmentFound(t *testing.T) {
-	storetesting.TestGetSegmentFound(t, New(""))
+	storetestcases.TestGetSegmentFound(t, New(""))
 }
 
 func TestGetSegmentUpdatedState(t *testing.T) {
-	storetesting.TestGetSegmentUpdatedState(t, New(""))
+	storetestcases.TestGetSegmentUpdatedState(t, New(""))
 }
 
 func TestGetSegmentUpdatedMapID(t *testing.T) {
-	storetesting.TestGetSegmentUpdatedMapID(t, New(""))
+	storetestcases.TestGetSegmentUpdatedMapID(t, New(""))
 }
 
 func TestGetSegmentNotFound(t *testing.T) {
-	storetesting.TestGetSegmentNotFound(t, New(""))
+	storetestcases.TestGetSegmentNotFound(t, New(""))
 }
 
 func TestDeleteSegmentFound(t *testing.T) {
-	storetesting.TestDeleteSegmentFound(t, New(""))
+	storetestcases.TestDeleteSegmentFound(t, New(""))
 }
 
 func TestDeleteSegmentNotFound(t *testing.T) {
-	storetesting.TestDeleteSegmentNotFound(t, New(""))
+	storetestcases.TestDeleteSegmentNotFound(t, New(""))
 }
 
 func TestFindSegmentsAll(t *testing.T) {
-	storetesting.TestFindSegmentsAll(t, New(""))
+	storetestcases.TestFindSegmentsAll(t, New(""))
 }
 
 func TestFindSegmentsPagination(t *testing.T) {
-	storetesting.TestFindSegmentsPagination(t, New(""))
+	storetestcases.TestFindSegmentsPagination(t, New(""))
 }
 
 func TestFindSegmentsEmpty(t *testing.T) {
-	storetesting.TestFindSegmentsEmpty(t, New(""))
+	storetestcases.TestFindSegmentsEmpty(t, New(""))
 }
 
 func TestFindSegmentsSingleTag(t *testing.T) {
-	storetesting.TestFindSegmentsSingleTag(t, New(""))
+	storetestcases.TestFindSegmentsSingleTag(t, New(""))
 }
 
 func TestFindSegmentsMultipleTags(t *testing.T) {
-	storetesting.TestFindSegmentsMultipleTags(t, New(""))
+	storetestcases.TestFindSegmentsMultipleTags(t, New(""))
 }
 
 func TestFindSegmentsMapIDFound(t *testing.T) {
-	storetesting.TestFindSegmentsMapIDFound(t, New(""))
+	storetestcases.TestFindSegmentsMapIDFound(t, New(""))
 }
 
 func TestFindSegmentsMapIDNotFound(t *testing.T) {
-	storetesting.TestFindSegmentsMapIDNotFound(t, New(""))
+	storetestcases.TestFindSegmentsMapIDNotFound(t, New(""))
 }
 
 func TestFindSegmentsPrevLinkHashFound(t *testing.T) {
-	storetesting.TestFindSegmentsPrevLinkHashFound(t, New(""))
+	storetestcases.TestFindSegmentsPrevLinkHashFound(t, New(""))
 }
 
 func TestFindSegmentsPrevLinkHashNotFound(t *testing.T) {
-	storetesting.TestFindSegmentsPrevLinkHashNotFound(t, New(""))
+	storetestcases.TestFindSegmentsPrevLinkHashNotFound(t, New(""))
 }
 
 func TestGetMapIDsAll(t *testing.T) {
-	storetesting.TestGetMapIDsAll(t, New(""))
+	storetestcases.TestGetMapIDsAll(t, New(""))
 }
 
 func TestGetMapIDsPagination(t *testing.T) {
-	storetesting.TestGetMapIDsPagination(t, New(""))
+	storetestcases.TestGetMapIDsPagination(t, New(""))
 }
 
 func TestGetMapIDsEmpty(t *testing.T) {
-	storetesting.TestGetMapIDsEmpty(t, New(""))
+	storetestcases.TestGetMapIDsEmpty(t, New(""))
 }
 
 func BenchmarkSaveSegmentNew(b *testing.B) {
-	storetesting.BenchmarkSaveSegmentNew(b, New(""))
+	storetestcases.BenchmarkSaveSegmentNew(b, New(""))
 }
 
 func BenchmarkSaveSegmentNewParallel(b *testing.B) {
-	storetesting.BenchmarkSaveSegmentNewParallel(b, New(""))
+	storetestcases.BenchmarkSaveSegmentNewParallel(b, New(""))
 }
 
 func BenchmarkSaveSegmentUpdateState(b *testing.B) {
-	storetesting.BenchmarkSaveSegmentUpdateState(b, New(""))
+	storetestcases.BenchmarkSaveSegmentUpdateState(b, New(""))
 }
 
 func BenchmarkSaveSegmentUpdateStateParallel(b *testing.B) {
-	storetesting.BenchmarkSaveSegmentUpdateStateParallel(b, New(""))
+	storetestcases.BenchmarkSaveSegmentUpdateStateParallel(b, New(""))
 }
 
 func BenchmarkSaveSegmentUpdateMapID(b *testing.B) {
-	storetesting.BenchmarkSaveSegmentUpdateMapID(b, New(""))
+	storetestcases.BenchmarkSaveSegmentUpdateMapID(b, New(""))
 }
 
 func BenchmarkSaveSegmentUpdateMapIDParallel(b *testing.B) {
-	storetesting.BenchmarkSaveSegmentUpdateMapIDParallel(b, New(""))
+	storetestcases.BenchmarkSaveSegmentUpdateMapIDParallel(b, New(""))
 }
 
 func BenchmarkGetSegmentFound(b *testing.B) {
-	storetesting.BenchmarkGetSegmentFound(b, New(""))
+	storetestcases.BenchmarkGetSegmentFound(b, New(""))
 }
 
 func BenchmarkGetSegmentFoundParallel(b *testing.B) {
-	storetesting.BenchmarkGetSegmentFoundParallel(b, New(""))
+	storetestcases.BenchmarkGetSegmentFoundParallel(b, New(""))
 }
 
 func BenchmarkDeleteSegmentFound(b *testing.B) {
-	storetesting.BenchmarkDeleteSegmentFound(b, New(""))
+	storetestcases.BenchmarkDeleteSegmentFound(b, New(""))
 }
 
 func BenchmarkDeleteSegmentFoundParallel(b *testing.B) {
-	storetesting.BenchmarkDeleteSegmentFoundParallel(b, New(""))
+	storetestcases.BenchmarkDeleteSegmentFoundParallel(b, New(""))
 }
