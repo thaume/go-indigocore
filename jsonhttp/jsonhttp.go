@@ -47,7 +47,7 @@ type Server struct {
 // JSONHandle is the function type for a route handle.
 type JSONHandle func(http.ResponseWriter, *http.Request, httprouter.Params, *Config) (interface{}, error)
 
-// NotFoundHandler is a handlers for undefined routes.
+// NotFoundHandler is a handler for undefined routes.
 type NotFoundHandler struct {
 	handler
 }
