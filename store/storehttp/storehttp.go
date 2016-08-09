@@ -208,7 +208,7 @@ func parsePagination(r *http.Request) (*store.Pagination, error) {
 
 	if offsetstr != "" {
 		if offset, err = strconv.Atoi(offsetstr); err != nil || offset < 0 {
-			return nil, NewErrOffset("")
+			return nil, newErrOffset("")
 		}
 	}
 
@@ -217,7 +217,7 @@ func parsePagination(r *http.Request) (*store.Pagination, error) {
 
 	if limitstr != "" {
 		if limit, err = strconv.Atoi(limitstr); err != nil || limit < 0 {
-			return nil, NewErrLimit("")
+			return nil, newErrLimit("")
 		}
 	}
 

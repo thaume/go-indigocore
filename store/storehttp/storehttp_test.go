@@ -394,10 +394,10 @@ func TestFindSegmentsValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != NewErrOffset("").Status() {
+	if res.StatusCode != newErrOffset("").Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != NewErrOffset("").Error() {
+	if dict["error"].(string) != newErrOffset("").Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockFindSegments.CalledCount != 0 {
@@ -475,10 +475,10 @@ func TestGetMapIDsValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != NewErrLimit("").Status() {
+	if res.StatusCode != newErrLimit("").Status() {
 		t.Fatal("unexpected status code")
 	}
-	if dict["error"].(string) != NewErrLimit("").Error() {
+	if dict["error"].(string) != newErrLimit("").Error() {
 		t.Fatal("unexpected error message")
 	}
 	if a.MockGetMapIDs.CalledCount != 0 {

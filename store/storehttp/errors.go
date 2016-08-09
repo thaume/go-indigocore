@@ -8,9 +8,7 @@ import (
 	"github.com/stratumn/go/jsonhttp"
 )
 
-// NewErrOffset creates an error for when an invalid pagination offset is given.
-// If the message is empty, the default is "offset must be a positive integer".
-func NewErrOffset(msg string) jsonhttp.ErrHTTP {
+func newErrOffset(msg string) jsonhttp.ErrHTTP {
 	if msg == "" {
 		msg = "offset must be a positive integer"
 	}
@@ -18,9 +16,7 @@ func NewErrOffset(msg string) jsonhttp.ErrHTTP {
 	return jsonhttp.NewErrBadRequest(msg)
 }
 
-// NewErrLimit creates an error for when an invalid pagination offset is given.
-// If the message is empty, the default is "limit must be a posive integer".
-func NewErrLimit(msg string) jsonhttp.ErrHTTP {
+func newErrLimit(msg string) jsonhttp.ErrHTTP {
 	if msg == "" {
 		msg = "limit must be a posive integer"
 	}

@@ -79,12 +79,12 @@ func (s *Server) Post(path string, handle JSONHandle) {
 	s.router.POST(path, handler{s.config, handle}.ServeHTTP)
 }
 
-// Put adds PUT route.
+// Put adds a PUT route.
 func (s *Server) Put(path string, handle JSONHandle) {
 	s.router.PUT(path, handler{s.config, handle}.ServeHTTP)
 }
 
-// Delete adds DELETE route.
+// Delete adds a DELETE route.
 func (s *Server) Delete(path string, handle JSONHandle) {
 	s.router.DELETE(path, handler{s.config, handle}.ServeHTTP)
 }
