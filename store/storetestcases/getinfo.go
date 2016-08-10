@@ -14,11 +14,11 @@ import (
 func TestGetInfo(t *testing.T, a store.Adapter) {
 	info, err := a.GetInfo()
 
-	if info == nil {
-		t.Fatal("info is nil")
-	}
-
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if info == nil {
+		t.Fatal("info is nil")
 	}
 }

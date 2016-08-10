@@ -10,6 +10,19 @@ import (
 	"github.com/stratumn/go/fossilizer"
 )
 
+func TestGetInfo(t *testing.T) {
+	a := New("")
+	info, err := a.GetInfo()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if info == nil {
+		t.Fatal("info is nil")
+	}
+}
+
 func TestFossilize(t *testing.T) {
 	a := New("")
 	rc := make(chan *fossilizer.Result)

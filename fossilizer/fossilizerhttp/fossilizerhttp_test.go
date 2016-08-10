@@ -33,7 +33,7 @@ func TestRootOK(t *testing.T) {
 		t.Fatal(err)
 	}
 	if res.StatusCode != http.StatusOK {
-		t.Fatal("unexpected status code")
+		t.Fatal("unexpected HTTP status code")
 	}
 	if dict["adapter"].(string) != "test" {
 		t.Fatal("unexpected adapter dict")
@@ -56,7 +56,7 @@ func TestRootErr(t *testing.T) {
 		t.Fatal(err)
 	}
 	if res.StatusCode != jsonhttp.NewErrInternalServer("").Status() {
-		t.Fatal("unexpected status code")
+		t.Fatal("unexpected HTTP status code")
 	}
 	if dict["error"].(string) != jsonhttp.NewErrInternalServer("").Error() {
 		t.Fatal("unexpected error message")
@@ -101,7 +101,7 @@ func TestFossilizeOK(t *testing.T) {
 		}
 
 		if res.StatusCode != http.StatusOK {
-			t.Fatal("unexpected status code")
+			t.Fatal("unexpected HTTP status code")
 		}
 
 		time.Sleep(2 * time.Second)
@@ -123,8 +123,62 @@ func TestFossilizeNoData(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res.StatusCode != http.StatusBadRequest {
-		t.Fatal("unexpected status code")
+	if res.StatusCode != newErrData("").Status() {
+		t.Fatal("unexpected HTTP status code")
+	}
+}
+
+func TestFossilizeDataTooShort(t *testing.T) {
+	s, _ := createServer()
+	defer s.Close()
+
+	v := url.Values{}
+	v.Set("callbackUrl", "http://localhost:6666")
+	v.Set("data", "1")
+	res, err := http.PostForm(s.URL+"/fossils", v)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.StatusCode != newErrData("").Status() {
+		t.Fatal("unexpected HTTP status code")
+	}
+}
+
+func TestFossilizeDataTooLong(t *testing.T) {
+	s, _ := createServer()
+	defer s.Close()
+
+	v := url.Values{}
+	v.Set("callbackUrl", "http://localhost:6666")
+	v.Set("data", "12345678901234567890")
+	res, err := http.PostForm(s.URL+"/fossils", v)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.StatusCode != newErrData("").Status() {
+		t.Fatal("unexpected HTTP status code")
+	}
+}
+
+func TestFossilizeDataNotHex(t *testing.T) {
+	s, _ := createServer()
+	defer s.Close()
+
+	v := url.Values{}
+	v.Set("callbackUrl", "http://localhost:6666")
+	v.Set("data", "azertyuiop")
+	res, err := http.PostForm(s.URL+"/fossils", v)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.StatusCode != newErrData("").Status() {
+		t.Fatal("unexpected HTTP status code")
 	}
 }
 
@@ -141,7 +195,7 @@ func TestFossilizeNoCallback(t *testing.T) {
 	}
 
 	if res.StatusCode != http.StatusBadRequest {
-		t.Fatal("unexpected status code")
+		t.Fatal("unexpected HTTP status code")
 	}
 }
 
@@ -157,7 +211,7 @@ func TestFossilizeNoBody(t *testing.T) {
 	}
 
 	if res.StatusCode != http.StatusBadRequest {
-		t.Fatal("unexpected status code")
+		t.Fatal("unexpected HTTP status code")
 	}
 }
 
@@ -172,7 +226,7 @@ func TestNotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 	if res.StatusCode != jsonhttp.NewErrNotFound("").Status() {
-		t.Fatal("unexpected status code")
+		t.Fatal("unexpected HTTP status code")
 	}
 	if dict["error"].(string) != jsonhttp.NewErrNotFound("").Error() {
 		t.Fatal("unexpected error message")
@@ -181,7 +235,7 @@ func TestNotFound(t *testing.T) {
 
 func createServer() (*httptest.Server, *fossilizertesting.MockAdapter) {
 	a := &fossilizertesting.MockAdapter{}
-	s := httptest.NewServer(New(a, &Config{MinDataLen: 1}))
+	s := httptest.NewServer(New(a, &Config{MinDataLen: 2, MaxDataLen: 16}))
 
 	return s, a
 }
