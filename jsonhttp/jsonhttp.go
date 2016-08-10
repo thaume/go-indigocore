@@ -127,7 +127,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request, p httprouter.
 	js, err := json.Marshal(data)
 
 	if err != nil {
-		http.Error(w, "unexpected error", http.StatusInternalServerError)
+		renderErr(w, err, h.config)
 		return
 	}
 

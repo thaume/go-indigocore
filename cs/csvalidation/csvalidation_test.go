@@ -137,7 +137,7 @@ func TestValidateTagsWrongType(t *testing.T) {
 
 func TestValidateTagsWrongElementType(t *testing.T) {
 	s := cstesting.RandomSegment()
-	s.Link.Meta["tags"] = []int{1, 2, 3}
+	s.Link.Meta["tags"] = []interface{}{1, true, 3}
 
 	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
@@ -148,7 +148,7 @@ func TestValidateTagsWrongElementType(t *testing.T) {
 
 func TestValidateTagsEmpty(t *testing.T) {
 	s := cstesting.RandomSegment()
-	s.Link.Meta["tags"] = []string{""}
+	s.Link.Meta["tags"] = []interface{}{"test", ""}
 
 	if err := Validate(s); err == nil {
 		t.Fatal("expected error")
