@@ -89,11 +89,6 @@ func (s *Server) Patch(path string, handle Handle) {
 	s.router.PATCH(path, handler{s.config, handle}.ServeHTTP)
 }
 
-// Head adds a HEAD route.
-func (s *Server) Head(path string, handle Handle) {
-	s.router.HEAD(path, handler{s.config, handle}.ServeHTTP)
-}
-
 // Options adds an OPTIONS route.
 func (s *Server) Options(path string, handle Handle) {
 	s.router.OPTIONS(path, handler{s.config, handle}.ServeHTTP)
