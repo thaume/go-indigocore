@@ -5,6 +5,7 @@
 package jsonhttp
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -166,7 +167,7 @@ func TestNotFound(t *testing.T) {
 	}
 }
 
-func TestError(t *testing.T) {
+func TestErrHTTP(t *testing.T) {
 	s := New(&Config{})
 
 	s.Get("/test", func(r http.ResponseWriter, _ *http.Request, p httprouter.Params, _ *Config) (interface{}, error) {
@@ -191,6 +192,35 @@ func TestError(t *testing.T) {
 	}
 
 	if int(body["status"].(float64)) != NewErrBadRequest("").Status() {
+		t.Fatal("unexpected error HTTP status")
+	}
+}
+
+func TestError(t *testing.T) {
+	s := New(&Config{})
+
+	s.Get("/test", func(r http.ResponseWriter, _ *http.Request, p httprouter.Params, _ *Config) (interface{}, error) {
+		return nil, errors.New("no")
+	})
+
+	ts := httptest.NewServer(s)
+	defer ts.Close()
+
+	var body map[string]interface{}
+	res, err := testutils.GetJSON(ts.URL+"/test", &body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.StatusCode != NewErrInternalServer("").Status() {
+		t.Fatal("unexpected HTTP status")
+	}
+
+	if body["error"].(string) != NewErrInternalServer("").Error() {
+		t.Fatal("unexpected error")
+	}
+
+	if int(body["status"].(float64)) != NewErrInternalServer("").Status() {
 		t.Fatal("unexpected error HTTP status")
 	}
 }
