@@ -5,8 +5,6 @@
 package fossilizerhttp
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net"
@@ -19,6 +17,7 @@ import (
 	"github.com/stratumn/go/fossilizer"
 	"github.com/stratumn/go/fossilizer/fossilizertesting"
 	"github.com/stratumn/go/jsonhttp"
+	"github.com/stratumn/go/testutils"
 )
 
 func TestRootOK(t *testing.T) {
@@ -28,7 +27,7 @@ func TestRootOK(t *testing.T) {
 	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", nil }
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL, &dict)
+	res, err := testutils.GetJSON(s.URL, &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -51,7 +50,7 @@ func TestRootErr(t *testing.T) {
 	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", errors.New("error") }
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL, &dict)
+	res, err := testutils.GetJSON(s.URL, &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -76,7 +75,7 @@ func TestFossilizeOK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h := &ResultHandler{T: t, Listener: l, Expected: "\"it is known\""}
+	h := &resultHandler{T: t, Listener: l, Expected: "\"it is known\""}
 
 	go func() {
 		defer l.Close()
@@ -167,7 +166,7 @@ func TestNotFound(t *testing.T) {
 	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL+"/dsfsdf", &dict)
+	res, err := testutils.GetJSON(s.URL+"/dsfsdf", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -187,55 +186,13 @@ func createServer() (*httptest.Server, *fossilizertesting.MockAdapter) {
 	return s, a
 }
 
-func getJSON(url string, target interface{}) (*http.Response, error) {
-	return requestJSON(http.MethodGet, url, target, nil)
-}
-
-func postJSON(url string, target interface{}, payload interface{}) (*http.Response, error) {
-	return requestJSON(http.MethodPost, url, target, payload)
-}
-
-func requestJSON(method, url string, target, payload interface{}) (*http.Response, error) {
-	var req *http.Request
-	var err error
-	var body []byte
-
-	if payload != nil {
-		body, err = json.Marshal(payload)
-		if err != nil {
-			return nil, err
-		}
-
-		req, err = http.NewRequest(method, url, bytes.NewReader(body))
-	} else {
-		req, err = http.NewRequest(method, url, nil)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer res.Body.Close()
-
-	if err = json.NewDecoder(res.Body).Decode(&target); err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
-type ResultHandler struct {
+type resultHandler struct {
 	T        *testing.T
 	Listener net.Listener
 	Expected string
 }
 
-func (h *ResultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *resultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer h.Listener.Close()
 
 	w.Write([]byte("thanks"))

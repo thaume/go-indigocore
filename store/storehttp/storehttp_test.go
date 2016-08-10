@@ -5,8 +5,6 @@
 package storehttp
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -18,6 +16,7 @@ import (
 	"github.com/stratumn/go/jsonhttp"
 	"github.com/stratumn/go/store"
 	"github.com/stratumn/go/store/storetesting"
+	"github.com/stratumn/go/testutils"
 )
 
 func TestRootOK(t *testing.T) {
@@ -27,7 +26,7 @@ func TestRootOK(t *testing.T) {
 	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", nil }
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL, &dict)
+	res, err := testutils.GetJSON(s.URL, &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -50,7 +49,7 @@ func TestRootErr(t *testing.T) {
 	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", errors.New("error") }
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL, &dict)
+	res, err := testutils.GetJSON(s.URL, &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -74,7 +73,7 @@ func TestSaveSegmentOK(t *testing.T) {
 
 	s1 := cstesting.RandomSegment()
 	var s2 cs.Segment
-	res, err := postJSON(s.URL+"/segments", &s2, s1)
+	res, err := testutils.PostJSON(s.URL+"/segments", &s2, s1)
 
 	if err != nil {
 		t.Fatal(err)
@@ -100,7 +99,7 @@ func TestSaveSegmentErr(t *testing.T) {
 	a.MockSaveSegment.Fn = func(*cs.Segment) error { return errors.New("test") }
 
 	var dict map[string]interface{}
-	res, err := postJSON(s.URL+"/segments", &dict, cstesting.RandomSegment())
+	res, err := testutils.PostJSON(s.URL+"/segments", &dict, cstesting.RandomSegment())
 
 	if err != nil {
 		t.Fatal(err)
@@ -124,7 +123,7 @@ func TestSaveSegmentInvalidSegment(t *testing.T) {
 	s1.Meta["linkHash"] = true
 
 	var dict map[string]interface{}
-	res, err := postJSON(s.URL+"/segments", &dict, s1)
+	res, err := testutils.PostJSON(s.URL+"/segments", &dict, s1)
 
 	if err != nil {
 		t.Fatal(err)
@@ -145,7 +144,7 @@ func TestSaveSegmentInvalidJSON(t *testing.T) {
 	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := postJSON(s.URL+"/segments", &dict, "1234567890azertyui")
+	res, err := testutils.PostJSON(s.URL+"/segments", &dict, "1234567890azertyui")
 
 	if err != nil {
 		t.Fatal(err)
@@ -171,7 +170,7 @@ func TestGetSegmentFound(t *testing.T) {
 	a.MockGetSegment.Fn = func(string) (*cs.Segment, error) { return s1, nil }
 
 	var s2 cs.Segment
-	res, err := getJSON(s.URL+"/segments/abcde", &s2)
+	res, err := testutils.GetJSON(s.URL+"/segments/abcde", &s2)
 
 	if err != nil {
 		t.Fatal(err)
@@ -195,7 +194,7 @@ func TestGetSegmentNotFound(t *testing.T) {
 	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL+"/segments/abcde", &dict)
+	res, err := testutils.GetJSON(s.URL+"/segments/abcde", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -221,7 +220,7 @@ func TestGetSegmentErr(t *testing.T) {
 	a.MockGetSegment.Fn = func(string) (*cs.Segment, error) { return nil, errors.New("error") }
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL+"/segments/abcde", &dict)
+	res, err := testutils.GetJSON(s.URL+"/segments/abcde", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -248,7 +247,7 @@ func TestDeleteSegmentFound(t *testing.T) {
 	a.MockDeleteSegment.Fn = func(string) (*cs.Segment, error) { return s1, nil }
 
 	var s2 cs.Segment
-	res, err := deleteJSON(s.URL+"/segments/abcde", &s2)
+	res, err := testutils.DeleteJSON(s.URL+"/segments/abcde", &s2)
 
 	if err != nil {
 		t.Fatal(err)
@@ -272,7 +271,7 @@ func TestDeleteSegmentNotFound(t *testing.T) {
 	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := deleteJSON(s.URL+"/segments/abcde", &dict)
+	res, err := testutils.DeleteJSON(s.URL+"/segments/abcde", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -298,7 +297,7 @@ func TestDeleteSegmentErr(t *testing.T) {
 	a.MockDeleteSegment.Fn = func(string) (*cs.Segment, error) { return nil, errors.New("error") }
 
 	var dict map[string]interface{}
-	res, err := deleteJSON(s.URL+"/segments/abcde", &dict)
+	res, err := testutils.DeleteJSON(s.URL+"/segments/abcde", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -328,7 +327,7 @@ func TestFindSegmentsOK(t *testing.T) {
 	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return s1, nil }
 
 	var s2 cs.SegmentSlice
-	res, err := getJSON(s.URL+"/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one+two", &s2)
+	res, err := testutils.GetJSON(s.URL+"/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one+two", &s2)
 
 	if err != nil {
 		t.Fatal(err)
@@ -368,7 +367,7 @@ func TestFindSegmentsErr(t *testing.T) {
 	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return nil, errors.New("test") }
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL+"/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one,two", &dict)
+	res, err := testutils.GetJSON(s.URL+"/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one,two", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -389,7 +388,7 @@ func TestFindSegmentsValidation(t *testing.T) {
 	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL+"/segments?offset=hello", &dict)
+	res, err := testutils.GetJSON(s.URL+"/segments?offset=hello", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -413,7 +412,7 @@ func TestGetMapIDsOK(t *testing.T) {
 	a.MockGetMapIDs.Fn = func(*store.Pagination) ([]string, error) { return slice1, nil }
 
 	var slice2 []string
-	res, err := getJSON(s.URL+"/maps?offset=20&limit=10", &slice2)
+	res, err := testutils.GetJSON(s.URL+"/maps?offset=20&limit=10", &slice2)
 
 	if err != nil {
 		t.Fatal(err)
@@ -449,7 +448,7 @@ func TestGetMapIDsErr(t *testing.T) {
 	a.MockGetMapIDs.Fn = func(*store.Pagination) ([]string, error) { return nil, errors.New("test") }
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL+"/maps", &dict)
+	res, err := testutils.GetJSON(s.URL+"/maps", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -470,7 +469,7 @@ func TestGetMapIDsValidation(t *testing.T) {
 	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL+"/maps?limit=-1", &dict)
+	res, err := testutils.GetJSON(s.URL+"/maps?limit=-1", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -491,7 +490,7 @@ func TestRootNotFound(t *testing.T) {
 	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := getJSON(s.URL+"/dsfsdf", &dict)
+	res, err := testutils.GetJSON(s.URL+"/dsfsdf", &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -509,50 +508,4 @@ func createServer() (*httptest.Server, *storetesting.MockAdapter) {
 	s := httptest.NewServer(New(a, &jsonhttp.Config{}))
 
 	return s, a
-}
-
-func getJSON(url string, target interface{}) (*http.Response, error) {
-	return requestJSON(http.MethodGet, url, target, nil)
-}
-
-func postJSON(url string, target interface{}, payload interface{}) (*http.Response, error) {
-	return requestJSON(http.MethodPost, url, target, payload)
-}
-
-func deleteJSON(url string, target interface{}) (*http.Response, error) {
-	return requestJSON(http.MethodDelete, url, target, nil)
-}
-
-func requestJSON(method, url string, target, payload interface{}) (*http.Response, error) {
-	var req *http.Request
-	var err error
-	var body []byte
-
-	if payload != nil {
-		body, err = json.Marshal(payload)
-		if err != nil {
-			return nil, err
-		}
-
-		req, err = http.NewRequest(method, url, bytes.NewReader(body))
-	} else {
-		req, err = http.NewRequest(method, url, nil)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer res.Body.Close()
-
-	if err = json.NewDecoder(res.Body).Decode(&target); err != nil {
-		return nil, err
-	}
-
-	return res, nil
 }
