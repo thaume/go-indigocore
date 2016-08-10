@@ -146,6 +146,17 @@ func TestValidateTagsWrongElementType(t *testing.T) {
 	}
 }
 
+func TestValidateTagsEmpty(t *testing.T) {
+	s := cstesting.RandomSegment()
+	s.Link.Meta["tags"] = []string{""}
+
+	if err := Validate(s); err == nil {
+		t.Fatal("expected error")
+	} else if err.Error() != "link.meta.tags should be an array of non empty string" {
+		t.Fatal(err)
+	}
+}
+
 func TestValidatePriorityNil(t *testing.T) {
 	s := cstesting.RandomSegment()
 	delete(s.Link.Meta, "priority")

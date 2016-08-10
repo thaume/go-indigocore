@@ -46,7 +46,7 @@ func (s SegmentSlice) Less(i, j int) bool {
 		return true
 	}
 
-	if ok1 && ok2 {
+	if ok1 && ok2 && p1 != p2 {
 		return p1 > p2
 	}
 

@@ -30,6 +30,26 @@ func TestSortable(t *testing.T) {
 	}
 }
 
+func TestSortableLinkHash(t *testing.T) {
+	slice := SegmentSlice{
+		&Segment{Link: Link{Meta: map[string]interface{}{"priority": 2.0}}, Meta: map[string]interface{}{"linkHash": "c"}},
+		&Segment{Link: Link{Meta: map[string]interface{}{"priority": 2.0}}, Meta: map[string]interface{}{"linkHash": "b"}},
+	}
+
+	sort.Sort(slice)
+
+	lastLinkHash := "a"
+
+	for _, s := range slice {
+		linkHash := s.Meta["linkHash"].(string)
+		if linkHash < lastLinkHash {
+			t.Fatal("expected segments to be sorted by link hashes")
+		}
+
+		lastLinkHash = linkHash
+	}
+}
+
 func TestSortableNoPriority(t *testing.T) {
 	slice := SegmentSlice{
 		&Segment{Link: Link{Meta: map[string]interface{}{"priority": 2.3}}},
