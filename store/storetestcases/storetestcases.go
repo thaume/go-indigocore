@@ -11,9 +11,10 @@ import (
 	"github.com/stratumn/go/store"
 )
 
-// Factory contains functions to allocate and free an adapter.
+// Factory wraps functions to allocate and free an adapter,
+// and is used to run the tests on an adapter.
 type Factory struct {
-	// New create an adapter.
+	// New creates an adapter.
 	New func() (store.Adapter, error)
 
 	// Free is an optional function to free an adapter.
