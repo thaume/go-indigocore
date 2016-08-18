@@ -11,30 +11,37 @@ import (
 	"net/http"
 )
 
+// GetJSON does a GET request expecting a JSON response.
 func GetJSON(url string, target interface{}) (*http.Response, error) {
 	return RequestJSON(http.MethodGet, url, target, nil)
 }
 
+// PostJSON does a POST request expecting a JSON response.
 func PostJSON(url string, target interface{}, payload interface{}) (*http.Response, error) {
 	return RequestJSON(http.MethodPost, url, target, payload)
 }
 
+// PutJSON does a PUT request expecting a JSON response.
 func PutJSON(url string, target interface{}, payload interface{}) (*http.Response, error) {
 	return RequestJSON(http.MethodPut, url, target, payload)
 }
 
+// DeleteJSON does a DELETE request expecting a JSON response.
 func DeleteJSON(url string, target interface{}) (*http.Response, error) {
 	return RequestJSON(http.MethodDelete, url, target, nil)
 }
 
+// PatchJSON does a PATCH request expecting a JSON response.
 func PatchJSON(url string, target interface{}, payload interface{}) (*http.Response, error) {
 	return RequestJSON(http.MethodPatch, url, target, payload)
 }
 
+// OptionsJSON does an OPTIONS request expecting a JSON response.
 func OptionsJSON(url string, target interface{}) (*http.Response, error) {
 	return RequestJSON(http.MethodOptions, url, target, nil)
 }
 
+// RequestJSON does a request expecting a JSON response.
 func RequestJSON(method, url string, target, payload interface{}) (*http.Response, error) {
 	var req *http.Request
 	var err error
