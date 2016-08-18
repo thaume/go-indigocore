@@ -34,7 +34,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/cs/csvalidation"
 	"github.com/stratumn/go/jsonhttp"
 	"github.com/stratumn/go/store"
 )
@@ -99,7 +98,7 @@ func saveSegment(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c 
 		return nil, jsonhttp.NewErrBadRequest("")
 	}
 
-	if err := csvalidation.Validate(&s); err != nil {
+	if err := s.Validate(); err != nil {
 		return nil, jsonhttp.NewErrHTTP(err.Error(), http.StatusBadRequest)
 	}
 
