@@ -6,12 +6,19 @@ package storetestcases
 
 import (
 	"testing"
-
-	"github.com/stratumn/go/store"
 )
 
 // TestGetInfo tests what happens when you get information about the adapter.
-func TestGetInfo(t *testing.T, a store.Adapter) {
+func (f Factory) TestGetInfo(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	info, err := a.GetInfo()
 
 	if err != nil {

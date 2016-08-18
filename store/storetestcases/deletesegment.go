@@ -10,11 +10,19 @@ import (
 	"testing"
 
 	"github.com/stratumn/go/cs/cstesting"
-	"github.com/stratumn/go/store"
 )
 
 // TestDeleteSegmentFound tests what happens when you delete an existing segments.
-func TestDeleteSegmentFound(t *testing.T, a store.Adapter) {
+func (f Factory) TestDeleteSegmentFound(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s1 := cstesting.RandomSegment()
 	a.SaveSegment(s1)
 
@@ -46,7 +54,16 @@ func TestDeleteSegmentFound(t *testing.T, a store.Adapter) {
 }
 
 // TestDeleteSegmentNotFound tests what happens when you delete a nonexistent segment.
-func TestDeleteSegmentNotFound(t *testing.T, a store.Adapter) {
+func (f Factory) TestDeleteSegmentNotFound(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s, err := a.DeleteSegment(cstesting.RandomString(32))
 
 	if err != nil {
@@ -59,7 +76,16 @@ func TestDeleteSegmentNotFound(t *testing.T, a store.Adapter) {
 }
 
 // BenchmarkDeleteSegmentFound benchmarks deleting existing segments.
-func BenchmarkDeleteSegmentFound(b *testing.B, a store.Adapter) {
+func (f Factory) BenchmarkDeleteSegmentFound(b *testing.B) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if a == nil {
+		b.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	linkHashes := make([]string, b.N)
 
 	for i := 0; i < b.N; i++ {
@@ -80,7 +106,16 @@ func BenchmarkDeleteSegmentFound(b *testing.B, a store.Adapter) {
 }
 
 // BenchmarkDeleteSegmentFoundParallel benchmarks deleting existing segments in parallel.
-func BenchmarkDeleteSegmentFoundParallel(b *testing.B, a store.Adapter) {
+func (f Factory) BenchmarkDeleteSegmentFoundParallel(b *testing.B) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if a == nil {
+		b.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	linkHashes := make([]string, b.N)
 
 	for i := 0; i < b.N; i++ {

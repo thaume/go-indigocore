@@ -13,7 +13,16 @@ import (
 )
 
 // TestGetMapIDsAll tests what happens when you get all the map IDs.
-func TestGetMapIDsAll(t *testing.T, a store.Adapter) {
+func (f Factory) TestGetMapIDsAll(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	for i := 0; i < 10; i++ {
 		for j := 0; j < 10; j++ {
 			s := cstesting.RandomSegment()
@@ -40,7 +49,16 @@ func TestGetMapIDsAll(t *testing.T, a store.Adapter) {
 }
 
 // TestGetMapIDsPagination tests what happens when you get map IDs with pagination.
-func TestGetMapIDsPagination(t *testing.T, a store.Adapter) {
+func (f Factory) TestGetMapIDsPagination(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	for i := 0; i < 10; i++ {
 		for j := 0; j < 10; j++ {
 			segment := cstesting.RandomSegment()
@@ -61,7 +79,16 @@ func TestGetMapIDsPagination(t *testing.T, a store.Adapter) {
 }
 
 // TestGetMapIDsEmpty tests what happens when you should get no map IDs.
-func TestGetMapIDsEmpty(t *testing.T, a store.Adapter) {
+func (f Factory) TestGetMapIDsEmpty(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	slice, err := a.GetMapIDs(&store.Pagination{Offset: 100000, Limit: 5})
 
 	if err != nil {

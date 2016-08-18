@@ -10,11 +10,19 @@ import (
 	"testing"
 
 	"github.com/stratumn/go/cs/cstesting"
-	"github.com/stratumn/go/store"
 )
 
 // TestGetSegmentFound tests what happens when you get an existing segment.
-func TestGetSegmentFound(t *testing.T, a store.Adapter) {
+func (f Factory) TestGetSegmentFound(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s1 := cstesting.RandomSegment()
 	linkHash := s1.Meta["linkHash"].(string)
 
@@ -36,7 +44,16 @@ func TestGetSegmentFound(t *testing.T, a store.Adapter) {
 }
 
 // TestGetSegmentUpdatedState tests what happens when you get a segment whose state was updated.
-func TestGetSegmentUpdatedState(t *testing.T, a store.Adapter) {
+func (f Factory) TestGetSegmentUpdatedState(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s1 := cstesting.RandomSegment()
 	linkHash := s1.Meta["linkHash"].(string)
 
@@ -60,7 +77,16 @@ func TestGetSegmentUpdatedState(t *testing.T, a store.Adapter) {
 }
 
 // TestGetSegmentUpdatedMapID tests what happens when you get a segment whose map ID was updated.
-func TestGetSegmentUpdatedMapID(t *testing.T, a store.Adapter) {
+func (f Factory) TestGetSegmentUpdatedMapID(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s1 := cstesting.RandomSegment()
 	linkHash := s1.Meta["linkHash"].(string)
 
@@ -84,7 +110,16 @@ func TestGetSegmentUpdatedMapID(t *testing.T, a store.Adapter) {
 }
 
 // TestGetSegmentNotFound tests what happens when you get a nonexistent segment.
-func TestGetSegmentNotFound(t *testing.T, a store.Adapter) {
+func (f Factory) TestGetSegmentNotFound(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s, err := a.GetSegment(cstesting.RandomString(32))
 
 	if err != nil {
@@ -97,7 +132,16 @@ func TestGetSegmentNotFound(t *testing.T, a store.Adapter) {
 }
 
 // BenchmarkGetSegmentFound benchmarks getting existing segments.
-func BenchmarkGetSegmentFound(b *testing.B, a store.Adapter) {
+func (f Factory) BenchmarkGetSegmentFound(b *testing.B) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if a == nil {
+		b.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	linkHashes := make([]string, b.N)
 
 	for i := 0; i < b.N; i++ {
@@ -118,7 +162,16 @@ func BenchmarkGetSegmentFound(b *testing.B, a store.Adapter) {
 }
 
 // BenchmarkGetSegmentFoundParallel benchmarks getting existing segments in parallel.
-func BenchmarkGetSegmentFoundParallel(b *testing.B, a store.Adapter) {
+func (f Factory) BenchmarkGetSegmentFoundParallel(b *testing.B) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if a == nil {
+		b.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	linkHashes := make([]string, b.N)
 
 	for i := 0; i < b.N; i++ {

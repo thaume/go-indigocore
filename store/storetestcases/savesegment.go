@@ -10,11 +10,19 @@ import (
 
 	"github.com/stratumn/go/cs"
 	"github.com/stratumn/go/cs/cstesting"
-	"github.com/stratumn/go/store"
 )
 
 // TestSaveSegmentNew tests what happens when you save a new segment.
-func TestSaveSegmentNew(t *testing.T, a store.Adapter) {
+func (f Factory) TestSaveSegmentNew(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s := cstesting.RandomSegment()
 
 	if err := a.SaveSegment(s); err != nil {
@@ -23,7 +31,16 @@ func TestSaveSegmentNew(t *testing.T, a store.Adapter) {
 }
 
 // TestSaveSegmentUpdateState tests what happens when you update the state of a segment.
-func TestSaveSegmentUpdateState(t *testing.T, a store.Adapter) {
+func (f Factory) TestSaveSegmentUpdateState(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s := cstesting.RandomSegment()
 
 	if err := a.SaveSegment(s); err != nil {
@@ -38,7 +55,16 @@ func TestSaveSegmentUpdateState(t *testing.T, a store.Adapter) {
 }
 
 // TestSaveSegmentUpdateMapID tests what happens when you update the map ID of a segment.
-func TestSaveSegmentUpdateMapID(t *testing.T, a store.Adapter) {
+func (f Factory) TestSaveSegmentUpdateMapID(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s1 := cstesting.RandomSegment()
 
 	if err := a.SaveSegment(s1); err != nil {
@@ -53,7 +79,16 @@ func TestSaveSegmentUpdateMapID(t *testing.T, a store.Adapter) {
 }
 
 // TestSaveSegmentBranch tests what happens when you save a segment with a previous link hash.
-func TestSaveSegmentBranch(t *testing.T, a store.Adapter) {
+func (f Factory) TestSaveSegmentBranch(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s := cstesting.RandomSegment()
 
 	if err := a.SaveSegment(s); err != nil {
@@ -68,7 +103,16 @@ func TestSaveSegmentBranch(t *testing.T, a store.Adapter) {
 }
 
 // BenchmarkSaveSegmentNew benchmarks saving new segments.
-func BenchmarkSaveSegmentNew(b *testing.B, a store.Adapter) {
+func (f Factory) BenchmarkSaveSegmentNew(b *testing.B) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if a == nil {
+		b.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	slice := make([]*cs.Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
@@ -85,7 +129,16 @@ func BenchmarkSaveSegmentNew(b *testing.B, a store.Adapter) {
 }
 
 // BenchmarkSaveSegmentNewParallel benchmarks saving new segments in parallel.
-func BenchmarkSaveSegmentNewParallel(b *testing.B, a store.Adapter) {
+func (f Factory) BenchmarkSaveSegmentNewParallel(b *testing.B) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if a == nil {
+		b.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	slice := make([]*cs.Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
@@ -108,7 +161,16 @@ func BenchmarkSaveSegmentNewParallel(b *testing.B, a store.Adapter) {
 }
 
 // BenchmarkSaveSegmentUpdateState benchmarks updating segments states.
-func BenchmarkSaveSegmentUpdateState(b *testing.B, a store.Adapter) {
+func (f Factory) BenchmarkSaveSegmentUpdateState(b *testing.B) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if a == nil {
+		b.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	slice := make([]*cs.Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
@@ -127,7 +189,16 @@ func BenchmarkSaveSegmentUpdateState(b *testing.B, a store.Adapter) {
 }
 
 // BenchmarkSaveSegmentUpdateStateParallel benchmarks updating segments states in parallel.
-func BenchmarkSaveSegmentUpdateStateParallel(b *testing.B, a store.Adapter) {
+func (f Factory) BenchmarkSaveSegmentUpdateStateParallel(b *testing.B) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if a == nil {
+		b.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	slice := make([]*cs.Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
@@ -151,7 +222,16 @@ func BenchmarkSaveSegmentUpdateStateParallel(b *testing.B, a store.Adapter) {
 }
 
 // BenchmarkSaveSegmentUpdateMapID benchmarks updating segment map IDs.
-func BenchmarkSaveSegmentUpdateMapID(b *testing.B, a store.Adapter) {
+func (f Factory) BenchmarkSaveSegmentUpdateMapID(b *testing.B) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if a == nil {
+		b.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	slice := make([]*cs.Segment, b.N)
 
 	for i := 0; i < b.N; i++ {
@@ -170,7 +250,16 @@ func BenchmarkSaveSegmentUpdateMapID(b *testing.B, a store.Adapter) {
 }
 
 // BenchmarkSaveSegmentUpdateMapIDParallel benchmarks updating segment map IDs in parallel.
-func BenchmarkSaveSegmentUpdateMapIDParallel(b *testing.B, a store.Adapter) {
+func (f Factory) BenchmarkSaveSegmentUpdateMapIDParallel(b *testing.B) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if a == nil {
+		b.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	slice := make([]*cs.Segment, b.N)
 
 	for i := 0; i < b.N; i++ {

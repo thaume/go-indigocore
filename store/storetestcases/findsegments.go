@@ -14,7 +14,16 @@ import (
 )
 
 // TestFindSegmentsAll tests what happens when you search for all segments.
-func TestFindSegmentsAll(t *testing.T, a store.Adapter) {
+func (f Factory) TestFindSegmentsAll(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	for i := 0; i < 100; i++ {
 		a.SaveSegment(cstesting.RandomSegment())
 	}
@@ -43,7 +52,16 @@ func TestFindSegmentsAll(t *testing.T, a store.Adapter) {
 }
 
 // TestFindSegmentsPagination tests what happens when you search with pagination.
-func TestFindSegmentsPagination(t *testing.T, a store.Adapter) {
+func (f Factory) TestFindSegmentsPagination(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	for i := 0; i < 100; i++ {
 		a.SaveSegment(cstesting.RandomSegment())
 	}
@@ -79,7 +97,16 @@ func TestFindSegmentsPagination(t *testing.T, a store.Adapter) {
 }
 
 // TestFindSegmentsEmpty tests what happens when there are no matches.
-func TestFindSegmentsEmpty(t *testing.T, a store.Adapter) {
+func (f Factory) TestFindSegmentsEmpty(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	for i := 0; i < 100; i++ {
 		a.SaveSegment(cstesting.RandomSegment())
 	}
@@ -98,7 +125,16 @@ func TestFindSegmentsEmpty(t *testing.T, a store.Adapter) {
 }
 
 // TestFindSegmentsSingleTag tests what happens when you search with only one tag.
-func TestFindSegmentsSingleTag(t *testing.T, a store.Adapter) {
+func (f Factory) TestFindSegmentsSingleTag(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	tag1 := cstesting.RandomString(5)
 	tag2 := cstesting.RandomString(5)
 
@@ -128,7 +164,16 @@ func TestFindSegmentsSingleTag(t *testing.T, a store.Adapter) {
 }
 
 // TestFindSegmentsMultipleTags tests what happens when you search with more than one tag.
-func TestFindSegmentsMultipleTags(t *testing.T, a store.Adapter) {
+func (f Factory) TestFindSegmentsMultipleTags(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	tag1 := cstesting.RandomString(5)
 	tag2 := cstesting.RandomString(5)
 
@@ -158,7 +203,16 @@ func TestFindSegmentsMultipleTags(t *testing.T, a store.Adapter) {
 }
 
 // TestFindSegmentsMapIDFound tests whan happens when you search for an existing map ID.
-func TestFindSegmentsMapIDFound(t *testing.T, a store.Adapter) {
+func (f Factory) TestFindSegmentsMapIDFound(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	for i := 0; i < 2; i++ {
 		for j := 0; j < 10; j++ {
 			s := cstesting.RandomSegment()
@@ -185,7 +239,16 @@ func TestFindSegmentsMapIDFound(t *testing.T, a store.Adapter) {
 }
 
 // TestFindSegmentsMapIDNotFound tests whan happens when you search for a nonexistent map ID.
-func TestFindSegmentsMapIDNotFound(t *testing.T, a store.Adapter) {
+func (f Factory) TestFindSegmentsMapIDNotFound(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	slice, err := a.FindSegments(&store.Filter{
 		MapID: cstesting.RandomString(10),
 	})
@@ -200,7 +263,16 @@ func TestFindSegmentsMapIDNotFound(t *testing.T, a store.Adapter) {
 }
 
 // TestFindSegmentsPrevLinkHashFound tests whan happens when you search for an existing previous link hash.
-func TestFindSegmentsPrevLinkHashFound(t *testing.T, a store.Adapter) {
+func (f Factory) TestFindSegmentsPrevLinkHashFound(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	s := cstesting.RandomSegment()
 	a.SaveSegment(s)
 
@@ -226,7 +298,16 @@ func TestFindSegmentsPrevLinkHashFound(t *testing.T, a store.Adapter) {
 }
 
 // TestFindSegmentsPrevLinkHashNotFound tests whan happens when you search for a nonexistent previous link hash.
-func TestFindSegmentsPrevLinkHashNotFound(t *testing.T, a store.Adapter) {
+func (f Factory) TestFindSegmentsPrevLinkHashNotFound(t *testing.T) {
+	a, err := f.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a == nil {
+		t.Fatal("expected adapter not to be nil")
+	}
+	defer f.free(a)
+
 	slice, err := a.FindSegments(&store.Filter{
 		PrevLinkHash: cstesting.RandomString(32),
 	})
