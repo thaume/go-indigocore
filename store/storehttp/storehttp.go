@@ -4,7 +4,7 @@
 
 // Package storehttp is used to create an HTTP server from a store adapter.
 //
-// It servers the following routes:
+// It serves the following routes:
 //	GET /
 //		Renders information about the fossilizer.
 //

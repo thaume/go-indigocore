@@ -4,7 +4,7 @@
 
 // Package fossilizerhttp is used to create an HTTP server from a fossilizer adapter.
 //
-// It servers the following routes:
+// It serves the following routes:
 //	GET /
 //		Renders information about the fossilizer.
 //
