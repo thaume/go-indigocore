@@ -13,7 +13,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/stratumn/go/testutils"
+	"github.com/stratumn/go/testutil"
 )
 
 func TestGet(t *testing.T) {
@@ -27,7 +27,7 @@ func TestGet(t *testing.T) {
 	defer ts.Close()
 
 	var body map[string]bool
-	_, err := testutils.GetJSON(ts.URL+"/test", &body)
+	_, err := testutil.GetJSON(ts.URL+"/test", &body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func TestPost(t *testing.T) {
 	defer ts.Close()
 
 	var body map[string]bool
-	_, err := testutils.PostJSON(ts.URL+"/test", &body, nil)
+	_, err := testutil.PostJSON(ts.URL+"/test", &body, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestPut(t *testing.T) {
 	defer ts.Close()
 
 	var body map[string]bool
-	_, err := testutils.PutJSON(ts.URL+"/test", &body, nil)
+	_, err := testutil.PutJSON(ts.URL+"/test", &body, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,7 +90,7 @@ func TestDelete(t *testing.T) {
 	defer ts.Close()
 
 	var body map[string]bool
-	_, err := testutils.DeleteJSON(ts.URL+"/test", &body)
+	_, err := testutil.DeleteJSON(ts.URL+"/test", &body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestPatch(t *testing.T) {
 	defer ts.Close()
 
 	var body map[string]bool
-	_, err := testutils.PatchJSON(ts.URL+"/test", &body, nil)
+	_, err := testutil.PatchJSON(ts.URL+"/test", &body, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +132,7 @@ func TestOptions(t *testing.T) {
 	defer ts.Close()
 
 	var body map[string]bool
-	_, err := testutils.OptionsJSON(ts.URL+"/test", &body)
+	_, err := testutil.OptionsJSON(ts.URL+"/test", &body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,7 +149,7 @@ func TestNotFound(t *testing.T) {
 	defer ts.Close()
 
 	var body map[string]interface{}
-	res, err := testutils.GetJSON(ts.URL+"/test", &body)
+	res, err := testutil.GetJSON(ts.URL+"/test", &body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +178,7 @@ func TestErrHTTP(t *testing.T) {
 	defer ts.Close()
 
 	var body map[string]interface{}
-	res, err := testutils.GetJSON(ts.URL+"/test", &body)
+	res, err := testutil.GetJSON(ts.URL+"/test", &body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,7 +207,7 @@ func TestError(t *testing.T) {
 	defer ts.Close()
 
 	var body map[string]interface{}
-	res, err := testutils.GetJSON(ts.URL+"/test", &body)
+	res, err := testutil.GetJSON(ts.URL+"/test", &body)
 	if err != nil {
 		t.Fatal(err)
 	}

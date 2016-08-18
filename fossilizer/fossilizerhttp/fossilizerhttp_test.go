@@ -17,7 +17,7 @@ import (
 	"github.com/stratumn/go/fossilizer"
 	"github.com/stratumn/go/fossilizer/fossilizertesting"
 	"github.com/stratumn/go/jsonhttp"
-	"github.com/stratumn/go/testutils"
+	"github.com/stratumn/go/testutil"
 )
 
 func TestRootOK(t *testing.T) {
@@ -27,7 +27,7 @@ func TestRootOK(t *testing.T) {
 	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", nil }
 
 	var dict map[string]interface{}
-	res, err := testutils.GetJSON(s.URL, &dict)
+	res, err := testutil.GetJSON(s.URL, &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -50,7 +50,7 @@ func TestRootErr(t *testing.T) {
 	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", errors.New("error") }
 
 	var dict map[string]interface{}
-	res, err := testutils.GetJSON(s.URL, &dict)
+	res, err := testutil.GetJSON(s.URL, &dict)
 
 	if err != nil {
 		t.Fatal(err)
@@ -220,7 +220,7 @@ func TestNotFound(t *testing.T) {
 	defer s.Close()
 
 	var dict map[string]interface{}
-	res, err := testutils.GetJSON(s.URL+"/dsfsdf", &dict)
+	res, err := testutil.GetJSON(s.URL+"/dsfsdf", &dict)
 
 	if err != nil {
 		t.Fatal(err)

@@ -2,8 +2,8 @@
 // Use of this source code is governed by an Apache License 2.0
 // that can be found in the LICENSE file.
 
-// Package testutils contains helpers for tests.
-package testutils
+// Package testutil contains helpers for tests.
+package testutil
 
 import (
 	"bytes"
