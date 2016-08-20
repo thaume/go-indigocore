@@ -57,11 +57,11 @@ func (a *DummyFossilizer) Fossilize(data []byte, meta []byte) error {
 		Meta: meta,
 	}
 
-	for _, c1 := range a.resultChans {
-		go func(c2 chan *fossilizer.Result) {
-			c2 <- r
-		}(c1)
-	}
+	go func(chans []chan *fossilizer.Result) {
+		for _, c := range chans {
+			c <- r
+		}
+	}(a.resultChans)
 
 	return nil
 }
