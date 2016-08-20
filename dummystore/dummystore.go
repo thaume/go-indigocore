@@ -26,18 +26,18 @@ const (
 // DummyStore is the type that implements github.com/stratumn/go/store.Adapter.
 type DummyStore struct {
 	version  string
-	segments segmentMap    // maps link hashes to segments
-	maps     hashSetMap    // maps chains IDs to sets of link hashes
-	mutex    *sync.RWMutex // simple global mutex, just in case
+	segments segmentMap   // maps link hashes to segments
+	maps     hashSetMap   // maps chains IDs to sets of link hashes
+	mutex    sync.RWMutex // simple global mutex, just in case
 }
 
 type segmentMap map[string]*cs.Segment
-type hashSet map[string]bool
+type hashSet map[string]struct{}
 type hashSetMap map[string]hashSet
 
 // New creates an instance of a DummyStore.
 func New(version string) *DummyStore {
-	return &DummyStore{version, segmentMap{}, hashSetMap{}, &sync.RWMutex{}}
+	return &DummyStore{version, segmentMap{}, hashSetMap{}, sync.RWMutex{}}
 }
 
 // GetInfo implements github.com/stratumn/go/store.Adapter.GetInfo.
@@ -77,7 +77,7 @@ func (a *DummyStore) SaveSegment(segment *cs.Segment) error {
 	}
 
 	a.segments[linkHash] = segment
-	a.maps[mapID][linkHash] = true
+	a.maps[mapID][linkHash] = struct{}{}
 
 	return nil
 }
@@ -114,7 +114,7 @@ func (a *DummyStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error)
 	if filter.MapID == "" {
 		linkHashes = hashSet{}
 		for linkHash := range a.segments {
-			linkHashes[linkHash] = true
+			linkHashes[linkHash] = struct{}{}
 		}
 	} else {
 		linkHashes, exists = a.maps[filter.MapID]

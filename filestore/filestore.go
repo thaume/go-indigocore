@@ -156,10 +156,10 @@ func (a *FileStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) 
 
 // GetMapIDs implements github.com/stratumn/go/store.Adapter.GetMapIDs.
 func (a *FileStore) GetMapIDs(pagination *store.Pagination) ([]string, error) {
-	set := map[string]bool{}
+	set := map[string]struct{}{}
 
 	a.forEach(func(segment *cs.Segment) error {
-		set[segment.Link.Meta["mapId"].(string)] = true
+		set[segment.Link.Meta["mapId"].(string)] = struct{}{}
 		return nil
 	})
 
