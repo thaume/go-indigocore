@@ -6,8 +6,9 @@ package storetesting_test
 
 import (
 	"fmt"
-	"github.com/stratumn/go/store/storetesting"
 	"log"
+
+	"github.com/stratumn/go/store/storetesting"
 )
 
 // This example shows how to use a mock adapter.

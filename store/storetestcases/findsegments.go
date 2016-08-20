@@ -11,6 +11,7 @@ import (
 
 	"github.com/stratumn/go/cs/cstesting"
 	"github.com/stratumn/go/store"
+	"github.com/stratumn/go/testutil"
 )
 
 // TestFindSegmentsAll tests what happens when you search for all segments.
@@ -135,18 +136,18 @@ func (f Factory) TestFindSegmentsSingleTag(t *testing.T) {
 	}
 	defer f.free(a)
 
-	tag1 := cstesting.RandomString(5)
-	tag2 := cstesting.RandomString(5)
+	tag1 := testutil.RandomString(5)
+	tag2 := testutil.RandomString(5)
 
 	for i := 0; i < 10; i++ {
 		s := cstesting.RandomSegment()
-		s.Link.Meta["tags"] = []interface{}{tag1, cstesting.RandomString(5)}
+		s.Link.Meta["tags"] = []interface{}{tag1, testutil.RandomString(5)}
 		a.SaveSegment(s)
 	}
 
 	for i := 0; i < 10; i++ {
 		s := cstesting.RandomSegment()
-		s.Link.Meta["tags"] = []interface{}{tag1, tag2, cstesting.RandomString(5)}
+		s.Link.Meta["tags"] = []interface{}{tag1, tag2, testutil.RandomString(5)}
 		a.SaveSegment(s)
 	}
 
@@ -174,18 +175,18 @@ func (f Factory) TestFindSegmentsMultipleTags(t *testing.T) {
 	}
 	defer f.free(a)
 
-	tag1 := cstesting.RandomString(5)
-	tag2 := cstesting.RandomString(5)
+	tag1 := testutil.RandomString(5)
+	tag2 := testutil.RandomString(5)
 
 	for i := 0; i < 10; i++ {
 		s := cstesting.RandomSegment()
-		s.Link.Meta["tags"] = []interface{}{tag1, cstesting.RandomString(5)}
+		s.Link.Meta["tags"] = []interface{}{tag1, testutil.RandomString(5)}
 		a.SaveSegment(s)
 	}
 
 	for i := 0; i < 10; i++ {
 		s := cstesting.RandomSegment()
-		s.Link.Meta["tags"] = []interface{}{tag1, tag2, cstesting.RandomString(5)}
+		s.Link.Meta["tags"] = []interface{}{tag1, tag2, testutil.RandomString(5)}
 		a.SaveSegment(s)
 	}
 
@@ -250,7 +251,7 @@ func (f Factory) TestFindSegmentsMapIDNotFound(t *testing.T) {
 	defer f.free(a)
 
 	slice, err := a.FindSegments(&store.Filter{
-		MapID: cstesting.RandomString(10),
+		MapID: testutil.RandomString(10),
 	})
 
 	if err != nil {
@@ -309,7 +310,7 @@ func (f Factory) TestFindSegmentsPrevLinkHashNotFound(t *testing.T) {
 	defer f.free(a)
 
 	slice, err := a.FindSegments(&store.Filter{
-		PrevLinkHash: cstesting.RandomString(32),
+		PrevLinkHash: testutil.RandomString(32),
 	})
 
 	if err != nil {

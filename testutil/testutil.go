@@ -8,8 +8,30 @@ package testutil
 import (
 	"bytes"
 	"encoding/json"
+	"math/rand"
 	"net/http"
 )
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+// RandomString generates a random string.
+func RandomString(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
+// ContainsString checks if an array contains a string.
+func ContainsString(a []string, s string) bool {
+	for _, v := range a {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
 
 // GetJSON does a GET request expecting a JSON response.
 func GetJSON(url string, target interface{}) (*http.Response, error) {

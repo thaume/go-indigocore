@@ -10,6 +10,7 @@ import (
 
 	"github.com/stratumn/go/cs/cstesting"
 	"github.com/stratumn/go/store"
+	"github.com/stratumn/go/testutil"
 )
 
 // TestGetMapIDsAll tests what happens when you get all the map IDs.
@@ -42,7 +43,7 @@ func (f Factory) TestGetMapIDsAll(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		if !cstesting.ContainsString(slice, fmt.Sprintf("map%d", i)) {
+		if !testutil.ContainsString(slice, fmt.Sprintf("map%d", i)) {
 			t.Fatal("missing map ID")
 		}
 	}

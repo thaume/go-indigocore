@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stratumn/go/cs/cstesting"
+	"github.com/stratumn/go/testutil"
 )
 
 // TestGetSegmentFound tests what happens when you get an existing segment.
@@ -120,7 +121,7 @@ func (f Factory) TestGetSegmentNotFound(t *testing.T) {
 	}
 	defer f.free(a)
 
-	s, err := a.GetSegment(cstesting.RandomString(32))
+	s, err := a.GetSegment(testutil.RandomString(32))
 
 	if err != nil {
 		t.Fatal(err)

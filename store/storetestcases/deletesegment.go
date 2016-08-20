@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stratumn/go/cs/cstesting"
+	"github.com/stratumn/go/testutil"
 )
 
 // TestDeleteSegmentFound tests what happens when you delete an existing segments.
@@ -64,7 +65,7 @@ func (f Factory) TestDeleteSegmentNotFound(t *testing.T) {
 	}
 	defer f.free(a)
 
-	s, err := a.DeleteSegment(cstesting.RandomString(32))
+	s, err := a.DeleteSegment(testutil.RandomString(32))
 
 	if err != nil {
 		t.Fatal(err)

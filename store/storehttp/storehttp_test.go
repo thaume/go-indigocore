@@ -424,7 +424,7 @@ func TestGetMapIDsOK(t *testing.T) {
 		t.Fatal("expected map ID slices to be have same length")
 	}
 	for i := 0; i < len(slice1); i++ {
-		if !cstesting.ContainsString(slice2, slice1[i]) {
+		if !testutil.ContainsString(slice2, slice1[i]) {
 			t.Fatal("expected map ID slices to have same elements")
 		}
 	}

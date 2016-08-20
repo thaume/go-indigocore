@@ -6,8 +6,9 @@ package fossilizertesting_test
 
 import (
 	"fmt"
-	"github.com/stratumn/go/fossilizer/fossilizertesting"
 	"log"
+
+	"github.com/stratumn/go/fossilizer/fossilizertesting"
 )
 
 // This example shows how to use a mock adapter.
