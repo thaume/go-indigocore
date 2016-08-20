@@ -131,7 +131,6 @@ func fossilize(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *c
 func handleResults(resultChan chan *fossilizer.Result, client *http.Client) {
 	for {
 		r := <-resultChan
-
 		body, err := json.Marshal(r.Evidence)
 		if err != nil {
 			log.Println(err)
@@ -140,7 +139,6 @@ func handleResults(resultChan chan *fossilizer.Result, client *http.Client) {
 
 		url := string(r.Meta)
 		res, err := client.Post(url, "application/json", bytes.NewReader(body))
-
 		if err != nil {
 			log.Println(err)
 		} else if res.StatusCode >= 300 {

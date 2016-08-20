@@ -12,7 +12,6 @@ func newErrData(msg string) jsonhttp.ErrHTTP {
 	if msg == "" {
 		msg = "data required"
 	}
-
 	return jsonhttp.NewErrBadRequest(msg)
 }
 
@@ -20,7 +19,6 @@ func newErrDataLen(msg string) jsonhttp.ErrHTTP {
 	if msg == "" {
 		msg = "invalid data length"
 	}
-
 	return jsonhttp.NewErrBadRequest(msg)
 }
 
@@ -28,6 +26,5 @@ func newErrCallbackURL(msg string) jsonhttp.ErrHTTP {
 	if msg == "" {
 		msg = "callback URL required"
 	}
-
 	return jsonhttp.NewErrBadRequest(msg)
 }

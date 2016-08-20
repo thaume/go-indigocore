@@ -14,7 +14,6 @@ type Adapter interface {
 	AddResultChan(resultChan chan *Result)
 
 	// Requests data to be fossilized.
-	//
 	// Meta is arbitrary data that will be sent to the result channels.
 	Fossilize(data []byte, meta []byte) error
 }

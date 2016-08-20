@@ -55,7 +55,7 @@ func NotFound(w http.ResponseWriter, r *http.Request, _ httprouter.Params, _ *Co
 // New creates an instance of Server.
 func New(config *Config) *Server {
 	r := httprouter.New()
-	r.NotFound = notFoundHandler{handler{config, NotFound}}
+	r.NotFound = notFoundHandler{config, NotFound}
 	return &Server{r, config}
 }
 
@@ -97,7 +97,6 @@ func (s *Server) Options(path string, handle Handle) {
 // ListenAndServe starts the server.
 func (s *Server) ListenAndServe() error {
 	p := s.config.Port
-
 	if p == "" {
 		p = DefaultPort
 	}
@@ -118,14 +117,12 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request, p httprouter.
 	var err error
 
 	data, err := h.serve(w, r, p, h.config)
-
 	if err != nil {
 		renderErr(w, err, h.config)
 		return
 	}
 
 	js, err := json.Marshal(data)
-
 	if err != nil {
 		renderErr(w, err, h.config)
 		return
@@ -137,7 +134,6 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request, p httprouter.
 
 func renderErr(w http.ResponseWriter, err error, c *Config) {
 	e, ok := err.(ErrHTTP)
-
 	if !ok {
 		log.Println(err.Error())
 		e = NewErrInternalServer("")
@@ -145,16 +141,12 @@ func renderErr(w http.ResponseWriter, err error, c *Config) {
 		log.Println(err.Error())
 	}
 
-	js := e.JSONMarshal()
-
 	w.Header().Set("Content-Type", "application/json")
-	http.Error(w, string(js), e.Status())
+	http.Error(w, string(e.JSONMarshal()), e.Status())
 }
 
-type notFoundHandler struct {
-	handler
-}
+type notFoundHandler handler
 
 func (h notFoundHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.handler.ServeHTTP(w, r, nil)
+	handler(h).ServeHTTP(w, r, nil)
 }

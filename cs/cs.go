@@ -20,11 +20,9 @@ func (s *Segment) Validate() error {
 	if linkHash, ok := s.Meta["linkHash"].(string); !ok || linkHash == "" {
 		return errors.New("meta.linkHash should be a non empty string")
 	}
-
 	if mapID, ok := s.Link.Meta["mapId"].(string); !ok || mapID == "" {
 		return errors.New("link.meta.mapId should be a non empty string")
 	}
-
 	if v, ok := s.Link.Meta["prevLinkHash"]; ok {
 		if prevLinkHash, ok := v.(string); !ok || prevLinkHash == "" {
 			return errors.New("link.meta.prevLinkHash should be a non empty string")
@@ -33,11 +31,9 @@ func (s *Segment) Validate() error {
 
 	if v, ok := s.Link.Meta["tags"]; ok {
 		tags, ok := v.([]interface{})
-
 		if !ok {
 			return errors.New("link.meta.tags should be an array of non empty string")
 		}
-
 		for _, t := range tags {
 			if tag, ok := t.(string); !ok || tag == "" {
 				return errors.New("link.meta.tags should be an array of non empty string")
@@ -75,11 +71,12 @@ func (s SegmentSlice) Swap(i, j int) {
 
 // Less implements sort.Interface.Less.
 func (s SegmentSlice) Less(i, j int) bool {
-	s1 := s[i]
-	s2 := s[j]
-
-	p1, ok1 := s1.Link.Meta["priority"].(float64)
-	p2, ok2 := s2.Link.Meta["priority"].(float64)
+	var (
+		s1      = s[i]
+		s2      = s[j]
+		p1, ok1 = s1.Link.Meta["priority"].(float64)
+		p2, ok2 = s2.Link.Meta["priority"].(float64)
+	)
 
 	if !ok1 && ok2 {
 		return false

@@ -73,7 +73,6 @@ func (a *FileStore) SaveSegment(segment *cs.Segment) error {
 	}
 
 	segmentPath := path.Join(a.config.Path, segment.Meta["linkHash"].(string)+".json")
-
 	return ioutil.WriteFile(segmentPath, js, 0644)
 }
 
@@ -90,7 +89,6 @@ func (a *FileStore) GetSegment(linkHash string) (*cs.Segment, error) {
 	defer file.Close()
 
 	var segment cs.Segment
-
 	if err = json.NewDecoder(file).Decode(&segment); err != nil {
 		return nil, err
 	}
@@ -129,7 +127,6 @@ func (a *FileStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) 
 		if len(filter.Tags) > 0 {
 			if t, ok := segment.Link.Meta["tags"].([]interface{}); ok {
 				var tags []string
-
 				for _, v := range t {
 					tags = append(tags, v.(string))
 				}
@@ -157,22 +154,21 @@ func (a *FileStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) 
 // GetMapIDs implements github.com/stratumn/go/store.Adapter.GetMapIDs.
 func (a *FileStore) GetMapIDs(pagination *store.Pagination) ([]string, error) {
 	set := map[string]struct{}{}
-
 	a.forEach(func(segment *cs.Segment) error {
 		set[segment.Link.Meta["mapId"].(string)] = struct{}{}
 		return nil
 	})
 
 	var mapIDs []string
-
 	for mapID := range set {
 		mapIDs = append(mapIDs, mapID)
 	}
 
 	sort.Strings(mapIDs)
-
 	return paginateStrings(mapIDs, pagination), nil
 }
+
+var segmentFileRegepx = regexp.MustCompile("(.*)\\.json$")
 
 func (a *FileStore) forEach(fn func(*cs.Segment) error) error {
 	files, err := ioutil.ReadDir(a.config.Path)
@@ -183,11 +179,9 @@ func (a *FileStore) forEach(fn func(*cs.Segment) error) error {
 		return err
 	}
 
-	re := regexp.MustCompile("(.*)\\.json$")
-
 	for _, file := range files {
 		name := file.Name()
-		if re.MatchString(name) {
+		if segmentFileRegepx.MatchString(name) {
 			linkHash := name[:len(name)-5]
 			segment, err := a.GetSegment(linkHash)
 			if err != nil {

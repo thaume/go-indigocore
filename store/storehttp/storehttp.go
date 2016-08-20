@@ -93,15 +93,12 @@ func saveSegment(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c 
 	decoder := json.NewDecoder(r.Body)
 
 	var s cs.Segment
-
 	if err := decoder.Decode(&s); err != nil {
 		return nil, jsonhttp.NewErrBadRequest("")
 	}
-
 	if err := s.Validate(); err != nil {
 		return nil, jsonhttp.NewErrHTTP(err.Error(), http.StatusBadRequest)
 	}
-
 	if err := c.adapter.SaveSegment(&s); err != nil {
 		return nil, err
 	}
@@ -111,11 +108,9 @@ func saveSegment(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c 
 
 func getSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *context) (interface{}, error) {
 	s, err := c.adapter.GetSegment(p.ByName("linkHash"))
-
 	if err != nil {
 		return nil, err
 	}
-
 	if s == nil {
 		return nil, jsonhttp.NewErrNotFound("")
 	}
@@ -125,11 +120,9 @@ func getSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *
 
 func deleteSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *context) (interface{}, error) {
 	s, err := c.adapter.DeleteSegment(p.ByName("linkHash"))
-
 	if err != nil {
 		return nil, err
 	}
-
 	if s == nil {
 		return nil, jsonhttp.NewErrNotFound("")
 	}
@@ -139,13 +132,11 @@ func deleteSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 
 func findSegments(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *context) (interface{}, error) {
 	filter, e := parseFilter(r)
-
 	if e != nil {
 		return nil, e
 	}
 
 	slice, err := c.adapter.FindSegments(filter)
-
 	if err != nil {
 		return nil, err
 	}
@@ -155,13 +146,11 @@ func findSegments(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c
 
 func getMapIDs(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *context) (interface{}, error) {
 	pagination, e := parsePagination(r)
-
 	if e != nil {
 		return nil, e
 	}
 
 	slice, err := c.adapter.GetMapIDs(pagination)
-
 	if err != nil {
 		return nil, err
 	}
@@ -173,19 +162,18 @@ func parseFilter(r *http.Request) (*store.Filter, error) {
 	var tags []string
 
 	pagination, e := parsePagination(r)
-
 	if e != nil {
 		return nil, e
 	}
 
-	mapID := r.URL.Query().Get("mapId")
-	prevLinkHash := r.URL.Query().Get("prevLinkHash")
-
-	tagsStr := r.URL.Query().Get("tags")
+	var (
+		mapID        = r.URL.Query().Get("mapId")
+		prevLinkHash = r.URL.Query().Get("prevLinkHash")
+		tagsStr      = r.URL.Query().Get("tags")
+	)
 
 	if tagsStr != "" {
 		spacetags := strings.Split(tagsStr, " ")
-
 		for _, t := range spacetags {
 			tags = append(tags, strings.Split(t, "+")...)
 		}
@@ -204,7 +192,6 @@ func parsePagination(r *http.Request) (*store.Pagination, error) {
 
 	offsetstr := r.URL.Query().Get("offset")
 	offset := 0
-
 	if offsetstr != "" {
 		if offset, err = strconv.Atoi(offsetstr); err != nil || offset < 0 {
 			return nil, newErrOffset("")
@@ -213,7 +200,6 @@ func parsePagination(r *http.Request) (*store.Pagination, error) {
 
 	limitstr := r.URL.Query().Get("limit")
 	limit := 0
-
 	if limitstr != "" {
 		if limit, err = strconv.Atoi(limitstr); err != nil || limit < 0 {
 			return nil, newErrLimit("")

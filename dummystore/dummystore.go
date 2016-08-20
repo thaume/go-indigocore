@@ -65,7 +65,6 @@ func (a *DummyStore) SaveSegment(segment *cs.Segment) error {
 
 	if curr != nil {
 		currMapID := curr.Link.Meta["mapId"].(string)
-
 		if currMapID != mapID {
 			delete(a.maps[currMapID], linkHash)
 		}
@@ -108,8 +107,10 @@ func (a *DummyStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error)
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 
-	var linkHashes hashSet
-	var exists bool
+	var (
+		linkHashes hashSet
+		exists     bool
+	)
 
 	if filter.MapID == "" {
 		linkHashes = hashSet{}
@@ -133,14 +134,12 @@ func (a *DummyStore) GetMapIDs(pagination *store.Pagination) ([]string, error) {
 
 	mapIDs := make([]string, len(a.maps))
 	i := 0
-
 	for mapID := range a.maps {
 		mapIDs[i] = mapID
 		i++
 	}
 
 	sort.Strings(mapIDs)
-
 	return paginateStrings(mapIDs, pagination), nil
 }
 
@@ -159,11 +158,9 @@ HASH_LOOP:
 		if len(filter.Tags) > 0 {
 			if t, ok := segment.Link.Meta["tags"].([]interface{}); ok {
 				var tags []string
-
 				for _, v := range t {
 					tags = append(tags, v.(string))
 				}
-
 				for _, tag := range filter.Tags {
 					if !containsString(tags, tag) {
 						continue HASH_LOOP
@@ -188,13 +185,11 @@ func containsString(a []string, s string) bool {
 			return true
 		}
 	}
-
 	return false
 }
 
 func paginateStrings(a []string, p *store.Pagination) []string {
 	l := len(a)
-
 	if p.Offset >= l {
 		return []string{}
 	}
@@ -209,7 +204,6 @@ func paginateStrings(a []string, p *store.Pagination) []string {
 
 func paginateSegments(a cs.SegmentSlice, p *store.Pagination) cs.SegmentSlice {
 	l := len(a)
-
 	if p.Offset >= l {
 		return cs.SegmentSlice{}
 	}

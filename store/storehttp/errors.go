@@ -12,7 +12,6 @@ func newErrOffset(msg string) jsonhttp.ErrHTTP {
 	if msg == "" {
 		msg = "offset must be a positive integer"
 	}
-
 	return jsonhttp.NewErrBadRequest(msg)
 }
 
@@ -20,6 +19,5 @@ func newErrLimit(msg string) jsonhttp.ErrHTTP {
 	if msg == "" {
 		msg = "limit must be a posive integer"
 	}
-
 	return jsonhttp.NewErrBadRequest(msg)
 }

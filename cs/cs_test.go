@@ -187,9 +187,7 @@ func TestSegmentSliceSortable(t *testing.T) {
 	}
 
 	sort.Sort(slice)
-
 	lastPriority := 100.0
-
 	for _, s := range slice {
 		priority := s.Link.Meta["priority"].(float64)
 		if priority > lastPriority {
@@ -207,9 +205,7 @@ func TestSegmentSliceSortableLinkHash(t *testing.T) {
 	}
 
 	sort.Sort(slice)
-
 	lastLinkHash := "a"
-
 	for _, s := range slice {
 		linkHash := s.Meta["linkHash"].(string)
 		if linkHash < lastLinkHash {
@@ -228,9 +224,7 @@ func TestSegmentSliceSortableNoPriority(t *testing.T) {
 	}
 
 	sort.Sort(slice)
-
 	lastPriority := 100.0
-
 	for _, s := range slice {
 		priority, ok := s.Link.Meta["priority"].(float64)
 		if ok {

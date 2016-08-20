@@ -18,7 +18,6 @@ func createAdapter(tb testing.TB) *FileStore {
 	if err != nil {
 		tb.Fatal(err)
 	}
-
 	return New(&Config{Path: path})
 }
 

@@ -27,7 +27,6 @@ func NewErrInternalServer(msg string) ErrHTTP {
 	if msg == "" {
 		msg = "internal server error"
 	}
-
 	return NewErrHTTP(msg, http.StatusInternalServerError)
 }
 
@@ -37,7 +36,6 @@ func NewErrBadRequest(msg string) ErrHTTP {
 	if msg == "" {
 		msg = "bad request"
 	}
-
 	return NewErrHTTP(msg, http.StatusBadRequest)
 }
 
@@ -47,7 +45,6 @@ func NewErrUnauthorized(msg string) ErrHTTP {
 	if msg == "" {
 		msg = "unauthorized"
 	}
-
 	return NewErrHTTP(msg, http.StatusUnauthorized)
 }
 
@@ -57,7 +54,6 @@ func NewErrNotFound(msg string) ErrHTTP {
 	if msg == "" {
 		msg = "not found"
 	}
-
 	return NewErrHTTP(msg, http.StatusNotFound)
 }
 
@@ -79,7 +75,6 @@ func (e ErrHTTP) JSONMarshal() []byte {
 		"error":  e.msg,
 		"status": e.status,
 	})
-
 	if err != nil {
 		msg := internalServerJSON
 		return []byte(msg)
