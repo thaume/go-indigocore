@@ -10,6 +10,8 @@
 //
 //	$ dummyfossilizer -h
 //	Usage of dummyfossilizer:
+//	  -callbacktimeout duration
+//	    	callback requests timeout (default 10s)
 //	  -maxdata int
 //	    	maximum data length (default 64)
 //	  -mindata int

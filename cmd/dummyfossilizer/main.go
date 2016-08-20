@@ -20,6 +20,7 @@ var (
 	numResultWorkers = flag.Int("workers", fossilizerhttp.DefaultNumResultWorkers, "number of result workers")
 	minDataLen       = flag.Int("mindata", fossilizerhttp.DefaultMinDataLen, "minimum data length")
 	maxDataLen       = flag.Int("maxdata", fossilizerhttp.DefaultMaxDataLen, "maximum data length")
+	callbackTimeout  = flag.Duration("callbacktimeout", fossilizerhttp.DefaultCallbackTimeout, "callback requests timeout")
 	verbose          = flag.Bool("verbose", fossilizerhttp.DefaultVerbose, "verbose output")
 	version          = ""
 )
@@ -42,6 +43,7 @@ func main() {
 		NumResultWorkers: *numResultWorkers,
 		MinDataLen:       *minDataLen,
 		MaxDataLen:       *maxDataLen,
+		CallbackTimeout:  *callbackTimeout,
 	}
 	h := fossilizerhttp.New(a, c)
 

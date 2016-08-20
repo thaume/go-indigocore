@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 
@@ -42,6 +43,9 @@ const (
 
 	// DefaultVerbose is whether verbose output should be enabled by default.
 	DefaultVerbose = false
+
+	// DefaultCallbackTimeout is the default timeout of requests to the callback URLs.
+	DefaultCallbackTimeout = 10 * time.Second
 )
 
 // Config contains configuration options for the server.
@@ -56,6 +60,9 @@ type Config struct {
 
 	// The maximum fossilize data length.
 	MaxDataLen int
+
+	// THe timeout of requests to the callback URLs.
+	CallbackTimeout time.Duration
 }
 
 type context struct {
@@ -89,8 +96,9 @@ func New(a fossilizer.Adapter, c *Config) *jsonhttp.Server {
 	// Launch result workers.
 	rc := make(chan *fossilizer.Result)
 	a.AddResultChan(rc)
+	client := http.Client{Timeout: c.CallbackTimeout}
 	for i := 0; i < c.NumResultWorkers; i++ {
-		go handleResults(rc)
+		go handleResults(rc, &client)
 	}
 
 	return s
@@ -120,7 +128,7 @@ func fossilize(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *c
 	return "ok", nil
 }
 
-func handleResults(resultChan chan *fossilizer.Result) {
+func handleResults(resultChan chan *fossilizer.Result, client *http.Client) {
 	for {
 		r := <-resultChan
 
@@ -131,7 +139,7 @@ func handleResults(resultChan chan *fossilizer.Result) {
 		}
 
 		url := string(r.Meta)
-		res, err := http.Post(url, "application/json", bytes.NewReader(body))
+		res, err := client.Post(url, "application/json", bytes.NewReader(body))
 
 		if err != nil {
 			log.Println(err)
