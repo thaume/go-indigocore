@@ -1,5 +1,8 @@
 ## Change log
 
+### 0.8.0-alpha
+  * More compact Docker images using Alpine and binaries.
+
 ### 0.7.0-alpha
 
   * Refactoring.

@@ -8,13 +8,13 @@ for target in ./*; do
 
 	cd $target
 
-	for package in ./*; do
-		[ -d "${package}" ] || continue
+	for cmd in ./*; do
+		[ -d "${cmd}" ] || continue
 
-		cp ../../LICENSE $package/
-		cp ../../RELEASE_NOTES.md $package/
-		cp ../../CHANGE_LOG.md $package/
-		zip -r ${package}{.zip,}
+		cp ../../LICENSE $cmd/
+		cp ../../RELEASE_NOTES.md $cmd/
+		cp ../../CHANGE_LOG.md $cmd/
+		zip -r ${cmd}{.zip,}
 	done
 
 	cd ..

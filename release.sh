@@ -2,7 +2,8 @@
 set -e
 
 commit=$(git rev-parse HEAD)
-tag=v$(cat VERSION)
+version=$(cat VERSION)
+tag=v${version}
 prerelease=$(cat PRERELEASE)
 
 description=$(cat <<EOF
@@ -27,6 +28,9 @@ echo "==> Building"
 echo "==> Packaging"
 ./package.sh
 
+echo "==> Creating docker images"
+./docker.sh
+
 echo "==> Creating tag $tag"
 git tag $tag 2>/dev/null || echo Tag $tag already exists
 
@@ -44,6 +48,16 @@ for target in ./dist/*; do
 		eval github-release upload "$flags" --file "$file" --name "$(basename ${file/.zip/})-$(basename $target).zip"
 	done
 done
+
+echo "==> Uploading docker images"
+cd dist
+for cmd in ./*; do
+	[ -d "${cmd}" ] || continue
+	cd $cmd
+	cmd=$(basename $cmd)
+	docker push stratumn/${cmd}:${version}
+done
+cd ..
 
 echo "==> Publishing"
 if [[ $prerelease != "false" ]]; then

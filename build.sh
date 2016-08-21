@@ -2,7 +2,7 @@
 
 set -e
 
-version=v$(cat VERSION)
+version=$(cat VERSION)
 
 builds=(
 	"dummyfossilizer github.com/stratumn/go/cmd/dummyfossilizer"
@@ -48,7 +48,7 @@ for (( i = 0; i < ${#targets[@]}; i++ )); do
 	for (( j = 0; j < ${#builds[@]}; j++ )); do
 		build=(${builds[j]})
 		name=${build[0]}
-		package=${build[1]}
+		cmd=${build[1]}
 
 		dir=dist/${os}-${arch}/${name}
 
@@ -61,6 +61,6 @@ for (( i = 0; i < ${#targets[@]}; i++ )); do
 		out=${dir}/${name}
 
 		echo Building $out
-		GOOS=$os GOARCH=$arch go build -o "$(pwd)/${out}" -ldflags "-X main.version=${version}" "$package"
+		GOOS=$os GOARCH=$arch go build -o "$(pwd)/${out}" -ldflags "-X main.version=${version}" "$cmd"
 	done
 done
