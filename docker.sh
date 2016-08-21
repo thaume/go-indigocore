@@ -18,8 +18,9 @@ WORKDIR /opt/stratumn/bin/
 
 CMD ["./${cmd}"]
 EOF
-	docker build -t stratumn/${cmd}:${version} .
+	docker build -t stratumn/${cmd}:${version} -t stratumn/${cmd}:latest .
 	cd ..
 done
 
+cd ..
 cd ..
