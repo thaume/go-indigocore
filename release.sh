@@ -16,14 +16,10 @@ EOF)
 flags="--user stratumn --repo go --tag '$tag'"
 release_flags="$flags --name 'Stratumn Go packages $tag' --description '$description'"
 
+./check.sh
+
 echo "==> Cleaning up"
 rm -rf dist
-
-echo "==> Running tests"
-go test ./...
-
-echo "==> Running linter"
-golint -set_exit_status ./...
 
 echo "==> Building"
 ./build.sh
