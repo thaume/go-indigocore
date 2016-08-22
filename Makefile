@@ -138,7 +138,7 @@ $(DOCKER_FILE_LIST): docker_file_%:
 
 $(DOCKER_IMAGE_LIST): docker_image_%:
 	@echo "==> Create Docker image" $(DOCKER_IMAGE)
-	$(DOCKER_BUILD) -f $(DOCKER_FILE) -t $(DOCKER_IMAGE):$(VERSION) -t $(DOCKER_IMAGE):latest $(DIST_DIR)
+	$(DOCKER_BUILD) -f $(DOCKER_FILE) -t $(DOCKER_IMAGE):$(VERSION) -t $(DOCKER_IMAGE):latest .
 
 $(DOCKER_PUSH_LIST): docker_push_%:
 	@echo "==> Pushing Docker image" $(DOCKER_IMAGE)
