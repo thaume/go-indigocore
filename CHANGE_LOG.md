@@ -1,5 +1,8 @@
 ## Change log
 
+### 0.8.1-alpha
+  * Added Makefile.
+
 ### 0.8.0-alpha
   * More compact Docker images using Alpine and binaries.
 

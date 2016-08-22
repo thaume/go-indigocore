@@ -11,7 +11,7 @@ GIT_REPO=$(lastword $(subst :, ,$(GIT_ORIGIN)))
 GITHUB_USER=$(firstword $(subst /, ,$(GIT_REPO)))
 GITHUB_REPO=$(firstword $(subst ., ,$(lastword $(subst /, ,$(GIT_REPO)))))
 GIT_TAG=v$(VERSION)
-RELEASE_NAME=$(GITHUB_USER)/$(GITHUB_REPO) $(GIT_TAG)
+RELEASE_NAME=$(GIT_TAG)
 RELEASE_NOTES_FILE=RELEASE_NOTES.md
 
 GITHUB_RELEASE_FLAGS=--user stratumn --repo go --tag '$(GIT_TAG)'
@@ -120,13 +120,13 @@ $(BUILD_LIST): build_%:
 
 $(ZIP_LIST): zip_%:
 	@echo "==> Zipping" $(COMMAND) $(OS) $(ARCH)
-	@mkdir -p $(TMP_ZIP_DIR)
-	@cp $(OUT) $(TMP_ZIP_DIR)
-	@cp LICENSE $(TMP_ZIP_DIR)
-	@cp RELEASE_NOTES.md $(TMP_ZIP_DIR)
-	@cp CHANGE_LOG.md $(TMP_ZIP_DIR)
-	@cd $(TMP_OS_ARCH_DIR) && zip -r $(COMMAND){.zip,} 1>/dev/null
-	@cp $(TMP_ZIP_DIR).zip $(OUT_OS_ARCH_DIR)
+	mkdir -p $(TMP_ZIP_DIR)
+	cp $(OUT) $(TMP_ZIP_DIR)
+	cp LICENSE $(TMP_ZIP_DIR)
+	cp RELEASE_NOTES.md $(TMP_ZIP_DIR)
+	cp CHANGE_LOG.md $(TMP_ZIP_DIR)
+	cd $(TMP_OS_ARCH_DIR) && zip -r $(COMMAND){.zip,} 1>/dev/null
+	cp $(TMP_ZIP_DIR).zip $(OUT_OS_ARCH_DIR)
 
 $(GITHUB_UPLOAD_LIST): github_upload_%:
 	@echo "==> Uploading Github release file" $(COMMAND)-$(OS)-$(ARCH).zip
@@ -134,7 +134,7 @@ $(GITHUB_UPLOAD_LIST): github_upload_%:
 
 $(DOCKER_FILE_LIST): docker_file_%:
 	@echo "==> Create Dockerfile for" $(DOCKER_IMAGE)
-	@sed 's/{{CMD}}/$(COMMAND)/g' $(DOCKER_FILE_TEMPLATE) > $(DOCKER_FILE)
+	sed 's/{{CMD}}/$(COMMAND)/g' $(DOCKER_FILE_TEMPLATE) > $(DOCKER_FILE)
 
 $(DOCKER_IMAGE_LIST): docker_image_%:
 	@echo "==> Create Docker image" $(DOCKER_IMAGE)
