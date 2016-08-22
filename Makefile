@@ -30,8 +30,7 @@ DIST_DIR=dist
 PACKAGES=$(shell $(GO_LIST) ./cmd/...)
 OS_ARCHS=darwin_amd64 linux_amd64 windows_amd64
 DOCKER_USER=$(GITHUB_USER)
-BUILDFILES_DIR=buildfiles
-DOCKER_FILE_TEMPLATE=$(BUILDFILES_DIR)/Dockerfile.tpl
+DOCKER_FILE_TEMPLATE=Dockerfile.tpl
 
 TMP_DIR := $(shell mktemp -d)
 
