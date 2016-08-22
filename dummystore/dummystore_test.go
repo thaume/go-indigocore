@@ -14,7 +14,7 @@ import (
 func TestDummystore(t *testing.T) {
 	storetestcases.Factory{
 		New: func() (store.Adapter, error) {
-			return New(""), nil
+			return New(&Config{}), nil
 		},
 	}.RunTests(t)
 }
@@ -22,7 +22,7 @@ func TestDummystore(t *testing.T) {
 func BenchmarkDummystore(b *testing.B) {
 	storetestcases.Factory{
 		New: func() (store.Adapter, error) {
-			return New(""), nil
+			return New(&Config{}), nil
 		},
 	}.RunBenchmarks(b)
 }

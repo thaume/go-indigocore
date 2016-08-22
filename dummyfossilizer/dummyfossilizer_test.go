@@ -11,7 +11,7 @@ import (
 )
 
 func TestGetInfo(t *testing.T) {
-	a := New("")
+	a := New(&Config{})
 	info, err := a.GetInfo()
 	if err != nil {
 		t.Fatal(err)
@@ -22,7 +22,7 @@ func TestGetInfo(t *testing.T) {
 }
 
 func TestFossilize(t *testing.T) {
-	a := New("")
+	a := New(&Config{})
 	rc := make(chan *fossilizer.Result)
 	a.AddResultChan(rc)
 
