@@ -23,6 +23,7 @@ GO_TEST=$(GO_CMD) test
 GO_LINT=$(GO_LINT_CMD) -set_exit_status
 GITHUB_RELEASE_RELEASE=$(GITHUB_RELEASE_COMMAND) release $(GITHUB_RELEASE_RELEASE_FLAGS)
 GITHUB_RELEASE_UPLOAD=$(GITHUB_RELEASE_COMMAND) upload $(GITHUB_RELEASE_FLAGS)
+GITHUB_RELEASE_RELEASE=$(GITHUB_RELEASE_COMMAND) edit $(GITHUB_RELEASE_RELEASE_FLAGS)
 DOCKER_BUILD=$(DOCKER_CMD) build
 DOCKER_PUSH=$(DOCKER_CMD) push
 
@@ -86,20 +87,23 @@ git_tag:
 	@echo "==> Creating git tag"
 	git tag $(GIT_TAG) 2>/dev/null || echo Tag $(GIT_TAG) already exists
 	git push origin --tags
-	sleep 1
 
 github_draft:
 	@echo "==> Creating Github draft release"
-	$(GITHUB_RELEASE_RELEASE) --target "$(GIT_COMMIT)" --draft
+	@if [[ $prerelease != "false" ]]; then \
+		$(GITHUB_RELEASE_RELEASE) --draft --pre-release; \
+	else \
+		$(GITHUB_RELEASE_RELEASE) --draft; \
+	fi
 
 github_upload: $(GITHUB_UPLOAD_LIST)
 
 github_publish:
 	@echo "==> Publishing Github release"
 	@if [[ $prerelease != "false" ]]; then \
-		$(GITHUB_RELEASE_RELEASE) --pre-release; \
+		$(GITHUB_RELEASE_EDIT) --pre-release; \
 	else \
-		$(GITHUB_RELEASE_RELEASE); \
+		$(GITHUB_RELEASE_EDIT); \
 	fi
 
 docker_files: $(DOCKER_FILE_LIST)
