@@ -86,6 +86,7 @@ git_tag:
 	@echo "==> Creating git tag"
 	git tag $(GIT_TAG) 2>/dev/null || echo Tag $(GIT_TAG) already exists
 	git push origin --tags
+	sleep 1
 
 github_draft:
 	@echo "==> Creating Github draft release"
@@ -95,7 +96,7 @@ github_upload: $(GITHUB_UPLOAD_LIST)
 
 github_publish:
 	@echo "==> Publishing Github release"
-	if [[ $prerelease != "false" ]]; then \
+	@if [[ $prerelease != "false" ]]; then \
 		$(GITHUB_RELEASE_RELEASE) --pre-release; \
 	else \
 		$(GITHUB_RELEASE_RELEASE); \
