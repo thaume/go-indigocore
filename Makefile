@@ -11,7 +11,7 @@ GIT_REPO=$(lastword $(subst :, ,$(GIT_ORIGIN)))
 GITHUB_USER=$(firstword $(subst /, ,$(GIT_REPO)))
 GITHUB_REPO=$(firstword $(subst ., ,$(lastword $(subst /, $(GIT_REPO)))))
 GIT_TAG=v$(VERSION)
-RELEASE_NAME=$(GITHUB_USER)/$(GIT_REPO) $(GIT_TAG)
+RELEASE_NAME=$(GITHUB_USER)/$(GITHUB_REPO) $(GIT_TAG)
 RELEASE_NOTES_FILE=RELEASE_NOTES.md
 
 GITHUB_RELEASE_FLAGS=--user stratumn --repo go --tag '$(GIT_TAG)'
