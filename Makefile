@@ -18,7 +18,7 @@ GITHUB_RELEASE_FLAGS=--user stratumn --repo go --tag '$(GIT_TAG)'
 GITHUB_RELEASE_RELEASE_FLAGS=$(GITHUB_RELEASE_FLAGS) --name '$(RELEASE_NAME)' --description "$$(cat $(RELEASE_NOTES_FILE))"
 
 GO_LIST=$(GO_CMD) list
-GO_BUILD=$(GO_CMD) build -ldflags '-X main.version=$(VERSION)'
+GO_BUILD=$(GO_CMD) build -ldflags '-X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT)'
 GO_TEST=$(GO_CMD) test
 GO_LINT=$(GO_LINT_CMD) -set_exit_status
 GITHUB_RELEASE_RELEASE=$(GITHUB_RELEASE_COMMAND) release $(GITHUB_RELEASE_RELEASE_FLAGS)

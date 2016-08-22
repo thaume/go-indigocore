@@ -23,9 +23,18 @@ const (
 	Description = "Stratumn Dummy Store"
 )
 
+// Config contains configuration options for the store.
+type Config struct {
+	// A version string that will set in the store's information.
+	Version string
+
+	// A git commit hash that will set in the store's information.
+	Commit string
+}
+
 // DummyStore is the type that implements github.com/stratumn/go/store.Adapter.
 type DummyStore struct {
-	version  string
+	config   *Config
 	segments segmentMap   // maps link hashes to segments
 	maps     hashSetMap   // maps chains IDs to sets of link hashes
 	mutex    sync.RWMutex // simple global mutex, just in case
@@ -36,8 +45,8 @@ type hashSet map[string]struct{}
 type hashSetMap map[string]hashSet
 
 // New creates an instance of a DummyStore.
-func New(version string) *DummyStore {
-	return &DummyStore{version, segmentMap{}, hashSetMap{}, sync.RWMutex{}}
+func New(config *Config) *DummyStore {
+	return &DummyStore{config, segmentMap{}, hashSetMap{}, sync.RWMutex{}}
 }
 
 // GetInfo implements github.com/stratumn/go/store.Adapter.GetInfo.
@@ -45,7 +54,8 @@ func (a *DummyStore) GetInfo() (interface{}, error) {
 	return map[string]interface{}{
 		"name":        Name,
 		"description": Description,
-		"version":     a.version,
+		"version":     a.config.Version,
+		"commit":      a.config.Commit,
 	}, nil
 }
 

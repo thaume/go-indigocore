@@ -23,6 +23,7 @@ var (
 	callbackTimeout  = flag.Duration("callbacktimeout", fossilizerhttp.DefaultCallbackTimeout, "callback requests timeout")
 	verbose          = flag.Bool("verbose", fossilizerhttp.DefaultVerbose, "verbose output")
 	version          = ""
+	commit           = ""
 )
 
 func init() {
@@ -32,7 +33,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	a := dummyfossilizer.New(version)
+	a := dummyfossilizer.New((&dummyfossilizer.Config{Version: version, Commit: commit}))
 	c := &fossilizerhttp.Config{
 		Config: jsonhttp.Config{
 			Port:     *port,

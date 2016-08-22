@@ -43,6 +43,9 @@ type Config struct {
 	// A version string that will set in the store's information.
 	Version string
 
+	// A git commit hash that will set in the store's information.
+	Commit string
+
 	// Path where segments will be saved.
 	Path string
 }
@@ -58,6 +61,7 @@ func (a *FileStore) GetInfo() (interface{}, error) {
 		"name":        Name,
 		"description": Description,
 		"version":     a.config.Version,
+		"commit":      a.config.Commit,
 	}, nil
 }
 

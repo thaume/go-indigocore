@@ -21,15 +21,24 @@ const (
 	Description = "Stratumn Dummy Fossilizer"
 )
 
+// Config contains configuration options for the store.
+type Config struct {
+	// A version string that will set in the store's information.
+	Version string
+
+	// A git commit hash that will set in the store's information.
+	Commit string
+}
+
 // DummyFossilizer is the type that implements github.com/stratumn/go/fossilizer.Adapter.
 type DummyFossilizer struct {
-	version     string
+	config      *Config
 	resultChans []chan *fossilizer.Result
 }
 
 // New creates an instance of a DummyFossilizer.
-func New(version string) *DummyFossilizer {
-	return &DummyFossilizer{version, nil}
+func New(config *Config) *DummyFossilizer {
+	return &DummyFossilizer{config, nil}
 }
 
 // GetInfo implements github.com/stratumn/go/fossilizer.Adapter.GetInfo.
@@ -37,7 +46,8 @@ func (a *DummyFossilizer) GetInfo() (interface{}, error) {
 	return map[string]interface{}{
 		"name":        Name,
 		"description": Description,
-		"version":     a.version,
+		"version":     a.config.Version,
+		"commit":      a.config.Commit,
 	}, nil
 }
 

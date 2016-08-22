@@ -19,6 +19,7 @@ var (
 	keyFile  = flag.String("tlskey", "", "TLS private key file")
 	verbose  = flag.Bool("verbose", storehttp.DefaultVerbose, "verbose output")
 	version  = ""
+	commit   = ""
 )
 
 func init() {
@@ -28,7 +29,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	a := dummystore.New(version)
+	a := dummystore.New(&dummystore.Config{Version: version, Commit: commit})
 	c := &jsonhttp.Config{
 		Port:     *port,
 		CertFile: *certFile,
