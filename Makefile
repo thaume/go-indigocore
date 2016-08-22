@@ -49,6 +49,7 @@ OS=$(word 2, $(subst _, ,$*))
 ARCH=$(word 3, $(subst _, ,$*))
 OUT_OS_ARCH_DIR=$(DIST_DIR)/$(OS)-$(ARCH)
 OUT=$(OUT_OS_ARCH_DIR)/$(COMMAND)
+OUT_WINDOWS=$(OUT_OS_ARCH_DIR)/$(COMMAND).exe
 TMP_OS_ARCH_DIR=$(TMP_DIR)/$(OS)-$(ARCH)
 TMP_ZIP_DIR=$(TMP_OS_ARCH_DIR)/$(COMMAND)
 DOCKER_IMAGE=$(DOCKER_USER)/$(COMMAND)
@@ -100,9 +101,11 @@ github_upload: $(GITHUB_UPLOAD_LIST)
 
 github_publish:
 	@echo "==> Publishing Github release"
-	@if [[ $prerelease != "false" ]]; then \
+	@if [[ "$(PRERELEASE)" != "false" ]]; then \
+		echo $(GITHUB_RELEASE_EDIT) --pre-release; \
 		$(GITHUB_RELEASE_EDIT) --pre-release; \
 	else \
+		echo $(GITHUB_RELEASE_EDIT); \
 		$(GITHUB_RELEASE_EDIT); \
 	fi
 
@@ -116,12 +119,22 @@ release: test lint clean build zip git_tag github_draft github_upload github_pub
 
 $(BUILD_LIST): build_%:
 	@echo "==> Building" $(COMMAND) $(OS) $(ARCH)
-	GOOS=$(OS) GOARCH=$(ARCH) $(GO_BUILD) -o $(OUT) $(PACKAGE)
+	@if [[ "$(OS)" = "windows" ]]; then \
+		echo GOOS=$(OS) GOARCH=$(ARCH) $(GO_BUILD) -o $(OUT_WINDOWS) $(PACKAGE); \
+		GOOS=$(OS) GOARCH=$(ARCH) $(GO_BUILD) -o $(OUT_WINDOWS) $(PACKAGE); \
+	else \
+		echo GOOS=$(OS) GOARCH=$(ARCH) $(GO_BUILD) -o $(OUT) $(PACKAGE); \
+		GOOS=$(OS) GOARCH=$(ARCH) $(GO_BUILD) -o $(OUT) $(PACKAGE); \
+	fi
 
 $(ZIP_LIST): zip_%:
 	@echo "==> Zipping" $(COMMAND) $(OS) $(ARCH)
 	mkdir -p $(TMP_ZIP_DIR)
-	cp $(OUT) $(TMP_ZIP_DIR)
+	@if [[ "$(OS)" = "windows" ]]; then \
+		cp $(OUT_WINDOWS) $(TMP_ZIP_DIR); \
+	else \
+		cp $(OUT) $(TMP_ZIP_DIR); \
+	fi
 	cp LICENSE $(TMP_ZIP_DIR)
 	cp RELEASE_NOTES.md $(TMP_ZIP_DIR)
 	cp CHANGE_LOG.md $(TMP_ZIP_DIR)
