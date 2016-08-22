@@ -85,7 +85,7 @@ zip: $(ZIP_LIST)
 
 git_tag:
 	@echo "==> Creating git tag"
-	git tag $(GIT_TAG) 2>/dev/null || echo Tag $(GIT_TAG) already exists
+	git tag $(GIT_TAG) 2>/dev/null
 	git push origin --tags
 
 github_draft:
