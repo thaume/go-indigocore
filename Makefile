@@ -35,7 +35,7 @@ DOCKER_FILE_TEMPLATE=Dockerfile.tpl
 
 TMP_DIR := $(shell mktemp -d)
 
-COVERAGE_LIST=$(shell $(GO_LIST) ./... | grep -v vendor | grep -v testutil | grep -v testcases)
+TEST_LIST=$(shell $(GO_LIST) ./... | grep -v vendor | grep -v testutil | grep -v testcases)
 BUILD_LIST=$(foreach package, $(PACKAGES), $(foreach os_arch, $(OS_ARCHS), build_$(package)_$(os_arch)))
 ZIP_LIST=$(foreach package, $(PACKAGES), $(foreach os_arch, $(OS_ARCHS), zip_$(package)_$(os_arch)))
 DOCKER_FILE_LIST=$(foreach package, $(PACKAGES), docker_file_$(package))
@@ -61,16 +61,19 @@ all: build
 
 test:
 	@echo "==> Running tests"
-	$(GO_TEST) ./...
+	@for d in $(TEST_LIST); do \
+	    $(GO_TEST) $$d; \
+	done
 
 lint:
 	@echo "==> Running linter"
 	$(GO_LINT) ./...
 
 coverage:
+	@echo "==> Running test coverage"
 	@echo "" > coverage.txt
-	@for d in $(COVERAGE_LIST); do \
-	    go test -coverprofile=profile.out -covermode=atomic $$d; \
+	@for d in $(TEST_LIST); do \
+	    $(GO_TEST) -coverprofile=profile.out -covermode=atomic $$d; \
 	    if [ -f profile.out ]; then \
 	        cat profile.out >> coverage.txt; \
 	        rm profile.out; \
