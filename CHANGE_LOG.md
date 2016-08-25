@@ -1,5 +1,8 @@
 ## Change log
 
+### 0.8.2-alpha
+  * More idiomatic Makefile.
+
 ### 0.8.1-alpha
   * Added Makefile.
 
