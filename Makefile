@@ -1,8 +1,7 @@
-GO_CMD=go
-GO_LINT_CMD=golint
-GITHUB_RELEASE_COMMAND=github-release
-DOCKER_CMD=docker
-
+NIX_OS_ARCHS=darwin-amd64 linux-amd64
+WIN_OS_ARCHS=windows-amd64
+DIST_DIR=dist
+COMMAND_DIR=cmd
 VERSION=$(shell cat VERSION)
 PRERELEASE=$(cat PRERELEASE)
 GIT_COMMIT=$(shell git rev-parse HEAD)
@@ -13,6 +12,17 @@ GITHUB_REPO=$(firstword $(subst ., ,$(lastword $(subst /, ,$(GIT_REPO)))))
 GIT_TAG=v$(VERSION)
 RELEASE_NAME=$(GIT_TAG)
 RELEASE_NOTES_FILE=RELEASE_NOTES.md
+TEXT_FILES=LICENSE RELEASE_NOTES.md CHANGE_LOG.md
+DOCKER_USER=$(GITHUB_USER)
+DOCKER_FILE_TEMPLATE=Dockerfile.tpl
+COVERAGE_FILE=coverage.txt
+CLEAN_PATHS=$(DIST_DIR) $(COVERAGE_FILE)
+TMP_DIR:=$(shell mktemp -d)
+
+GO_CMD=go
+GO_LINT_CMD=golint
+GITHUB_RELEASE_COMMAND=github-release
+DOCKER_CMD=docker
 
 GITHUB_RELEASE_FLAGS=--user '$(GITHUB_USER)' --repo '$(GITHUB_REPO)' --tag '$(GIT_TAG)'
 GITHUB_RELEASE_RELEASE_FLAGS=$(GITHUB_RELEASE_FLAGS) --name '$(RELEASE_NAME)' --description "$$(cat $(RELEASE_NOTES_FILE))"
@@ -20,6 +30,7 @@ GITHUB_RELEASE_RELEASE_FLAGS=$(GITHUB_RELEASE_FLAGS) --name '$(RELEASE_NAME)' --
 GO_LIST=$(GO_CMD) list
 GO_BUILD=$(GO_CMD) build -ldflags '-X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT)'
 GO_TEST=$(GO_CMD) test
+GO_BENCHMARK=$(GO_TEST) -bench .
 GO_LINT=$(GO_LINT_CMD) -set_exit_status
 GITHUB_RELEASE_RELEASE=$(GITHUB_RELEASE_COMMAND) release $(GITHUB_RELEASE_RELEASE_FLAGS)
 GITHUB_RELEASE_UPLOAD=$(GITHUB_RELEASE_COMMAND) upload $(GITHUB_RELEASE_FLAGS)
@@ -27,83 +38,123 @@ GITHUB_RELEASE_EDIT=$(GITHUB_RELEASE_COMMAND) edit $(GITHUB_RELEASE_RELEASE_FLAG
 DOCKER_BUILD=$(DOCKER_CMD) build
 DOCKER_PUSH=$(DOCKER_CMD) push
 
-DIST_DIR=dist
-PACKAGES=$(shell $(GO_LIST) ./cmd/...)
-OS_ARCHS=darwin_amd64 linux_amd64 windows_amd64
-DOCKER_USER=$(GITHUB_USER)
-DOCKER_FILE_TEMPLATE=Dockerfile.tpl
+PACKAGES=$(shell $(GO_LIST) ./... | grep -v vendor)
+TEST_PACKAGES=$(shell $(GO_LIST) ./... | grep -v vendor | grep -v testutil | grep -v testcases)
+COVERAGE_SOURCES=$(shell find . -name '*.go' | grep -v 'testutils' | grep -v 'testcases' | grep -v 'doc.go')
+BUILD_SOURCES=$(shell find . -name '*.go' | grep -v 'testutils' | grep -v 'testcases' | grep -v '_test.go' | grep -v 'doc.go')
+COMMANDS=$(shell ls $(COMMAND_DIR))
 
-TMP_DIR := $(shell mktemp -d)
+NIX_EXECS=$(foreach command, $(COMMANDS), $(foreach os-arch, $(NIX_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command)))
+WIN_EXECS=$(foreach command, $(COMMANDS), $(foreach os-arch, $(WIN_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).exe))
+EXECS=$(NIX_EXECS) $(WIN_EXECS)
+NIX_ZIP_FILES=$(foreach command, $(COMMANDS), $(foreach os-arch, $(NIX_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).zip))
+WIN_DIST_FILES=$(foreach command, $(COMMANDS), $(foreach os-arch, $(WIN_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).zip))
+ZIP_FILES=$(NIX_ZIP_FILES) $(WIN_DIST_FILES)
+DOCKER_FILES=$(foreach command, $(COMMANDS), $(DIST_DIR)/$(command).Dockerfile)
 
-TEST_LIST=$(shell $(GO_LIST) ./... | grep -v vendor | grep -v testutil | grep -v testcases)
-BUILD_LIST=$(foreach package, $(PACKAGES), $(foreach os_arch, $(OS_ARCHS), build_$(package)_$(os_arch)))
-ZIP_LIST=$(foreach package, $(PACKAGES), $(foreach os_arch, $(OS_ARCHS), zip_$(package)_$(os_arch)))
-DOCKER_FILE_LIST=$(foreach package, $(PACKAGES), docker_file_$(package))
-DOCKER_IMAGE_LIST=$(foreach package, $(PACKAGES), docker_image_$(package))
-DOCKER_PUSH_LIST=$(foreach package, $(PACKAGES), docker_push_$(package))
-GITHUB_UPLOAD_LIST=$(foreach package, $(PACKAGES), $(foreach os_arch, $(OS_ARCHS), github_upload_$(package)_$(os_arch)))
+TEST_LIST=$(foreach package, $(TEST_PACKAGES), test_$(package))
+BENCHMARK_LIST=$(foreach package, $(TEST_PACKAGES), benchmark_$(package))
+LINT_LIST=$(foreach package, $(PACKAGES), lint_$(package))
+GITHUB_UPLOAD_LIST=$(foreach file, $(ZIP_FILES), github_upload_$(firstword $(subst ., ,$(file))))
+DOCKER_IMAGE_LIST=$(foreach command, $(COMMANDS), docker_image_$(command))
+DOCKER_PUSH_LIST=$(foreach command, $(COMMANDS), docker_push_$(command))
+CLEAN_LIST=$(foreach path, $(CLEAN_PATHS), clean_$(path))
 
-PACKAGE=$(firstword $(subst _, ,$*))
-COMMAND=$(lastword $(subst /, ,$(PACKAGE)))
-OS=$(word 2, $(subst _, ,$*))
-ARCH=$(word 3, $(subst _, ,$*))
-OUT_OS_ARCH_DIR=$(DIST_DIR)/$(OS)-$(ARCH)
-OUT=$(OUT_OS_ARCH_DIR)/$(COMMAND)
-OUT_WINDOWS=$(OUT_OS_ARCH_DIR)/$(COMMAND).exe
-TMP_OS_ARCH_DIR=$(TMP_DIR)/$(OS)-$(ARCH)
-TMP_ZIP_DIR=$(TMP_OS_ARCH_DIR)/$(COMMAND)
-DOCKER_IMAGE=$(DOCKER_USER)/$(COMMAND)
-DOCKER_FILE=$(DIST_DIR)/Dockerfile.$(COMMAND)
+# == .PHONY ===================================================================
+.PHONY: test coverage benchmark lint build clean git_tag github_draft github_upload github_publish docker_images docker_push $(TEST_LIST) $(BENCHMARK_LIST) $(LINT_LIST) $(GITHUB_UPLOAD_LIST) $(DOCKER_IMAGE_LIST) $(DOCKER_PUSH_LIST) $(CLEAN_LIST)
 
-.PHONY: $(BUILD_LIST)
-
+# == all ======================================================================
 all: build
 
-test:
-	@echo "==> Running tests"
-	@for d in $(TEST_LIST); do \
-	    $(GO_TEST) $$d; \
-	done
+# == release ==================================================================
+release: test lint clean build git_tag github_draft github_upload github_publish docker_images docker_push
 
-lint:
-	@echo "==> Running linter"
-	$(GO_LINT) ./...
+# == test =====================================================================
+test: $(TEST_LIST)
 
-coverage:
-	@echo "==> Running test coverage"
-	@echo "" > coverage.txt
-	@for d in $(TEST_LIST); do \
+$(TEST_LIST): test_%:
+	@$(GO_TEST) $*
+
+# == coverage =================================================================
+coverage: $(COVERAGE_FILE)
+
+$(COVERAGE_FILE): $(COVERAGE_SOURCES)
+	@for d in $(TEST_PACKAGES); do \
 	    $(GO_TEST) -coverprofile=profile.out -covermode=atomic $$d; \
 	    if [ -f profile.out ]; then \
-	        cat profile.out >> coverage.txt; \
+	        cat profile.out >> $(COVERAGE_FILE); \
 	        rm profile.out; \
 	    fi \
 	done
 
-clean:
-	@echo "==> Cleaning up"
-	rm -rf $(DIST_DIR)
+# == benchmark ================================================================
+benchmark: $(BENCHMARK_LIST)
 
-build: $(BUILD_LIST)
-zip: $(ZIP_LIST)
+$(BENCHMARK_LIST): benchmark_%:
+	@$(GO_BENCHMARK) $*
 
+# == list =====================================================================
+lint: $(LINT_LIST)
+
+$(LINT_LIST): lint_%:
+	@$(GO_LINT) $*
+
+# == build ====================================================================
+build: $(EXECS)
+
+BUILD_OS_ARCH=$(word 2, $(subst /, ,$@))
+BUILD_OS=$(firstword $(subst -, ,$(BUILD_OS_ARCH)))
+BUILD_ARCH=$(lastword $(subst -, ,$(BUILD_OS_ARCH)))
+BUILD_COMMAND=$(firstword $(word 1, $(subst ., ,$(lastword $(subst /, ,$@)))))
+BUILD_PACKAGE=$(shell $(GO_LIST) ./$(COMMAND_DIR)/$(BUILD_COMMAND))
+
+$(EXECS): $(BUILD_SOURCES)
+	GOOS=$(BUILD_OS) GOARCH=$(BUILD_ARCH) $(GO_BUILD) -o $@ $(BUILD_PACKAGE)
+
+# == zip ======================================================================
+zip: $(ZIP_FILES)
+
+ZIP_TMP_OS_ARCH_DIR=$(TMP_DIR)/$(BUILD_OS_ARCH)
+ZIP_TMP_CMD_DIR=$(ZIP_TMP_OS_ARCH_DIR)/$(BUILD_COMMAND)
+
+%.zip: %.exe
+	mkdir -p $(ZIP_TMP_CMD_DIR)
+	cp $*.exe $(ZIP_TMP_CMD_DIR)
+	cp $(TEXT_FILES) $(ZIP_TMP_CMD_DIR)
+	mv $(ZIP_TMP_CMD_DIR)/LICENSE $(ZIP_TMP_CMD_DIR)/LICENSE.txt
+	cd $(ZIP_TMP_OS_ARCH_DIR) && zip -r $(BUILD_COMMAND){.zip,} 1>/dev/null
+	cp $(ZIP_TMP_CMD_DIR).zip $@
+
+%.zip: %
+	mkdir -p $(ZIP_TMP_CMD_DIR)
+	cp $* $(ZIP_TMP_CMD_DIR)
+	cp $(TEXT_FILES) $(ZIP_TMP_CMD_DIR)
+	cd $(ZIP_TMP_OS_ARCH_DIR) && zip -r $(BUILD_COMMAND){.zip,} 1>/dev/null
+	cp $(ZIP_TMP_CMD_DIR).zip $@
+
+# == git_tag ==================================================================
 git_tag:
-	@echo "==> Creating git tag"
-	git tag $(GIT_TAG) 2>/dev/null
+	git tag $(GIT_TAG)
 	git push origin --tags
 
+# == github_draft =============================================================
 github_draft:
-	@echo "==> Creating Github draft release"
 	@if [[ $prerelease != "false" ]]; then \
+		echo $(GITHUB_RELEASE_RELEASE) --draft --pre-release; \
 		$(GITHUB_RELEASE_RELEASE) --draft --pre-release; \
 	else \
+		echo $(GITHUB_RELEASE_RELEASE) --draft; \
 		$(GITHUB_RELEASE_RELEASE) --draft; \
 	fi
 
+# == github_upload ============================================================
 github_upload: $(GITHUB_UPLOAD_LIST)
 
+$(GITHUB_UPLOAD_LIST): github_upload_%: %.zip
+	$(GITHUB_RELEASE_UPLOAD) --file $*.zip --name $(BUILD_COMMAND)-$(BUILD_OS_ARCH).zip
+
+# == github_publish ===========================================================
 github_publish:
-	@echo "==> Publishing Github release"
 	@if [[ "$(PRERELEASE)" != "false" ]]; then \
 		echo $(GITHUB_RELEASE_EDIT) --pre-release; \
 		$(GITHUB_RELEASE_EDIT) --pre-release; \
@@ -112,51 +163,30 @@ github_publish:
 		$(GITHUB_RELEASE_EDIT); \
 	fi
 
-docker_files: $(DOCKER_FILE_LIST)
+# == docker_files =============================================================
+docker_files: $(DOCKER_FILES)
 
+$(DIST_DIR)/%.Dockerfile: $(DOCKER_FILE_TEMPLATE)
+	mkdir -p $(DIST_DIR)
+	sed 's/{{CMD}}/$*/g' $(DOCKER_FILE_TEMPLATE) > $@
+
+# == docker_images ============================================================
 docker_images: $(DOCKER_IMAGE_LIST)
 
+DOCKER_IMAGE=$(DOCKER_USER)/$*
+
+$(DOCKER_IMAGE_LIST): docker_image_%: $(DIST_DIR)/%.Dockerfile $(DIST_DIR)/linux-amd64/%
+	$(DOCKER_BUILD) -f $(DIST_DIR)/$*.Dockerfile -t $(DOCKER_IMAGE):$(VERSION) -t $(DOCKER_IMAGE):latest .
+
+# == docker_push ==============================================================
 docker_push: $(DOCKER_PUSH_LIST)
 
-release: test lint clean build zip git_tag github_draft github_upload github_publish docker_files docker_images docker_push
-
-$(BUILD_LIST): build_%:
-	@echo "==> Building" $(COMMAND) $(OS) $(ARCH)
-	@if [[ "$(OS)" = "windows" ]]; then \
-		echo GOOS=$(OS) GOARCH=$(ARCH) $(GO_BUILD) -o $(OUT_WINDOWS) $(PACKAGE); \
-		GOOS=$(OS) GOARCH=$(ARCH) $(GO_BUILD) -o $(OUT_WINDOWS) $(PACKAGE); \
-	else \
-		echo GOOS=$(OS) GOARCH=$(ARCH) $(GO_BUILD) -o $(OUT) $(PACKAGE); \
-		GOOS=$(OS) GOARCH=$(ARCH) $(GO_BUILD) -o $(OUT) $(PACKAGE); \
-	fi
-
-$(ZIP_LIST): zip_%:
-	@echo "==> Zipping" $(COMMAND) $(OS) $(ARCH)
-	mkdir -p $(TMP_ZIP_DIR)
-	@if [[ "$(OS)" = "windows" ]]; then \
-		cp $(OUT_WINDOWS) $(TMP_ZIP_DIR); \
-	else \
-		cp $(OUT) $(TMP_ZIP_DIR); \
-	fi
-	cp LICENSE $(TMP_ZIP_DIR)
-	cp RELEASE_NOTES.md $(TMP_ZIP_DIR)
-	cp CHANGE_LOG.md $(TMP_ZIP_DIR)
-	cd $(TMP_OS_ARCH_DIR) && zip -r $(COMMAND){.zip,} 1>/dev/null
-	cp $(TMP_ZIP_DIR).zip $(OUT_OS_ARCH_DIR)
-
-$(GITHUB_UPLOAD_LIST): github_upload_%:
-	@echo "==> Uploading Github release file" $(COMMAND)-$(OS)-$(ARCH).zip
-	$(GITHUB_RELEASE_UPLOAD) --file $(OUT).zip --name $(COMMAND)-$(OS)-$(ARCH).zip
-
-$(DOCKER_FILE_LIST): docker_file_%:
-	@echo "==> Create Dockerfile for" $(DOCKER_IMAGE)
-	sed 's/{{CMD}}/$(COMMAND)/g' $(DOCKER_FILE_TEMPLATE) > $(DOCKER_FILE)
-
-$(DOCKER_IMAGE_LIST): docker_image_%:
-	@echo "==> Create Docker image" $(DOCKER_IMAGE)
-	$(DOCKER_BUILD) -f $(DOCKER_FILE) -t $(DOCKER_IMAGE):$(VERSION) -t $(DOCKER_IMAGE):latest .
-
 $(DOCKER_PUSH_LIST): docker_push_%:
-	@echo "==> Pushing Docker image" $(DOCKER_IMAGE)
-	$(DOCKER_PUSH) $(DOCKER_IMAGE):$(VERSION)
-	$(DOCKER_PUSH) $(DOCKER_IMAGE):latest
+	echo $(DOCKER_PUSH) $(DOCKER_IMAGE):$(VERSION)
+	echo $(DOCKER_PUSH) $(DOCKER_IMAGE):latest
+
+# == clean ====================================================================
+clean: $(CLEAN_LIST)
+
+$(CLEAN_LIST): clean_%:
+	rm -rf $*
