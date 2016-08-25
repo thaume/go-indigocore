@@ -61,7 +61,7 @@ DOCKER_PUSH_LIST=$(foreach command, $(COMMANDS), docker_push_$(command))
 CLEAN_LIST=$(foreach path, $(CLEAN_PATHS), clean_$(path))
 
 # == .PHONY ===================================================================
-.PHONY: test coverage benchmark lint build clean git_tag github_draft github_upload github_publish docker_images docker_push $(TEST_LIST) $(BENCHMARK_LIST) $(LINT_LIST) $(GITHUB_UPLOAD_LIST) $(DOCKER_IMAGE_LIST) $(DOCKER_PUSH_LIST) $(CLEAN_LIST)
+.PHONY: test coverage benchmark lint build git_tag github_draft github_upload github_publish docker_images docker_push clean $(TEST_LIST) $(BENCHMARK_LIST) $(LINT_LIST) $(GITHUB_UPLOAD_LIST) $(DOCKER_IMAGE_LIST) $(DOCKER_PUSH_LIST) $(CLEAN_LIST)
 
 # == all ======================================================================
 all: build
@@ -182,8 +182,8 @@ $(DOCKER_IMAGE_LIST): docker_image_%: $(DIST_DIR)/%.Dockerfile $(DIST_DIR)/linux
 docker_push: $(DOCKER_PUSH_LIST)
 
 $(DOCKER_PUSH_LIST): docker_push_%:
-	echo $(DOCKER_PUSH) $(DOCKER_IMAGE):$(VERSION)
-	echo $(DOCKER_PUSH) $(DOCKER_IMAGE):latest
+	$(DOCKER_PUSH) $(DOCKER_IMAGE):$(VERSION)
+	$(DOCKER_PUSH) $(DOCKER_IMAGE):latest
 
 # == clean ====================================================================
 clean: $(CLEAN_LIST)
