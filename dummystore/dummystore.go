@@ -32,6 +32,14 @@ type Config struct {
 	Commit string
 }
 
+// Info is the info returned by GetInfo.
+type Info struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Version     string `json:"version"`
+	Commit      string `json:"commit"`
+}
+
 // DummyStore is the type that implements github.com/stratumn/go/store.Adapter.
 type DummyStore struct {
 	config   *Config
@@ -51,11 +59,11 @@ func New(config *Config) *DummyStore {
 
 // GetInfo implements github.com/stratumn/go/store.Adapter.GetInfo.
 func (a *DummyStore) GetInfo() (interface{}, error) {
-	return map[string]interface{}{
-		"name":        Name,
-		"description": Description,
-		"version":     a.config.Version,
-		"commit":      a.config.Commit,
+	return &Info{
+		Name:        Name,
+		Description: Description,
+		Version:     a.config.Version,
+		Commit:      a.config.Commit,
 	}, nil
 }
 

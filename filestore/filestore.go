@@ -50,6 +50,14 @@ type Config struct {
 	Path string
 }
 
+// Info is the info returned by GetInfo.
+type Info struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Version     string `json:"version"`
+	Commit      string `json:"commit"`
+}
+
 // New creates an instance of a FileStore.
 func New(config *Config) *FileStore {
 	return &FileStore{config}
@@ -57,11 +65,11 @@ func New(config *Config) *FileStore {
 
 // GetInfo implements github.com/stratumn/go/store.Adapter.GetInfo.
 func (a *FileStore) GetInfo() (interface{}, error) {
-	return map[string]interface{}{
-		"name":        Name,
-		"description": Description,
-		"version":     a.config.Version,
-		"commit":      a.config.Commit,
+	return &Info{
+		Name:        Name,
+		Description: Description,
+		Version:     a.config.Version,
+		Commit:      a.config.Commit,
 	}, nil
 }
 

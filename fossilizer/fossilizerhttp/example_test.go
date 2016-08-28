@@ -47,5 +47,5 @@ func Example() {
 	}
 
 	fmt.Printf("%s", info)
-	// Output: {"adapter":{"commit":"abc","description":"Stratumn Dummy Fossilizer","name":"dummy","version":"0.1.0"}}
+	// Output: {"adapter":{"name":"dummy","description":"Stratumn Dummy Fossilizer","version":"0.1.0","commit":"abc"}}
 }
