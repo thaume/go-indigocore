@@ -6,6 +6,8 @@ package storetestcases
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"log"
 	"reflect"
 	"sync/atomic"
 	"testing"
@@ -99,6 +101,7 @@ func (f Factory) BenchmarkDeleteSegment(b *testing.B) {
 	}
 
 	b.ResetTimer()
+	log.SetOutput(ioutil.Discard)
 
 	for i := 0; i < b.N; i++ {
 		if s, err := a.DeleteSegment(linkHashes[i]); err != nil {
@@ -130,6 +133,7 @@ func (f Factory) BenchmarkDeleteSegmentParallel(b *testing.B) {
 	var counter uint64
 
 	b.ResetTimer()
+	log.SetOutput(ioutil.Discard)
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {

@@ -5,6 +5,8 @@
 package storetestcases
 
 import (
+	"io/ioutil"
+	"log"
 	"sync/atomic"
 	"testing"
 
@@ -112,6 +114,7 @@ func (f Factory) BenchmarkSaveSegment(b *testing.B) {
 	}
 
 	b.ResetTimer()
+	log.SetOutput(ioutil.Discard)
 
 	for i := 0; i < b.N; i++ {
 		if err := a.SaveSegment(slice[i]); err != nil {
@@ -139,6 +142,7 @@ func (f Factory) BenchmarkSaveSegmentParallel(b *testing.B) {
 	var counter uint64
 
 	b.ResetTimer()
+	log.SetOutput(ioutil.Discard)
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
@@ -169,6 +173,7 @@ func (f Factory) BenchmarkSaveSegmentUpdatedState(b *testing.B) {
 	}
 
 	b.ResetTimer()
+	log.SetOutput(ioutil.Discard)
 
 	for i := 0; i < b.N; i++ {
 		if err := a.SaveSegment(slice[i]); err != nil {
@@ -197,6 +202,7 @@ func (f Factory) BenchmarkSaveSegmentUpdatedStateParallel(b *testing.B) {
 	var counter uint64
 
 	b.ResetTimer()
+	log.SetOutput(ioutil.Discard)
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
@@ -227,6 +233,7 @@ func (f Factory) BenchmarkSaveSegmentUpdatedMapID(b *testing.B) {
 	}
 
 	b.ResetTimer()
+	log.SetOutput(ioutil.Discard)
 
 	for i := 0; i < b.N; i++ {
 		if err := a.SaveSegment(slice[i]); err != nil {
@@ -255,6 +262,7 @@ func (f Factory) BenchmarkSaveSegmentUpdatedMapIDParallel(b *testing.B) {
 	var counter uint64
 
 	b.ResetTimer()
+	log.SetOutput(ioutil.Discard)
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
