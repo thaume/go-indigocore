@@ -13,14 +13,14 @@ import (
 	"github.com/stratumn/go/testutil"
 )
 
-// TestGetMapIDsAll tests what happens when you get all the map IDs.
-func (f Factory) TestGetMapIDsAll(t *testing.T) {
+// TestGetMapIDs tests what happens when you get all the map IDs.
+func (f Factory) TestGetMapIDs(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if a == nil {
-		t.Fatal("expected adapter not to be nil")
+		t.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
@@ -33,30 +33,30 @@ func (f Factory) TestGetMapIDsAll(t *testing.T) {
 	}
 
 	slice, err := a.GetMapIDs(&store.Pagination{})
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(slice) != 10 {
-		t.Fatal("expected map length to be 10")
+	if got, want := len(slice), 10; want != got {
+		t.Errorf("len(slice) = %d want %d", got, want)
 	}
 
 	for i := 0; i < 10; i++ {
-		if !testutil.ContainsString(slice, fmt.Sprintf("map%d", i)) {
-			t.Fatal("missing map ID")
+		mapID := fmt.Sprintf("map%d", i)
+		if !testutil.ContainsString(slice, mapID) {
+			t.Errorf("slice does not contain %q", mapID)
 		}
 	}
 }
 
-// TestGetMapIDsPagination tests what happens when you get map IDs with pagination.
-func (f Factory) TestGetMapIDsPagination(t *testing.T) {
+// TestGetMapIDs_pagination tests what happens when you get map IDs with pagination.
+func (f Factory) TestGetMapIDs_pagination(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if a == nil {
-		t.Fatal("expected adapter not to be nil")
+		t.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
@@ -69,34 +69,32 @@ func (f Factory) TestGetMapIDsPagination(t *testing.T) {
 	}
 
 	slice, err := a.GetMapIDs(&store.Pagination{Offset: 3, Limit: 5})
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(slice) != 5 {
-		t.Fatal("expected map length to be 5")
+	if got, want := len(slice), 5; want != got {
+		t.Errorf("len(slice) = %d want %d", got, want)
 	}
 }
 
-// TestGetMapIDsEmpty tests what happens when you should get no map IDs.
-func (f Factory) TestGetMapIDsEmpty(t *testing.T) {
+// TestGetMapIDs_empty tests what happens when you should get no map IDs.
+func (f Factory) TestGetMapIDs_empty(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if a == nil {
-		t.Fatal("expected adapter not to be nil")
+		t.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	slice, err := a.GetMapIDs(&store.Pagination{Offset: 100000, Limit: 5})
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(slice) != 0 {
-		t.Fatal("expected map length to be 0")
+	if got, want := len(slice), 0; want != got {
+		t.Errorf("len(slice) = %d want %d", got, want)
 	}
 }

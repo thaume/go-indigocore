@@ -11,10 +11,11 @@ package filestore
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 
@@ -200,7 +201,7 @@ func (a *FileStore) forEach(fn func(*cs.Segment) error) error {
 				return err
 			}
 			if segment == nil {
-				return errors.New("could not find segment")
+				return fmt.Errorf("could not find segment %q", filepath.Base(name))
 			}
 			if err = fn(segment); err != nil {
 				return err

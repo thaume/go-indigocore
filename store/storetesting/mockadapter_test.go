@@ -5,6 +5,7 @@
 package storetesting
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -16,25 +17,21 @@ import (
 func TestMockAdapter_GetInfo(t *testing.T) {
 	a := &MockAdapter{}
 
-	_, err := a.GetInfo()
-
-	if err != nil {
-		t.Fatal("unexpected error")
+	if _, err := a.GetInfo(); err != nil {
+		t.Fatal(err)
 	}
 
 	a.MockGetInfo.Fn = func() (interface{}, error) { return map[string]string{"name": "test"}, nil }
 	info, err := a.GetInfo()
-
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
-	if info.(map[string]string)["name"] != "test" {
-		t.Fatal("unexpect info")
+	if got, want := info.(map[string]string)["name"], "test"; got != want {
+		t.Errorf(`a.GetInfo(): info["name"] = %q want %q`, got, want)
 	}
-
-	if a.MockGetInfo.CalledCount != 2 {
-		t.Fatal("unexpected MockGetInfo.CalledCount value")
+	if got, want := a.MockGetInfo.CalledCount, 2; got != want {
+		t.Errorf(`a.MockGetInfo.CalledCount = %d want %d`, got, want)
 	}
 }
 
@@ -43,28 +40,28 @@ func TestMockAdapter_SaveSegment(t *testing.T) {
 	s := cstesting.RandomSegment()
 
 	err := a.SaveSegment(s)
-
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
 	a.MockSaveSegment.Fn = func(s *cs.Segment) error { return nil }
 	err = a.SaveSegment(s)
-
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
-	if a.MockSaveSegment.CalledCount != 2 {
-		t.Fatal("unexpected MockSaveSegment.CalledCount value")
+	if got, want := a.MockSaveSegment.CalledCount, 2; got != want {
+		t.Errorf(`a.MockSaveSegment.CalledCount = %d want %d`, got, want)
 	}
-
-	if !reflect.DeepEqual(a.MockSaveSegment.CalledWith, []*cs.Segment{s, s}) {
-		t.Fatal("unexpected MockSaveSegment.LastCalledWith value")
+	if got, want := a.MockSaveSegment.CalledWith, []*cs.Segment{s, s}; !reflect.DeepEqual(got, want) {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		wantJS, _ := json.MarshalIndent(want, "", "  ")
+		t.Errorf("a.MockSaveSegment.CalledWith = %s\n want %s", gotJS, wantJS)
 	}
-
-	if a.MockSaveSegment.LastCalledWith != s {
-		t.Fatal("unexpected MockSaveSegment.LastCalledWith value")
+	if got, want := a.MockSaveSegment.LastCalledWith, s; got != want {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		wantJS, _ := json.MarshalIndent(want, "", "  ")
+		t.Errorf("a.MockSaveSegment.LastCalledWith = %s\n want %s", gotJS, wantJS)
 	}
 }
 
@@ -72,33 +69,30 @@ func TestMockAdapter_GetSegment(t *testing.T) {
 	a := &MockAdapter{}
 
 	_, err := a.GetSegment("abcdef")
-
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
 	s1 := cstesting.RandomSegment()
 	a.MockGetSegment.Fn = func(linkHash string) (*cs.Segment, error) { return s1, nil }
 	s2, err := a.GetSegment("ghij")
-
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
-	if s1 != s2 {
-		t.Fatal("expected segments to be equal")
+	if got, want := s2, s1; got != want {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		wantJS, _ := json.MarshalIndent(want, "", "  ")
+		t.Errorf("s2 = %s\n want", gotJS, wantJS)
 	}
-
-	if a.MockGetSegment.CalledCount != 2 {
-		t.Fatal("unexpected MockGetSegment.CalledCount value")
+	if got, want := a.MockGetSegment.CalledCount, 2; got != want {
+		t.Errorf(`a.MockGetSegment.CalledCount = %d want %d`, got, want)
 	}
-
-	if !reflect.DeepEqual(a.MockGetSegment.CalledWith, []string{"abcdef", "ghij"}) {
-		t.Fatal("unexpected MockGetSegment.LastCalledWith value")
+	if got, want := a.MockGetSegment.CalledWith, []string{"abcdef", "ghij"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("a.MockGetSegment.CalledWith = %q\n want %q", got, want)
 	}
-
-	if a.MockGetSegment.LastCalledWith != "ghij" {
-		t.Fatal("unexpected MockGetSegment.LastCalledWith value")
+	if got, want := a.MockGetSegment.LastCalledWith, "ghij"; got != want {
+		t.Errorf("a.MockGetSegment.LastCalledWith = %q want %q", got, want)
 	}
 }
 
@@ -106,33 +100,30 @@ func TestMockAdapter_DeleteSegment(t *testing.T) {
 	a := &MockAdapter{}
 
 	_, err := a.DeleteSegment("abcdef")
-
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
 	s1 := cstesting.RandomSegment()
 	a.MockDeleteSegment.Fn = func(linkHash string) (*cs.Segment, error) { return s1, nil }
 	s2, err := a.DeleteSegment("ghij")
-
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
-	if s1 != s2 {
-		t.Fatal("expected segments to be equal")
+	if got, want := s2, s1; got != want {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		wantJS, _ := json.MarshalIndent(want, "", "  ")
+		t.Errorf("s2 = %s\n want", gotJS, wantJS)
 	}
-
-	if a.MockDeleteSegment.CalledCount != 2 {
-		t.Fatal("unexpected MockDeleteSegment.CalledCount value")
+	if got, want := a.MockDeleteSegment.CalledCount, 2; got != want {
+		t.Errorf(`a.MockDeleteSegment.CalledCount = %d want %d`, got, want)
 	}
-
-	if !reflect.DeepEqual(a.MockDeleteSegment.CalledWith, []string{"abcdef", "ghij"}) {
-		t.Fatal("unexpected MockDeleteSegment.LastCalledWith value")
+	if got, want := a.MockDeleteSegment.CalledWith, []string{"abcdef", "ghij"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("a.MockDeleteSegment.CalledWith = %q\n want %q", got, want)
 	}
-
-	if a.MockDeleteSegment.LastCalledWith != "ghij" {
-		t.Fatal("unexpected MockDeleteSegment.LastCalledWith value")
+	if got, want := a.MockDeleteSegment.LastCalledWith, "ghij"; got != want {
+		t.Errorf("a.MockDeleteSegment.LastCalledWith = %q want %q", got, want)
 	}
 }
 
@@ -140,34 +131,31 @@ func TestMockAdapter_FindSegments(t *testing.T) {
 	a := &MockAdapter{}
 
 	_, err := a.FindSegments(nil)
-
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
 	s := cstesting.RandomSegment()
 	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return cs.SegmentSlice{s}, nil }
 	f := store.Filter{PrevLinkHash: "test"}
-	slice, err := a.FindSegments(&f)
-
+	s1, err := a.FindSegments(&f)
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(slice, cs.SegmentSlice{s}) {
-		t.Fatal("expected segment slices to be equal")
+	if got, want := s1, (cs.SegmentSlice{s}); !reflect.DeepEqual(got, want) {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		wantJS, _ := json.MarshalIndent(want, "", "  ")
+		t.Errorf("s1 = %s\n want %s", gotJS, wantJS)
 	}
-
-	if a.MockFindSegments.CalledCount != 2 {
-		t.Fatal("unexpected MockFindSegments.CalledCount value")
+	if got, want := a.MockFindSegments.CalledCount, 2; got != want {
+		t.Errorf(`a.MockFindSegments.CalledCount = %d want %d`, got, want)
 	}
-
-	if !reflect.DeepEqual(a.MockFindSegments.CalledWith, []*store.Filter{nil, &f}) {
-		t.Fatal("unexpected MockFindSegments.LastCalledWith value")
+	if got, want := a.MockFindSegments.CalledWith, []*store.Filter{nil, &f}; !reflect.DeepEqual(got, want) {
+		t.Errorf("a.MockFindSegments.CalledWith = %q\n want %q", got, want)
 	}
-
-	if a.MockFindSegments.LastCalledWith != &f {
-		t.Fatal("unexpected MockFindSegments.LastCalledWith value")
+	if got, want := a.MockFindSegments.LastCalledWith, &f; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith = %q\n want %q", got, want)
 	}
 }
 
@@ -175,32 +163,27 @@ func TestMockAdapter_GetMapIDs(t *testing.T) {
 	a := &MockAdapter{}
 
 	_, err := a.GetMapIDs(nil)
-
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
 	a.MockGetMapIDs.Fn = func(*store.Pagination) ([]string, error) { return []string{"one", "two"}, nil }
 	p := store.Pagination{Offset: 10}
-	slice, err := a.GetMapIDs(&p)
-
+	s, err := a.GetMapIDs(&p)
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(slice, []string{"one", "two"}) {
-		t.Fatal("expected segment slices to be equal")
+	if got, want := s, []string{"one", "two"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("s1 = %q\n want %q", got, want)
 	}
-
-	if a.MockGetMapIDs.CalledCount != 2 {
-		t.Fatal("unexpected MockGetMapIDs.CalledCount value")
+	if got, want := a.MockGetMapIDs.CalledCount, 2; got != want {
+		t.Errorf(`a.MockGetMapIDs.CalledCount = %d want %d`, got, want)
 	}
-
-	if !reflect.DeepEqual(a.MockGetMapIDs.CalledWith, []*store.Pagination{nil, &p}) {
-		t.Fatal("unexpected MockGetMapIDs.LastCalledWith value")
+	if got, want := a.MockGetMapIDs.CalledWith, []*store.Pagination{nil, &p}; !reflect.DeepEqual(got, want) {
+		t.Errorf("a.MockGetMapIDs.CalledWith = %q\n want %q", got, want)
 	}
-
-	if a.MockGetMapIDs.LastCalledWith != &p {
-		t.Fatal("unexpected MockGetMapIDs.LastCalledWith value")
+	if got, want := a.MockGetMapIDs.LastCalledWith, &p; got != want {
+		t.Errorf("a.MockGetMapIDs.LastCalledWith = %q\n want %q", got, want)
 	}
 }

@@ -5,6 +5,7 @@
 package storetestcases
 
 import (
+	"encoding/json"
 	"reflect"
 	"sync/atomic"
 	"testing"
@@ -13,14 +14,14 @@ import (
 	"github.com/stratumn/go/testutil"
 )
 
-// TestDeleteSegmentFound tests what happens when you delete an existing segments.
-func (f Factory) TestDeleteSegmentFound(t *testing.T) {
+// TestDeleteSegment tests what happens when you delete an existing segments.
+func (f Factory) TestDeleteSegment(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if a == nil {
-		t.Fatal("expected adapter not to be nil")
+		t.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
@@ -28,67 +29,64 @@ func (f Factory) TestDeleteSegmentFound(t *testing.T) {
 	a.SaveSegment(s1)
 
 	linkHash := s1.Meta["linkHash"].(string)
-
 	s2, err := a.DeleteSegment(linkHash)
-
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
-	if s2 == nil {
-		t.Fatal("expected segment not to be nil")
+	if got := s2; got == nil {
+		t.Error("s2 = nil want *cs.Segment")
 	}
-
-	if !reflect.DeepEqual(s1, s2) {
-		t.Fatal("expected segments to be equal")
+	if got, want := s2, s1; !reflect.DeepEqual(want, got) {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		wantJS, _ := json.MarshalIndent(got, "", "  ")
+		t.Errorf("s2 = %s\n want%s", gotJS, wantJS)
 	}
 
 	s2, err = a.GetSegment(linkHash)
-
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-
-	if s2 != nil {
-		t.Fatal("expected segment to be nil")
+	if got := s2; got != nil {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		t.Errorf("s2 = %s\n want nil", gotJS)
 	}
 }
 
-// TestDeleteSegmentNotFound tests what happens when you delete a nonexistent segment.
-func (f Factory) TestDeleteSegmentNotFound(t *testing.T) {
+// TestDeleteSegment_notFound tests what happens when you delete a nonexistent segment.
+func (f Factory) TestDeleteSegment_notFound(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if a == nil {
-		t.Fatal("expected adapter not to be nil")
+		t.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	s, err := a.DeleteSegment(testutil.RandomString(32))
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if s != nil {
-		t.Fatal("expected segment to be nil")
+	if got := s; got != nil {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		t.Errorf("s = %s\n want nil", gotJS)
 	}
 }
 
-// BenchmarkDeleteSegmentFound benchmarks deleting existing segments.
-func (f Factory) BenchmarkDeleteSegmentFound(b *testing.B) {
+// BenchmarkDeleteSegment benchmarks deleting existing segments.
+func (f Factory) BenchmarkDeleteSegment(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
 		b.Fatal(err)
 	}
 	if a == nil {
-		b.Fatal("expected adapter not to be nil")
+		b.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	linkHashes := make([]string, b.N)
-
 	for i := 0; i < b.N; i++ {
 		s := cstesting.RandomSegment()
 		a.SaveSegment(s)
@@ -99,26 +97,25 @@ func (f Factory) BenchmarkDeleteSegmentFound(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		if s, err := a.DeleteSegment(linkHashes[i]); err != nil {
-			b.Fatal(err)
+			b.Error(err)
 		} else if s == nil {
-			b.Fatal("expected segment")
+			b.Error("s = nil want *cs.Segment")
 		}
 	}
 }
 
-// BenchmarkDeleteSegmentFoundParallel benchmarks deleting existing segments in parallel.
-func (f Factory) BenchmarkDeleteSegmentFoundParallel(b *testing.B) {
+// BenchmarkDeleteSegment_parallel benchmarks deleting existing segments in parallel.
+func (f Factory) BenchmarkDeleteSegment_parallel(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
 		b.Fatal(err)
 	}
 	if a == nil {
-		b.Fatal("expected adapter not to be nil")
+		b.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	linkHashes := make([]string, b.N)
-
 	for i := 0; i < b.N; i++ {
 		s := cstesting.RandomSegment()
 		a.SaveSegment(s)
@@ -132,11 +129,10 @@ func (f Factory) BenchmarkDeleteSegmentFoundParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			i := atomic.AddUint64(&counter, 1) - 1
-
 			if s, err := a.DeleteSegment(linkHashes[i]); err != nil {
-				b.Fatal(err)
+				b.Error(err)
 			} else if s == nil {
-				b.Fatal("expected segment")
+				b.Error("s = nil want *cs.Segment")
 			}
 		}
 	})

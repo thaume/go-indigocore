@@ -6,7 +6,6 @@ package fossilizerhttp
 
 import (
 	"errors"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -15,73 +14,63 @@ import (
 	"time"
 
 	"github.com/stratumn/go/fossilizer"
-	"github.com/stratumn/go/fossilizer/fossilizertesting"
 	"github.com/stratumn/go/jsonhttp"
 	"github.com/stratumn/go/testutil"
 )
 
-func TestRootOK(t *testing.T) {
+func TestRoot(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", nil }
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL, &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != http.StatusOK {
-		t.Fatal("unexpected HTTP status code")
+
+	if got, want := w.Code, http.StatusOK; want != got {
+		t.Errorf("w.StatusCode = %d want %d", got, want)
 	}
-	if dict["adapter"].(string) != "test" {
-		t.Fatal("unexpected adapter dict")
+	if got, want := body["adapter"].(string), "test"; got != want {
+		t.Errorf(`body["adapter"] = %q want %q`, got, want)
 	}
-	if a.MockGetInfo.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to GetInfo()")
+	if got, want := a.MockGetInfo.CalledCount, 1; got != want {
+		t.Errorf("a.MockGetInfo.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestRootErr(t *testing.T) {
+func TestRoot_err(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", errors.New("error") }
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL, &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.NewErrInternalServer("").Status() {
-		t.Fatal("unexpected HTTP status code")
+
+	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); want != got {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrInternalServer("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), jsonhttp.NewErrInternalServer("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockGetInfo.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to GetInfo()")
+	if got, want := a.MockGetInfo.CalledCount, 1; got != want {
+		t.Errorf("a.MockGetInfo.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestFossilizeOK(t *testing.T) {
+func TestFossilize(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	l, err := net.Listen("tcp", ":6666")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	h := &resultHandler{T: t, Listener: l, Expected: "\"it is known\""}
+	h := &resultHandler{t: t, listener: l, want: "\"it is known\""}
 
 	go func() {
 		defer l.Close()
-
 		rc := a.MockAddResultChan.LastCalledWith
-
 		a.MockFossilize.Fn = func(data []byte, meta []byte) error {
 			rc <- &fossilizer.Result{
 				Evidence: "it is known",
@@ -91,173 +80,130 @@ func TestFossilizeOK(t *testing.T) {
 			return nil
 		}
 
-		v := url.Values{}
-		v.Set("data", "1234567890")
-		v.Set("callbackUrl", "http://localhost:6666")
-		res, err := http.PostForm(s.URL+"/fossils", v)
+		req := httptest.NewRequest("POST", "/fossils", nil)
+		req.Form = url.Values{}
+		req.Form.Set("data", "1234567890")
+		req.Form.Set("callbackUrl", "http://localhost:6666")
 
-		if err != nil {
-			t.Fatal(err)
+		w := httptest.NewRecorder()
+		s.ServeHTTP(w, req)
+
+		if got, want := w.Code, http.StatusOK; want != got {
+			t.Errorf("w.Code = %d want %d", got, want)
 		}
 
-		if res.StatusCode != http.StatusOK {
-			t.Fatal("unexpected HTTP status code")
-		}
-
-		time.Sleep(2 * time.Second)
-		t.Fatal("callback URL not called")
+		sleep := 2 * time.Second
+		time.Sleep(sleep)
+		t.Errorf("callback URL not called after %s", sleep)
 	}()
 
 	http.Serve(l, h)
 }
 
-func TestFossilizeNoData(t *testing.T) {
+func TestFossilize_noData(t *testing.T) {
 	s, _ := createServer()
-	defer s.Close()
 
-	v := url.Values{}
-	v.Set("callbackUrl", "http://localhost:6666")
-	res, err := http.PostForm(s.URL+"/fossils", v)
+	req := httptest.NewRequest("POST", "/fossils", nil)
+	req.Form = url.Values{}
+	req.Form.Set("callbackUrl", "http://localhost:6666")
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, req)
 
-	if res.StatusCode != newErrData("").Status() {
-		t.Fatal("unexpected HTTP status code")
+	if got, want := w.Code, newErrData("").Status(); want != got {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
 }
 
-func TestFossilizeDataTooShort(t *testing.T) {
+func TestFossilize_dataTooShort(t *testing.T) {
 	s, _ := createServer()
-	defer s.Close()
 
-	v := url.Values{}
-	v.Set("callbackUrl", "http://localhost:6666")
-	v.Set("data", "1")
-	res, err := http.PostForm(s.URL+"/fossils", v)
+	req := httptest.NewRequest("POST", "/fossils", nil)
+	req.Form = url.Values{}
+	req.Form.Set("callbackUrl", "http://localhost:6666")
+	req.Form.Set("data", "1")
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, req)
 
-	if res.StatusCode != newErrData("").Status() {
-		t.Fatal("unexpected HTTP status code")
+	if got, want := w.Code, newErrData("").Status(); want != got {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
 }
 
-func TestFossilizeDataTooLong(t *testing.T) {
+func TestFossilize_dataTooLong(t *testing.T) {
 	s, _ := createServer()
-	defer s.Close()
 
-	v := url.Values{}
-	v.Set("callbackUrl", "http://localhost:6666")
-	v.Set("data", "12345678901234567890")
-	res, err := http.PostForm(s.URL+"/fossils", v)
+	req := httptest.NewRequest("POST", "/fossils", nil)
+	req.Form = url.Values{}
+	req.Form.Set("callbackUrl", "http://localhost:6666")
+	req.Form.Set("data", "12345678901234567890")
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, req)
 
-	if res.StatusCode != newErrData("").Status() {
-		t.Fatal("unexpected HTTP status code")
+	if got, want := w.Code, newErrData("").Status(); want != got {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
 }
 
-func TestFossilizeDataNotHex(t *testing.T) {
+func TestFossilize_dataNotHex(t *testing.T) {
 	s, _ := createServer()
-	defer s.Close()
 
-	v := url.Values{}
-	v.Set("callbackUrl", "http://localhost:6666")
-	v.Set("data", "azertyuiop")
-	res, err := http.PostForm(s.URL+"/fossils", v)
+	req := httptest.NewRequest("POST", "/fossils", nil)
+	req.Form = url.Values{}
+	req.Form.Set("callbackUrl", "http://localhost:6666")
+	req.Form.Set("data", "azertyuiop")
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, req)
 
-	if res.StatusCode != newErrData("").Status() {
-		t.Fatal("unexpected HTTP status code")
+	if got, want := w.Code, newErrData("").Status(); want != got {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
 }
 
-func TestFossilizeNoCallback(t *testing.T) {
+func TestFossilize_noCallback(t *testing.T) {
 	s, _ := createServer()
-	defer s.Close()
 
-	v := url.Values{}
-	v.Set("data", "1234567890")
-	res, err := http.PostForm(s.URL+"/fossils", v)
+	req := httptest.NewRequest("POST", "/fossils", nil)
+	req.Form = url.Values{}
+	req.Form.Set("data", "1234567890")
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, req)
 
-	if res.StatusCode != http.StatusBadRequest {
-		t.Fatal("unexpected HTTP status code")
+	if got, want := w.Code, http.StatusBadRequest; want != got {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
 }
 
-func TestFossilizeNoBody(t *testing.T) {
+func TestFossilize_noBody(t *testing.T) {
 	s, _ := createServer()
-	defer s.Close()
 
-	url := s.URL + "/fossils?callbackUrl=http%3A%2F%2Flocalhost%3A6666"
-	res, err := http.Post(url, "application/octet-stream", nil)
+	req := httptest.NewRequest("POST", "/fossils", nil)
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, req)
 
-	if res.StatusCode != http.StatusBadRequest {
-		t.Fatal("unexpected HTTP status code")
+	if got, want := w.Code, http.StatusBadRequest; want != got {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
 }
 
 func TestNotFound(t *testing.T) {
 	s, _ := createServer()
-	defer s.Close()
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL+"/dsfsdf", &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/azerty", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.NewErrNotFound("").Status() {
-		t.Fatal("unexpected HTTP status code")
+
+	if got, want := w.Code, jsonhttp.NewErrNotFound("").Status(); want != got {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrNotFound("").Error() {
-		t.Fatal("unexpected error message")
-	}
-}
-
-func createServer() (*httptest.Server, *fossilizertesting.MockAdapter) {
-	a := &fossilizertesting.MockAdapter{}
-	s := httptest.NewServer(New(a, &Config{MinDataLen: 2, MaxDataLen: 16}))
-
-	return s, a
-}
-
-type resultHandler struct {
-	T        *testing.T
-	Listener net.Listener
-	Expected string
-}
-
-func (h *resultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer h.Listener.Close()
-
-	w.Write([]byte("thanks"))
-
-	body, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		h.T.Fatal(err)
-	}
-
-	if string(body) != h.Expected {
-		h.T.Fatal("unexpected body")
+	if got, want := body["error"].(string), jsonhttp.NewErrNotFound("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
 }

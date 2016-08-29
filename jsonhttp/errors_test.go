@@ -10,49 +10,25 @@ import (
 )
 
 func TestNewErrInternalServer(t *testing.T) {
-	if NewErrInternalServer("").Status() != http.StatusInternalServerError {
-		t.Fatal("unexpected error HTTP status")
-	}
-	if NewErrInternalServer("").Error() != "internal server error" {
-		t.Fatal("unexpected error")
-	}
-	if NewErrInternalServer("test").Error() != "test" {
-		t.Fatal("unexpected error")
-	}
+	testErrStatus(t, NewErrInternalServer(""), http.StatusInternalServerError)
+	testErrError(t, NewErrInternalServer(""), "internal server error")
+	testErrError(t, NewErrInternalServer("test"), "test")
 }
 
 func TestNewErrBadRequest(t *testing.T) {
-	if NewErrBadRequest("").Status() != http.StatusBadRequest {
-		t.Fatal("unexpected error HTTP status")
-	}
-	if NewErrBadRequest("").Error() != "bad request" {
-		t.Fatal("unexpected error")
-	}
-	if NewErrBadRequest("test").Error() != "test" {
-		t.Fatal("unexpected error")
-	}
+	testErrStatus(t, NewErrBadRequest(""), http.StatusBadRequest)
+	testErrError(t, NewErrBadRequest(""), "bad request")
+	testErrError(t, NewErrBadRequest("test"), "test")
 }
 
 func TestNewErrUnauthorized(t *testing.T) {
-	if NewErrUnauthorized("").Status() != http.StatusUnauthorized {
-		t.Fatal("unexpected error HTTP status")
-	}
-	if NewErrUnauthorized("").Error() != "unauthorized" {
-		t.Fatal("unexpected error")
-	}
-	if NewErrUnauthorized("test").Error() != "test" {
-		t.Fatal("unexpected error")
-	}
+	testErrStatus(t, NewErrUnauthorized(""), http.StatusUnauthorized)
+	testErrError(t, NewErrUnauthorized(""), "unauthorized")
+	testErrError(t, NewErrUnauthorized("test"), "test")
 }
 
 func TestNewErrNotFound(t *testing.T) {
-	if NewErrNotFound("").Status() != http.StatusNotFound {
-		t.Fatal("unexpected error HTTP status")
-	}
-	if NewErrNotFound("").Error() != "not found" {
-		t.Fatal("unexpected error")
-	}
-	if NewErrNotFound("test").Error() != "test" {
-		t.Fatal("unexpected error")
-	}
+	testErrStatus(t, NewErrNotFound(""), http.StatusNotFound)
+	testErrError(t, NewErrNotFound(""), "not found")
+	testErrError(t, NewErrNotFound("test"), "test")
 }

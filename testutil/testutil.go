@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"math/rand"
 	"net/http"
+	"net/http/httptest"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -33,67 +34,28 @@ func ContainsString(a []string, s string) bool {
 	return false
 }
 
-// GetJSON does a GET request expecting a JSON response.
-func GetJSON(url string, target interface{}) (*http.Response, error) {
-	return RequestJSON(http.MethodGet, url, target, nil)
-}
-
-// PostJSON does a POST request expecting a JSON response.
-func PostJSON(url string, target interface{}, payload interface{}) (*http.Response, error) {
-	return RequestJSON(http.MethodPost, url, target, payload)
-}
-
-// PutJSON does a PUT request expecting a JSON response.
-func PutJSON(url string, target interface{}, payload interface{}) (*http.Response, error) {
-	return RequestJSON(http.MethodPut, url, target, payload)
-}
-
-// DeleteJSON does a DELETE request expecting a JSON response.
-func DeleteJSON(url string, target interface{}) (*http.Response, error) {
-	return RequestJSON(http.MethodDelete, url, target, nil)
-}
-
-// PatchJSON does a PATCH request expecting a JSON response.
-func PatchJSON(url string, target interface{}, payload interface{}) (*http.Response, error) {
-	return RequestJSON(http.MethodPatch, url, target, payload)
-}
-
-// OptionsJSON does an OPTIONS request expecting a JSON response.
-func OptionsJSON(url string, target interface{}) (*http.Response, error) {
-	return RequestJSON(http.MethodOptions, url, target, nil)
-}
-
 // RequestJSON does a request expecting a JSON response.
-func RequestJSON(method, url string, target, payload interface{}) (*http.Response, error) {
+func RequestJSON(h http.HandlerFunc, method, target string, payload, dst interface{}) (*httptest.ResponseRecorder, error) {
 	var req *http.Request
-	var err error
-	var body []byte
 
 	if payload != nil {
-		body, err = json.Marshal(payload)
+		body, err := json.Marshal(payload)
 		if err != nil {
 			return nil, err
 		}
-
-		req, err = http.NewRequest(method, url, bytes.NewReader(body))
+		req = httptest.NewRequest(method, target, bytes.NewReader(body))
 	} else {
-		req, err = http.NewRequest(method, url, nil)
+		req = httptest.NewRequest(method, target, nil)
 	}
 
-	if err != nil {
-		return nil, err
+	w := httptest.NewRecorder()
+	h(w, req)
+
+	if dst != nil {
+		if err := json.NewDecoder(w.Body).Decode(&dst); err != nil {
+			return nil, err
+		}
 	}
 
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer res.Body.Close()
-
-	if err = json.NewDecoder(res.Body).Decode(&target); err != nil {
-		return nil, err
-	}
-
-	return res, nil
+	return w, nil
 }

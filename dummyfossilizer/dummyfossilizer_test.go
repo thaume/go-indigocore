@@ -12,12 +12,12 @@ import (
 
 func TestGetInfo(t *testing.T) {
 	a := New(&Config{})
-	info, err := a.GetInfo()
+	got, err := a.GetInfo()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if info == nil {
-		t.Fatal("info is nil")
+	if _, ok := got.(*Info); !ok {
+		t.Errorf("a.GetInfo(): info = %#v want *Info", got)
 	}
 }
 
@@ -33,18 +33,19 @@ func TestFossilize(t *testing.T) {
 
 	go func() {
 		if err := a.Fossilize(data, meta); err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	}()
 
 	r := <-rc
-	if string(r.Data) != string(data) {
-		t.Fatal("Unexpected result data")
+
+	if got, want := string(r.Data), string(data); got != want {
+		t.Errorf("<-rc: Data = %q want %q", got, want)
 	}
-	if string(r.Meta) != string(meta) {
-		t.Fatal("Unexpected result meta")
+	if got, want := string(r.Meta), string(meta); got != want {
+		t.Errorf("<-rc: Meta = %q want %q", got, want)
 	}
-	if r.Evidence.(map[string]interface{})["authority"].(string) != "dummy" {
-		t.Fatal("Unexpected result evidence")
+	if got, want := r.Evidence.(map[string]interface{})["authority"].(string), "dummy"; got != want {
+		t.Errorf(`<-rc: Evidence["authority"] = %q want %q`, got, want)
 	}
 }

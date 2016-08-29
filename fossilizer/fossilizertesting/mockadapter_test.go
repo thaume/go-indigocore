@@ -14,25 +14,21 @@ import (
 func TestMockAdapter_GetInfo(t *testing.T) {
 	a := &MockAdapter{}
 
-	_, err := a.GetInfo()
-
-	if err != nil {
-		t.Fatal("unexpected error")
+	if _, err := a.GetInfo(); err != nil {
+		t.Fatal(err)
 	}
 
 	a.MockGetInfo.Fn = func() (interface{}, error) { return map[string]string{"name": "test"}, nil }
 	info, err := a.GetInfo()
-
 	if err != nil {
-		t.Fatal("unexpected error")
+		t.Fatal(err)
 	}
 
-	if info.(map[string]string)["name"] != "test" {
-		t.Fatal("unexpect info")
+	if got, want := info.(map[string]string)["name"], "test"; got != want {
+		t.Errorf(`a.GetInfo(): info["name"] = %q want %q`, got, want)
 	}
-
-	if a.MockGetInfo.CalledCount != 2 {
-		t.Fatal("unexpected MockGetInfo.CalledCount value")
+	if got, want := a.MockGetInfo.CalledCount, 2; got != want {
+		t.Errorf(`a.MockGetInfo.CalledCount = %d want %d`, got, want)
 	}
 }
 
@@ -47,16 +43,18 @@ func TestMockAdapter_AddResultChan(t *testing.T) {
 	c2 := make(chan *fossilizer.Result)
 	a.AddResultChan(c2)
 
-	if a.MockAddResultChan.CalledCount != 2 {
-		t.Fatal("unexpected MockAddResultChan.CalledCount value")
+	if got, want := a.MockAddResultChan.CalledCount, 2; got != want {
+		t.Errorf(`a.MockAddResultChan.CalledCount = %d want %d`, got, want)
 	}
-
-	if !reflect.DeepEqual(a.MockAddResultChan.CalledWith, []chan *fossilizer.Result{c1, c2}) {
-		t.Fatal("unexpected MockAddResultChan.LastCalledWith value")
+	var (
+		got  = a.MockAddResultChan.CalledWith
+		want = []chan *fossilizer.Result{c1, c2}
+	)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf(`a.MockAddResultChan.CalledWith = %#v want %#v`, got, want)
 	}
-
-	if a.MockAddResultChan.LastCalledWith != c2 {
-		t.Fatal("unexpected MockAddResultChan.LastCalledWith value")
+	if got, want := a.MockAddResultChan.LastCalledWith, c2; got != want {
+		t.Errorf(`a.MockAddResultChan.LastCalledWith = %#v want %#v`, got, want)
 	}
 }
 
@@ -66,10 +64,8 @@ func TestMockAdapter_Fossilize(t *testing.T) {
 	d1 := []byte("data1")
 	m1 := []byte("meta1")
 
-	err := a.Fossilize(d1, m1)
-
-	if err != nil {
-		t.Fatal("unexpected error")
+	if err := a.Fossilize(d1, m1); err != nil {
+		t.Fatal(err)
 	}
 
 	a.MockFossilize.Fn = func([]byte, []byte) error { return nil }
@@ -77,29 +73,37 @@ func TestMockAdapter_Fossilize(t *testing.T) {
 	d2 := []byte("data2")
 	m2 := []byte("meta2")
 
-	err = a.Fossilize(d2, m2)
-
-	if err != nil {
-		t.Fatal("unexpected error")
+	if err := a.Fossilize(d2, m2); err != nil {
+		t.Error(err)
 	}
 
-	if a.MockFossilize.CalledCount != 2 {
-		t.Fatal("unexpected MockFossilize.CalledCount value")
+	if got, want := a.MockFossilize.CalledCount, 2; got != want {
+		t.Errorf(`a.MockFossilize.CalledCount = %d want %d`, got, want)
 	}
 
-	if !reflect.DeepEqual(a.MockFossilize.CalledWithData, [][]byte{d1, d2}) {
-		t.Fatal("unexpected MockFossilize.CalledWithData value")
+	var got []string
+	for _, b := range a.MockFossilize.CalledWithData {
+		got = append(got, string(b))
+	}
+	want := []string{string(d1), string(d2)}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf(`a.MockFossilize.CalledWithData = %q want %q`, got, want)
 	}
 
-	if string(a.MockFossilize.LastCalledWithData) != string(d2) {
-		t.Fatal("unexpected MockFossilize.LastCalledWithData value")
+	if got, want := string(a.MockFossilize.LastCalledWithData), string(d2); got != want {
+		t.Errorf(`a.MockFossilize.LastCalledWithData = %q want %q`, got, want)
 	}
 
-	if !reflect.DeepEqual(a.MockFossilize.CalledWithMeta, [][]byte{m1, m2}) {
-		t.Fatal("unexpected MockFossilize.CalledWithMeta value")
+	got = nil
+	for _, b := range a.MockFossilize.CalledWithMeta {
+		got = append(got, string(b))
+	}
+	want = []string{string(m1), string(m2)}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf(`a.MockFossilize.CalledWithData = %q want %q`, got, want)
 	}
 
-	if string(a.MockFossilize.LastCalledWithMeta) != string(m2) {
-		t.Fatal("unexpected MockFossilize.LastCalledWithMeta value")
+	if got, want := string(a.MockFossilize.LastCalledWithMeta), string(m2); got != want {
+		t.Errorf(`a.MockFossilize.LastCalledWithMeta = %q want %q`, got, want)
 	}
 }

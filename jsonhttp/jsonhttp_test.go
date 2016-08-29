@@ -7,163 +7,125 @@ package jsonhttp
 import (
 	"errors"
 	"net/http"
-	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/julienschmidt/httprouter"
-
 	"github.com/stratumn/go/testutil"
 )
 
 func TestGet(t *testing.T) {
 	s := New(&Config{})
-
 	s.Get("/test", func(r http.ResponseWriter, _ *http.Request, p httprouter.Params, _ *Config) (interface{}, error) {
 		return map[string]bool{"test": true}, nil
 	})
 
-	ts := httptest.NewServer(s)
-	defer ts.Close()
-
-	var body map[string]bool
-	_, err := testutil.GetJSON(ts.URL+"/test", &body)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/test", nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(body, map[string]bool{"test": true}) {
-		t.Fatal("unexpected body")
+	if got, want := w.Body.String(), `{"test":true}`; got != want {
+		t.Errorf("w.Body = %s want %s", got, want)
 	}
 }
 
 func TestPost(t *testing.T) {
 	s := New(&Config{})
-
 	s.Post("/test", func(r http.ResponseWriter, _ *http.Request, p httprouter.Params, _ *Config) (interface{}, error) {
 		return map[string]bool{"test": true}, nil
 	})
 
-	ts := httptest.NewServer(s)
-	defer ts.Close()
-
-	var body map[string]bool
-	_, err := testutil.PostJSON(ts.URL+"/test", &body, nil)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "POST", "/test", nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(body, map[string]bool{"test": true}) {
-		t.Fatal("unexpected body")
+	if got, want := w.Body.String(), `{"test":true}`; got != want {
+		t.Errorf("w.Body = %s want %s", got, want)
 	}
 }
 
 func TestPut(t *testing.T) {
 	s := New(&Config{})
-
 	s.Put("/test", func(r http.ResponseWriter, _ *http.Request, p httprouter.Params, _ *Config) (interface{}, error) {
 		return map[string]bool{"test": true}, nil
 	})
 
-	ts := httptest.NewServer(s)
-	defer ts.Close()
-
-	var body map[string]bool
-	_, err := testutil.PutJSON(ts.URL+"/test", &body, nil)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "PUT", "/test", nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(body, map[string]bool{"test": true}) {
-		t.Fatal("unexpected body")
+	if got, want := w.Body.String(), `{"test":true}`; got != want {
+		t.Errorf("w.Body = %s want %s", got, want)
 	}
 }
 
 func TestDelete(t *testing.T) {
 	s := New(&Config{})
-
 	s.Delete("/test", func(r http.ResponseWriter, _ *http.Request, p httprouter.Params, _ *Config) (interface{}, error) {
 		return map[string]bool{"test": true}, nil
 	})
 
-	ts := httptest.NewServer(s)
-	defer ts.Close()
-
-	var body map[string]bool
-	_, err := testutil.DeleteJSON(ts.URL+"/test", &body)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/test", nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(body, map[string]bool{"test": true}) {
-		t.Fatal("unexpected body")
+	if got, want := w.Body.String(), `{"test":true}`; got != want {
+		t.Errorf("w.Body = %s want %s", got, want)
 	}
 }
 
 func TestPatch(t *testing.T) {
 	s := New(&Config{})
-
 	s.Patch("/test", func(r http.ResponseWriter, _ *http.Request, p httprouter.Params, _ *Config) (interface{}, error) {
 		return map[string]bool{"test": true}, nil
 	})
 
-	ts := httptest.NewServer(s)
-	defer ts.Close()
-
-	var body map[string]bool
-	_, err := testutil.PatchJSON(ts.URL+"/test", &body, nil)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "PATCH", "/test", nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(body, map[string]bool{"test": true}) {
-		t.Fatal("unexpected body")
+	if got, want := w.Body.String(), `{"test":true}`; got != want {
+		t.Errorf("w.Body = %s want %s", got, want)
 	}
 }
 
 func TestOptions(t *testing.T) {
 	s := New(&Config{})
-
 	s.Options("/test", func(r http.ResponseWriter, _ *http.Request, p httprouter.Params, _ *Config) (interface{}, error) {
 		return map[string]bool{"test": true}, nil
 	})
 
-	ts := httptest.NewServer(s)
-	defer ts.Close()
-
-	var body map[string]bool
-	_, err := testutil.OptionsJSON(ts.URL+"/test", &body)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "OPTIONS", "/test", nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(body, map[string]bool{"test": true}) {
-		t.Fatal("unexpected body")
+	if got, want := w.Body.String(), `{"test":true}`; got != want {
+		t.Errorf("w.Body = %s want %s", got, want)
 	}
 }
 
 func TestNotFound(t *testing.T) {
 	s := New(&Config{})
 
-	ts := httptest.NewServer(s)
-	defer ts.Close()
-
 	var body map[string]interface{}
-	res, err := testutil.GetJSON(ts.URL+"/test", &body)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/test", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if res.StatusCode != NewErrNotFound("").Status() {
-		t.Fatal("unexpected HTTP status")
+	if got, want := w.Code, NewErrNotFound("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-
-	if body["error"].(string) != NewErrNotFound("").Error() {
-		t.Fatal("unexpected error")
+	if got, want := body["error"].(string), NewErrNotFound("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-
-	if int(body["status"].(float64)) != NewErrNotFound("").Status() {
-		t.Fatal("unexpected error HTTP status")
+	if got, want := int(body["status"].(float64)), NewErrNotFound("").Status(); got != want {
+		t.Errorf(`body["status"] = %d want %d`, got, want)
 	}
 }
 
@@ -174,25 +136,20 @@ func TestErrHTTP(t *testing.T) {
 		return nil, NewErrBadRequest("no")
 	})
 
-	ts := httptest.NewServer(s)
-	defer ts.Close()
-
 	var body map[string]interface{}
-	res, err := testutil.GetJSON(ts.URL+"/test", &body)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/test", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if res.StatusCode != NewErrBadRequest("").Status() {
-		t.Fatal("unexpected HTTP status")
+	if got, want := w.Code, NewErrBadRequest("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-
-	if body["error"].(string) != "no" {
-		t.Fatal("unexpected error")
+	if got, want := body["error"].(string), "no"; got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-
-	if int(body["status"].(float64)) != NewErrBadRequest("").Status() {
-		t.Fatal("unexpected error HTTP status")
+	if got, want := int(body["status"].(float64)), NewErrBadRequest("").Status(); got != want {
+		t.Errorf(`body["status"] = %d want %d`, got, want)
 	}
 }
 
@@ -203,24 +160,19 @@ func TestError(t *testing.T) {
 		return nil, errors.New("no")
 	})
 
-	ts := httptest.NewServer(s)
-	defer ts.Close()
-
 	var body map[string]interface{}
-	res, err := testutil.GetJSON(ts.URL+"/test", &body)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/test", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if res.StatusCode != NewErrInternalServer("").Status() {
-		t.Fatal("unexpected HTTP status")
+	if got, want := w.Code, NewErrInternalServer("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-
-	if body["error"].(string) != NewErrInternalServer("").Error() {
-		t.Fatal("unexpected error")
+	if got, want := body["error"].(string), NewErrInternalServer("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-
-	if int(body["status"].(float64)) != NewErrInternalServer("").Status() {
-		t.Fatal("unexpected error HTTP status")
+	if got, want := int(body["status"].(float64)), NewErrInternalServer("").Status(); got != want {
+		t.Errorf(`body["status"] = %d want %d`, got, want)
 	}
 }

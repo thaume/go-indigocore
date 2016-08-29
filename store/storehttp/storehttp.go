@@ -62,6 +62,11 @@ func (h handler) serve(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	return h.handle(w, r, p, h.context)
 }
 
+// Info is the info returned by the root route.
+type Info struct {
+	Adapter interface{} `json:"adapter"`
+}
+
 // New create an instance of a server.
 func New(a store.Adapter, c *jsonhttp.Config) *jsonhttp.Server {
 	s := jsonhttp.New(c)
@@ -78,14 +83,13 @@ func New(a store.Adapter, c *jsonhttp.Config) *jsonhttp.Server {
 }
 
 func root(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *context) (interface{}, error) {
-	info, err := c.adapter.GetInfo()
-
+	adapterInfo, err := c.adapter.GetInfo()
 	if err != nil {
 		return nil, err
 	}
 
-	return map[string]interface{}{
-		"adapter": info,
+	return &Info{
+		Adapter: adapterInfo,
 	}, nil
 }
 

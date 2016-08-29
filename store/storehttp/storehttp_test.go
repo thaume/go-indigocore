@@ -5,9 +5,9 @@
 package storehttp
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"testing"
 
@@ -15,311 +15,293 @@ import (
 	"github.com/stratumn/go/cs/cstesting"
 	"github.com/stratumn/go/jsonhttp"
 	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/store/storetesting"
 	"github.com/stratumn/go/testutil"
 )
 
-func TestRootOK(t *testing.T) {
+func TestRoot(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", nil }
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL, &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != http.StatusOK {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, http.StatusOK; want != got {
+		t.Errorf("w.StatusCode = %d want %d", got, want)
 	}
-	if dict["adapter"].(string) != "test" {
-		t.Fatal("unexpected adapter dict")
+	if got, want := body["adapter"].(string), "test"; got != want {
+		t.Errorf(`body["adapter"] = %q want %q`, got, want)
 	}
-	if a.MockGetInfo.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to GetInfo()")
+	if got, want := a.MockGetInfo.CalledCount, 1; got != want {
+		t.Errorf("a.MockGetInfo.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestRootErr(t *testing.T) {
+func TestRoot_err(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	a.MockGetInfo.Fn = func() (interface{}, error) { return "test", errors.New("error") }
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL, &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.NewErrInternalServer("").Status() {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); want != got {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrInternalServer("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), jsonhttp.NewErrInternalServer("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockGetInfo.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to GetInfo()")
+	if got, want := a.MockGetInfo.CalledCount, 1; got != want {
+		t.Errorf("a.MockGetInfo.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestSaveSegmentOK(t *testing.T) {
+func TestSaveSegment(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	a.MockSaveSegment.Fn = func(*cs.Segment) error { return nil }
 
 	s1 := cstesting.RandomSegment()
 	var s2 cs.Segment
-	res, err := testutil.PostJSON(s.URL+"/segments", &s2, s1)
-
+	w, err := testutil.RequestJSON(s.ServeHTTP, "POST", "/segments", s1, &s2)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !reflect.DeepEqual(a.MockSaveSegment.LastCalledWith, s1) {
-		t.Fatal("unexpected argument passed to SaveSegment()")
+		got, _ := json.MarshalIndent(a.MockSaveSegment.LastCalledWith, "", "  ")
+		want, _ := json.MarshalIndent(s1, "", "  ")
+		t.Errorf("a.MockSaveSegment.LastCalledWith = %s\nwant %s", got, want)
 	}
-	if res.StatusCode != http.StatusOK {
-		t.Fatal("unexpected status code")
+	if got, want := w.Code, http.StatusOK; got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if !reflect.DeepEqual(s1, &s2) {
-		t.Fatal("expected segments to be equal")
+	if !reflect.DeepEqual(&s2, s1) {
+		got, _ := json.MarshalIndent(s2, "", "  ")
+		want, _ := json.MarshalIndent(s1, "", "  ")
+		t.Errorf("s2 = %s\nwant %s", got, want)
 	}
-	if a.MockSaveSegment.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to SaveSegment()")
+	if got, want := a.MockSaveSegment.CalledCount, 1; got != want {
+		t.Errorf("a.MockSaveSegment.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestSaveSegmentErr(t *testing.T) {
+func TestSaveSegment_err(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	a.MockSaveSegment.Fn = func(*cs.Segment) error { return errors.New("test") }
 
-	var dict map[string]interface{}
-	res, err := testutil.PostJSON(s.URL+"/segments", &dict, cstesting.RandomSegment())
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "POST", "/segments", cstesting.RandomSegment(), &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.NewErrInternalServer("").Status() {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrInternalServer("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), jsonhttp.NewErrInternalServer("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockSaveSegment.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to SaveSegment()")
+	if got, want := a.MockSaveSegment.CalledCount, 1; got != want {
+		t.Errorf("a.MockSaveSegment.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestSaveSegmentInvalidSegment(t *testing.T) {
+func TestSaveSegment_invalidSegment(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
 
 	s1 := cstesting.RandomSegment()
 	s1.Meta["linkHash"] = true
-
-	var dict map[string]interface{}
-	res, err := testutil.PostJSON(s.URL+"/segments", &dict, s1)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "POST", "/segments", s1, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.NewErrBadRequest("").Status() {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, jsonhttp.NewErrBadRequest("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != "meta.linkHash should be a non empty string" {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), "meta.linkHash should be a non empty string"; got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockSaveSegment.CalledCount != 0 {
-		t.Fatal("unexpected number of calls to SaveSegment()")
+	if got, want := a.MockSaveSegment.CalledCount, 0; got != want {
+		t.Errorf("a.MockSaveSegment.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestSaveSegmentInvalidJSON(t *testing.T) {
+func TestSaveSegment_invalidJSON(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
 
-	var dict map[string]interface{}
-	res, err := testutil.PostJSON(s.URL+"/segments", &dict, "1234567890azertyui")
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "POST", "/segments", "azertyuio", &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.NewErrBadRequest("").Status() {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, jsonhttp.NewErrBadRequest("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrBadRequest("").Error() {
-		t.Log(dict["error"].(string))
-		t.Log(jsonhttp.NewErrBadRequest("").Error())
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), jsonhttp.NewErrBadRequest("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockSaveSegment.CalledCount != 0 {
-		t.Fatal("unexpected number of calls to SaveSegment()")
+	if got, want := a.MockSaveSegment.CalledCount, 0; got != want {
+		t.Errorf("a.MockSaveSegment.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestGetSegmentFound(t *testing.T) {
+func TestGetSegment(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	s1 := cstesting.RandomSegment()
 	a.MockGetSegment.Fn = func(string) (*cs.Segment, error) { return s1, nil }
 
 	var s2 cs.Segment
-	res, err := testutil.GetJSON(s.URL+"/segments/abcde", &s2)
-
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/abcde", nil, &s2)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(a.MockGetSegment.LastCalledWith, "abcde") {
-		t.Fatal("unexpected argument passed to GetSegment()")
+
+	if got, want := a.MockGetSegment.LastCalledWith, "abcde"; got != want {
+		t.Errorf("a.MockGetSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
-	if res.StatusCode != http.StatusOK {
-		t.Fatal("unexpected status code")
+	if got, want := w.Code, http.StatusOK; got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if !reflect.DeepEqual(s1, &s2) {
-		t.Fatal("expected segments to be equal")
+	if !reflect.DeepEqual(&s2, s1) {
+		got, _ := json.MarshalIndent(s2, "", "  ")
+		want, _ := json.MarshalIndent(s1, "", "  ")
+		t.Errorf("s2 = %s\nwant %s", got, want)
 	}
-	if a.MockGetSegment.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to GetSegment()")
+	if got, want := a.MockGetSegment.CalledCount, 1; got != want {
+		t.Errorf("a.MockGetSegment.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestGetSegmentNotFound(t *testing.T) {
+func TestGetSegment_notFound(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL+"/segments/abcde", &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/abcde", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(a.MockGetSegment.LastCalledWith, "abcde") {
-		t.Fatal("unexpected argument passed to GetSegment()")
+
+	if got, want := a.MockGetSegment.LastCalledWith, "abcde"; got != want {
+		t.Errorf("a.MockGetSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
-	if res.StatusCode != jsonhttp.NewErrNotFound("").Status() {
-		t.Fatal("unexpected status code")
+	if got, want := w.Code, jsonhttp.NewErrNotFound("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrNotFound("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), jsonhttp.NewErrNotFound("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockGetSegment.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to GetSegment()")
+	if got, want := a.MockGetSegment.CalledCount, 1; got != want {
+		t.Errorf("a.MockGetSegment.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestGetSegmentErr(t *testing.T) {
+func TestGetSegment_err(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	a.MockGetSegment.Fn = func(string) (*cs.Segment, error) { return nil, errors.New("error") }
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL+"/segments/abcde", &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/abcde", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(a.MockGetSegment.LastCalledWith, "abcde") {
-		t.Fatal("unexpected argument passed to GetSegment()")
+
+	if got, want := a.MockGetSegment.LastCalledWith, "abcde"; got != want {
+		t.Errorf("a.MockGetSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
-	if res.StatusCode != jsonhttp.NewErrInternalServer("").Status() {
-		t.Fatal("unexpected status code")
+	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrInternalServer("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), jsonhttp.NewErrInternalServer("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockGetSegment.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to GetSegment()")
+	if got, want := a.MockGetSegment.CalledCount, 1; got != want {
+		t.Errorf("a.MockGetSegment.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestDeleteSegmentFound(t *testing.T) {
+func TestDeleteSegment(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	s1 := cstesting.RandomSegment()
 	a.MockDeleteSegment.Fn = func(string) (*cs.Segment, error) { return s1, nil }
 
 	var s2 cs.Segment
-	res, err := testutil.DeleteJSON(s.URL+"/segments/abcde", &s2)
-
+	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/abcde", nil, &s2)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(a.MockDeleteSegment.LastCalledWith, "abcde") {
-		t.Fatal("unexpected argument passed to DeleteSegment()")
+
+	if got, want := a.MockDeleteSegment.LastCalledWith, "abcde"; got != want {
+		t.Errorf("a.MockDeleteSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
-	if res.StatusCode != http.StatusOK {
-		t.Fatal("unexpected status code")
+	if got, want := w.Code, http.StatusOK; got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if !reflect.DeepEqual(s1, &s2) {
-		t.Fatal("expected segments to be equal")
+	if !reflect.DeepEqual(&s2, s1) {
+		got, _ := json.MarshalIndent(s2, "", "  ")
+		want, _ := json.MarshalIndent(s1, "", "  ")
+		t.Errorf("s2 = %s\nwant %s", got, want)
 	}
-	if a.MockDeleteSegment.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to DeleteSegment()")
+	if got, want := a.MockDeleteSegment.CalledCount, 1; got != want {
+		t.Errorf("a.MockDeleteSegment.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestDeleteSegmentNotFound(t *testing.T) {
+func TestDeleteSegment_notFound(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
 
-	var dict map[string]interface{}
-	res, err := testutil.DeleteJSON(s.URL+"/segments/abcde", &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/abcde", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(a.MockDeleteSegment.LastCalledWith, "abcde") {
-		t.Fatal("unexpected argument passed to DeleteSegment()")
+
+	if got, want := a.MockDeleteSegment.LastCalledWith, "abcde"; got != want {
+		t.Errorf("a.MockDeleteSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
-	if res.StatusCode != jsonhttp.NewErrNotFound("").Status() {
-		t.Fatal("unexpected status code")
+	if got, want := w.Code, jsonhttp.NewErrNotFound("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrNotFound("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), jsonhttp.NewErrNotFound("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockDeleteSegment.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to DeleteSegment()")
+	if got, want := a.MockDeleteSegment.CalledCount, 1; got != want {
+		t.Errorf("a.MockDeleteSegment.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestDeleteSegmentErr(t *testing.T) {
+func TestDeleteSegment_err(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	a.MockDeleteSegment.Fn = func(string) (*cs.Segment, error) { return nil, errors.New("error") }
 
-	var dict map[string]interface{}
-	res, err := testutil.DeleteJSON(s.URL+"/segments/abcde", &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/abcde", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(a.MockDeleteSegment.LastCalledWith, "abcde") {
-		t.Fatal("unexpected argument passed to DeleteSegment()")
+
+	if got, want := a.MockDeleteSegment.LastCalledWith, "abcde"; got != want {
+		t.Errorf("a.MockDeleteSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
-	if res.StatusCode != jsonhttp.NewErrInternalServer("").Status() {
-		t.Fatal("unexpected status code")
+	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrInternalServer("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), jsonhttp.NewErrInternalServer("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockDeleteSegment.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to DeleteSegment()")
+	if got, want := a.MockDeleteSegment.CalledCount, 1; got != want {
+		t.Errorf("a.MockDeleteSegment.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestFindSegmentsOK(t *testing.T) {
+func TestFindSegments(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	var s1 cs.SegmentSlice
 	for i := 0; i < 10; i++ {
 		s1 = append(s1, cstesting.RandomSegment())
@@ -327,185 +309,166 @@ func TestFindSegmentsOK(t *testing.T) {
 	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return s1, nil }
 
 	var s2 cs.SegmentSlice
-	res, err := testutil.GetJSON(s.URL+"/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one+two", &s2)
-
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one+two", nil, &s2)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != http.StatusOK {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, http.StatusOK; got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if !reflect.DeepEqual(s1, s2) {
-		t.Fatal("expected segment slices to be equal")
+	if !reflect.DeepEqual(s2, s1) {
+		got, _ := json.MarshalIndent(s2, "", "  ")
+		want, _ := json.MarshalIndent(s1, "", "  ")
+		t.Errorf("s2 = %s\nwant %s", got, want)
 	}
-	if a.MockFindSegments.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to FindSegments()")
+	if got, want := a.MockFindSegments.CalledCount, 1; got != want {
+		t.Errorf("a.MockFindSegments.CalledCount = %d want %d", got, want)
 	}
 
 	f := a.MockFindSegments.LastCalledWith
-	if f.Offset != 1 {
-		t.Fatal("unexpected offset")
+	if got, want := f.Offset, 1; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.Offset = %d want %d", got, want)
 	}
-	if f.Limit != 2 {
-		t.Fatal("unexpected limit")
+	if got, want := f.Limit, 2; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.Limit = %d want %d", got, want)
 	}
-	if f.MapID != "123" {
-		t.Fatal("unexpected map ID")
+	if got, want := f.MapID, "123"; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.MapID = %q want %q", got, want)
 	}
-	if f.PrevLinkHash != "abc" {
-		t.Fatal("unexpected previous link hash")
+	if got, want := f.PrevLinkHash, "abc"; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.PrevLinkHash = %q want %q", got, want)
 	}
-	if !reflect.DeepEqual(f.Tags, []string{"one", "two"}) {
-		t.Fatal("unexpected tags")
+	if got, want := f.Tags, []string{"one", "two"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("a.MockFindSegments.LastCalledWith.Tags = %v want %v", got, want)
 	}
 }
 
-func TestFindSegmentsErr(t *testing.T) {
+func TestFindSegments_err(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return nil, errors.New("test") }
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL+"/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one,two", &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.NewErrInternalServer("").Status() {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrInternalServer("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), jsonhttp.NewErrInternalServer("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockFindSegments.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to FindSegments()")
+	if got, want := a.MockFindSegments.CalledCount, 1; got != want {
+		t.Errorf("a.MockFindSegments.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestFindSegmentsValidation(t *testing.T) {
+func TestFindSegments_invalidOffset(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL+"/segments?offset=hello", &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=a", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != newErrOffset("").Status() {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, newErrOffset("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != newErrOffset("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), newErrOffset("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockFindSegments.CalledCount != 0 {
-		t.Fatal("unexpected number of calls to FindSegments()")
+	if got, want := a.MockFindSegments.CalledCount, 0; got != want {
+		t.Errorf("a.MockFindSegments.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestGetMapIDsOK(t *testing.T) {
+func TestGetMapIDs(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
+	s1 := []string{"one", "two", "three"}
+	a.MockGetMapIDs.Fn = func(*store.Pagination) ([]string, error) { return s1, nil }
 
-	slice1 := []string{"one", "two", "three"}
-	a.MockGetMapIDs.Fn = func(*store.Pagination) ([]string, error) { return slice1, nil }
-
-	var slice2 []string
-	res, err := testutil.GetJSON(s.URL+"/maps?offset=20&limit=10", &slice2)
-
+	var s2 []string
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/maps?offset=20&limit=10", nil, &s2)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != http.StatusOK {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, http.StatusOK; got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if len(slice1) != len(slice2) {
-		t.Fatal("expected map ID slices to be have same length")
+	if got, want := s2, s1; !reflect.DeepEqual(got, want) {
+		t.Errorf("s2 = %v want %v", got, want)
 	}
-	for i := 0; i < len(slice1); i++ {
-		if !testutil.ContainsString(slice2, slice1[i]) {
-			t.Fatal("expected map ID slices to have same elements")
-		}
-	}
-	if a.MockGetMapIDs.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to FindSegments()")
+	if got, want := a.MockGetMapIDs.CalledCount, 1; got != want {
+		t.Errorf("a.MockGetMapIDs(pagination).CalledCount = %d want %d", got, want)
 	}
 
-	pagination := a.MockGetMapIDs.LastCalledWith
-	if pagination.Offset != 20 {
-		t.Fatal("unexpected offset")
+	p := a.MockGetMapIDs.LastCalledWith
+	if got, want := p.Offset, 20; got != want {
+		t.Errorf("a.MockGetMapIDs.LastCalledWith.Offset = %d want %d", got, want)
 	}
-	if pagination.Limit != 10 {
-		t.Fatal("unexpected limit")
+	if got, want := p.Limit, 10; got != want {
+		t.Errorf("a.MockGetMapIDs.LastCalledWith.Limit = %d want %d", got, want)
 	}
 }
 
-func TestGetMapIDsErr(t *testing.T) {
+func TestGetMapIDs_err(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
-
 	a.MockGetMapIDs.Fn = func(*store.Pagination) ([]string, error) { return nil, errors.New("test") }
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL+"/maps", &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/maps", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.NewErrInternalServer("").Status() {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != jsonhttp.NewErrInternalServer("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), jsonhttp.NewErrInternalServer("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockGetMapIDs.CalledCount != 1 {
-		t.Fatal("unexpected number of calls to FindSegments()")
+	if got, want := a.MockGetMapIDs.CalledCount, 1; got != want {
+		t.Errorf("a.MockGetMapIDs.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestGetMapIDsValidation(t *testing.T) {
+func TestGetMapIDs_invalidLimit(t *testing.T) {
 	s, a := createServer()
-	defer s.Close()
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL+"/maps?limit=-1", &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/maps?limit=-1", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != newErrLimit("").Status() {
-		t.Fatal("unexpected status code")
+
+	if got, want := w.Code, newErrOffset("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
 	}
-	if dict["error"].(string) != newErrLimit("").Error() {
-		t.Fatal("unexpected error message")
+	if got, want := body["error"].(string), newErrLimit("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
 	}
-	if a.MockGetMapIDs.CalledCount != 0 {
-		t.Fatal("unexpected number of calls to FindSegments()")
+	if got, want := a.MockGetMapIDs.CalledCount, 0; got != want {
+		t.Errorf("a.MockGetMapIDs.CalledCount = %d want %d", got, want)
 	}
 }
 
-func TestRootNotFound(t *testing.T) {
+func TestNotFound(t *testing.T) {
 	s, _ := createServer()
-	defer s.Close()
 
-	var dict map[string]interface{}
-	res, err := testutil.GetJSON(s.URL+"/dsfsdf", &dict)
-
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/azerty", nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.StatusCode != jsonhttp.NewErrNotFound("").Status() {
-		t.Fatal("unexpected status code")
-	}
-	if dict["error"].(string) != jsonhttp.NewErrNotFound("").Error() {
-		t.Fatal("unexpected error message")
-	}
-}
 
-func createServer() (*httptest.Server, *storetesting.MockAdapter) {
-	a := &storetesting.MockAdapter{}
-	s := httptest.NewServer(New(a, &jsonhttp.Config{}))
-
-	return s, a
+	if got, want := w.Code, jsonhttp.NewErrNotFound("").Status(); want != got {
+		t.Errorf("w.Code = %d want %d", got, want)
+	}
+	if got, want := body["error"].(string), jsonhttp.NewErrNotFound("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
+	}
 }

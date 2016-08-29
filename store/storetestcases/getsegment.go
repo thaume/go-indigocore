@@ -5,6 +5,7 @@
 package storetestcases
 
 import (
+	"encoding/json"
 	"reflect"
 	"sync/atomic"
 	"testing"
@@ -13,138 +14,134 @@ import (
 	"github.com/stratumn/go/testutil"
 )
 
-// TestGetSegmentFound tests what happens when you get an existing segment.
-func (f Factory) TestGetSegmentFound(t *testing.T) {
+// TestGetSegment tests what happens when you get an existing segment.
+func (f Factory) TestGetSegment(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if a == nil {
-		t.Fatal("expected adapter not to be nil")
+		t.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	s1 := cstesting.RandomSegment()
 	linkHash := s1.Meta["linkHash"].(string)
-
 	a.SaveSegment(s1)
 
 	s2, err := a.GetSegment(linkHash)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if s2 == nil {
-		t.Fatal("expected segment not to be nil")
+	if got := s2; got == nil {
+		t.Error("s2 = nil want *cs.Segment")
 	}
-
-	if !reflect.DeepEqual(s1, s2) {
-		t.Fatal("expected segments to be equal")
+	if got, want := s2, s1; !reflect.DeepEqual(want, got) {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		wantJS, _ := json.MarshalIndent(got, "", "  ")
+		t.Errorf("s2 = %s\n want%s", gotJS, wantJS)
 	}
 }
 
-// TestGetSegmentUpdatedState tests what happens when you get a segment whose state was updated.
-func (f Factory) TestGetSegmentUpdatedState(t *testing.T) {
+// TestGetSegment_updatedState tests what happens when you get a segment whose state was updated.
+func (f Factory) TestGetSegment_updatedState(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if a == nil {
-		t.Fatal("expected adapter not to be nil")
+		t.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	s1 := cstesting.RandomSegment()
 	linkHash := s1.Meta["linkHash"].(string)
-
 	a.SaveSegment(s1)
 	s1 = cstesting.ChangeSegmentState(s1)
 	a.SaveSegment(s1)
 
 	s2, err := a.GetSegment(linkHash)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if s2 == nil {
-		t.Fatal("expected segment not to be nil")
+	if got := s2; got == nil {
+		t.Error("s2 = nil want *cs.Segment")
 	}
-
-	if !reflect.DeepEqual(s1, s2) {
-		t.Fatal("expected segments to be equal")
+	if got, want := s2, s1; !reflect.DeepEqual(want, got) {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		wantJS, _ := json.MarshalIndent(got, "", "  ")
+		t.Errorf("s2 = %s\n want%s", gotJS, wantJS)
 	}
 }
 
-// TestGetSegmentUpdatedMapID tests what happens when you get a segment whose map ID was updated.
-func (f Factory) TestGetSegmentUpdatedMapID(t *testing.T) {
+// TestGetSegment_updatedMapID tests what happens when you get a segment whose map ID was updated.
+func (f Factory) TestGetSegment_updatedMapID(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if a == nil {
-		t.Fatal("expected adapter not to be nil")
+		t.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	s1 := cstesting.RandomSegment()
 	linkHash := s1.Meta["linkHash"].(string)
-
 	a.SaveSegment(s1)
 	s1 = cstesting.ChangeSegmentMapID(s1)
 	a.SaveSegment(s1)
 
 	s2, err := a.GetSegment(linkHash)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if s2 == nil {
-		t.Fatal("expected segment not to be nil")
+	if got := s2; got == nil {
+		t.Error("s2 = nil want *cs.Segment")
 	}
-
-	if !reflect.DeepEqual(s1, s2) {
-		t.Fatal("expected segments to be equal")
+	if got, want := s2, s1; !reflect.DeepEqual(want, got) {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		wantJS, _ := json.MarshalIndent(got, "", "  ")
+		t.Errorf("s2 = %s\n want%s", gotJS, wantJS)
 	}
 }
 
-// TestGetSegmentNotFound tests what happens when you get a nonexistent segment.
-func (f Factory) TestGetSegmentNotFound(t *testing.T) {
+// TestGetSegment_notFound tests what happens when you get a nonexistent segment.
+func (f Factory) TestGetSegment_notFound(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if a == nil {
-		t.Fatal("expected adapter not to be nil")
+		t.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	s, err := a.GetSegment(testutil.RandomString(32))
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if s != nil {
-		t.Fatal("expected segment to be nil")
+	if got := s; got != nil {
+		gotJS, _ := json.MarshalIndent(got, "", "  ")
+		t.Errorf("s = %s\n want nil", gotJS)
 	}
 }
 
-// BenchmarkGetSegmentFound benchmarks getting existing segments.
-func (f Factory) BenchmarkGetSegmentFound(b *testing.B) {
+// BenchmarkGetSegment benchmarks getting existing segments.
+func (f Factory) BenchmarkGetSegment(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
 		b.Fatal(err)
 	}
 	if a == nil {
-		b.Fatal("expected adapter not to be nil")
+		b.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	linkHashes := make([]string, b.N)
-
 	for i := 0; i < b.N; i++ {
 		s := cstesting.RandomSegment()
 		a.SaveSegment(s)
@@ -157,24 +154,23 @@ func (f Factory) BenchmarkGetSegmentFound(b *testing.B) {
 		if s, err := a.GetSegment(linkHashes[i]); err != nil {
 			b.Fatal(err)
 		} else if s == nil {
-			b.Fatal("expected segment")
+			b.Error("s = nil want *cs.Segment")
 		}
 	}
 }
 
-// BenchmarkGetSegmentFoundParallel benchmarks getting existing segments in parallel.
-func (f Factory) BenchmarkGetSegmentFoundParallel(b *testing.B) {
+// BenchmarkGetSegment_parallel benchmarks getting existing segments in parallel.
+func (f Factory) BenchmarkGetSegment_parallel(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
 		b.Fatal(err)
 	}
 	if a == nil {
-		b.Fatal("expected adapter not to be nil")
+		b.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	linkHashes := make([]string, b.N)
-
 	for i := 0; i < b.N; i++ {
 		s := cstesting.RandomSegment()
 		a.SaveSegment(s)
@@ -188,11 +184,10 @@ func (f Factory) BenchmarkGetSegmentFoundParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			i := atomic.AddUint64(&counter, 1) - 1
-
 			if s, err := a.GetSegment(linkHashes[i]); err != nil {
-				b.Fatal(err)
+				b.Error(err)
 			} else if s == nil {
-				b.Fatal("expected segment")
+				b.Error("s = nil want *cs.Segment")
 			}
 		}
 	})

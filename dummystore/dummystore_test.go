@@ -18,11 +18,3 @@ func TestDummystore(t *testing.T) {
 		},
 	}.RunTests(t)
 }
-
-func BenchmarkDummystore(b *testing.B) {
-	storetestcases.Factory{
-		New: func() (store.Adapter, error) {
-			return New(&Config{}), nil
-		},
-	}.RunBenchmarks(b)
-}

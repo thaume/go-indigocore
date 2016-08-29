@@ -35,6 +35,8 @@ type Config struct {
 	KeyFile string
 
 	// Whether to enable verbose output.
+	// If enabled, all errors are logged.
+	// If disabled, only internal server errors are logged.
 	Verbose bool
 }
 
@@ -118,13 +120,13 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request, p httprouter.
 
 	data, err := h.serve(w, r, p, h.config)
 	if err != nil {
-		renderErr(w, err, h.config)
+		renderErr(w, r, err, h.config)
 		return
 	}
 
 	js, err := json.Marshal(data)
 	if err != nil {
-		renderErr(w, err, h.config)
+		renderErr(w, r, err, h.config)
 		return
 	}
 
@@ -132,13 +134,13 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request, p httprouter.
 	w.Write(js)
 }
 
-func renderErr(w http.ResponseWriter, err error, c *Config) {
+func renderErr(w http.ResponseWriter, r *http.Request, err error, c *Config) {
 	e, ok := err.(ErrHTTP)
 	if !ok {
-		log.Println(err.Error())
+		log.Printf("Error: %q %q %q 500 %q", r.RemoteAddr, r.Method, r.RequestURI, err)
 		e = NewErrInternalServer("")
 	} else if c.Verbose {
-		log.Println(err.Error())
+		log.Printf("Error: %q %q %q %d %q", r.RemoteAddr, r.Method, r.RequestURI, e.Status(), err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

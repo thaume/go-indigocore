@@ -2,24 +2,19 @@
 // Use of this source code is governed by an Apache License 2.0
 // that can be found in the LICENSE file.
 
-package filestore
+package dummystore
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stratumn/go/store"
 	"github.com/stratumn/go/store/storetestcases"
 )
 
-func TestFilestore(t *testing.T) {
+func BenchmarkDummystore(b *testing.B) {
 	storetestcases.Factory{
 		New: func() (store.Adapter, error) {
-			return createAdapter(t), nil
+			return New(&Config{}), nil
 		},
-		Free: func(s store.Adapter) {
-			a := s.(*FileStore)
-			defer os.RemoveAll(a.config.Path)
-		},
-	}.RunTests(t)
+	}.RunBenchmarks(b)
 }

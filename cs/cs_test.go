@@ -12,174 +12,110 @@ import (
 	"github.com/stratumn/go/cs/cstesting"
 )
 
-func TestSegmentValidateValid(t *testing.T) {
+func TestSegmentValidate_valid(t *testing.T) {
 	s := cstesting.RandomSegment()
-
 	if err := s.Validate(); err != nil {
-		t.Fatal(err)
+		t.Errorf("s.Validate() = %q want nil", err)
 	}
 }
 
-func TestSegmentValidateLinkHashNil(t *testing.T) {
+func TestSegmentValidate_linkHashNil(t *testing.T) {
 	s := cstesting.RandomSegment()
 	delete(s.Meta, "linkHash")
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "meta.linkHash should be a non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "meta.linkHash should be a non empty string")
 }
 
-func TestSegmentValidateLinkHashEmpty(t *testing.T) {
+func TestSegmentValidate_linkHashEmpty(t *testing.T) {
 	s := cstesting.RandomSegment()
 	s.Meta["linkHash"] = ""
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "meta.linkHash should be a non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "meta.linkHash should be a non empty string")
 }
 
-func TestSegmentValidateLinkHashWrongType(t *testing.T) {
+func TestSegmentValidate_linkHashWrongType(t *testing.T) {
 	s := cstesting.RandomSegment()
 	s.Meta["linkHash"] = 3
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "meta.linkHash should be a non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "meta.linkHash should be a non empty string")
 }
 
-func TestSegmentValidateMapIDNil(t *testing.T) {
+func TestSegmentValidate_mapIDNil(t *testing.T) {
 	s := cstesting.RandomSegment()
 	delete(s.Link.Meta, "mapId")
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "link.meta.mapId should be a non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "link.meta.mapId should be a non empty string")
 }
 
-func TestSegmentValidateMapIDEmpty(t *testing.T) {
+func TestSegmentValidate_mapIDEmpty(t *testing.T) {
 	s := cstesting.RandomSegment()
 	s.Link.Meta["mapId"] = ""
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "link.meta.mapId should be a non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "link.meta.mapId should be a non empty string")
 }
 
-func TestSegmentValidateMapIDWrongType(t *testing.T) {
+func TestSegmentValidate_mapIDWrongType(t *testing.T) {
 	s := cstesting.RandomSegment()
 	s.Link.Meta["mapId"] = true
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "link.meta.mapId should be a non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "link.meta.mapId should be a non empty string")
 }
 
-func TestSegmentValidatePrevLinkHashNil(t *testing.T) {
+func TestSegmentValidate_prevLinkHashNil(t *testing.T) {
 	s := cstesting.RandomSegment()
 	delete(s.Link.Meta, "prevLinkHash")
-
 	if err := s.Validate(); err != nil {
-		t.Fatal(err)
+		t.Errorf("s.Validate() = %q want nil", err)
 	}
 }
 
-func TestSegmentValidatePrevLinkHashEmpty(t *testing.T) {
+func TestSegmentValidate_prevLinkHashEmpty(t *testing.T) {
 	s := cstesting.RandomSegment()
 	s.Link.Meta["prevLinkHash"] = ""
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "link.meta.prevLinkHash should be a non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "link.meta.prevLinkHash should be a non empty string")
 }
 
-func TestSegmentValidatePrevLinkHashWrongType(t *testing.T) {
+func TestSegmentValidate_prevLinkHashWrongType(t *testing.T) {
 	s := cstesting.RandomSegment()
 	s.Link.Meta["prevLinkHash"] = []string{}
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "link.meta.prevLinkHash should be a non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "link.meta.prevLinkHash should be a non empty string")
 }
 
-func TestSegmentValidateTagsNil(t *testing.T) {
+func TestSegmentValidate_tagsNil(t *testing.T) {
 	s := cstesting.RandomSegment()
 	delete(s.Link.Meta, "tags")
-
 	if err := s.Validate(); err != nil {
-		t.Fatal(err)
+		t.Errorf("s.Validate() = %q want nil", err)
 	}
 }
 
-func TestSegmentValidateTagsWrongType(t *testing.T) {
+func TestSegmentValidate_tagsWrongType(t *testing.T) {
 	s := cstesting.RandomSegment()
 	s.Link.Meta["tags"] = 2.4
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "link.meta.tags should be an array of non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "link.meta.tags should be an array of non empty string")
 }
 
-func TestSegmentValidateTagsWrongElementType(t *testing.T) {
+func TestSegmentValidate_tagsWrongElementType(t *testing.T) {
 	s := cstesting.RandomSegment()
 	s.Link.Meta["tags"] = []interface{}{1, true, 3}
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "link.meta.tags should be an array of non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "link.meta.tags should be an array of non empty string")
 }
 
-func TestSegmentValidateTagsEmpty(t *testing.T) {
+func TestSegmentValidate_tagsEmpty(t *testing.T) {
 	s := cstesting.RandomSegment()
 	s.Link.Meta["tags"] = []interface{}{"test", ""}
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "link.meta.tags should be an array of non empty string" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "link.meta.tags should be an array of non empty string")
 }
 
-func TestSegmentValidatePriorityNil(t *testing.T) {
+func TestSegmentValidate_priorityNil(t *testing.T) {
 	s := cstesting.RandomSegment()
 	delete(s.Link.Meta, "priority")
-
 	if err := s.Validate(); err != nil {
-		t.Fatal(err)
+		t.Errorf("s.Validate() = %q want nil", err)
 	}
 }
 
-func TestSegmentValidatePriorityWrongType(t *testing.T) {
+func TestSegmentValidate_priorityWrongType(t *testing.T) {
 	s := cstesting.RandomSegment()
 	s.Link.Meta["priority"] = false
-
-	if err := s.Validate(); err == nil {
-		t.Fatal("expected error")
-	} else if err.Error() != "link.meta.priority should be a float64" {
-		t.Fatal(err)
-	}
+	testSegmentValidateError(t, s, "link.meta.priority should be a float64")
 }
 
-func TestSegmentSliceSortable(t *testing.T) {
+func TestSegmentSliceSort_priority(t *testing.T) {
 	slice := cs.SegmentSlice{
 		&cs.Segment{Link: cs.Link{Meta: map[string]interface{}{"priority": 2.3}}},
 		&cs.Segment{Link: cs.Link{Meta: map[string]interface{}{"priority": -1.1}}},
@@ -187,36 +123,35 @@ func TestSegmentSliceSortable(t *testing.T) {
 	}
 
 	sort.Sort(slice)
-	lastPriority := 100.0
-	for _, s := range slice {
-		priority := s.Link.Meta["priority"].(float64)
-		if priority > lastPriority {
-			t.Fatal("expected segments to be sorted by priority")
+	wantLTE := 100.0
+	for i, s := range slice {
+		got := s.Link.Meta["priority"].(float64)
+		if got > wantLTE {
+			t.Errorf("slice#%d: priority = %f want <= %f", i, got, wantLTE)
 		}
-
-		lastPriority = priority
+		wantLTE = got
 	}
 }
 
-func TestSegmentSliceSortableLinkHash(t *testing.T) {
+func TestSegmentSliceSort_linkHash(t *testing.T) {
 	slice := cs.SegmentSlice{
 		&cs.Segment{Link: cs.Link{Meta: map[string]interface{}{"priority": 2.0}}, Meta: map[string]interface{}{"linkHash": "c"}},
 		&cs.Segment{Link: cs.Link{Meta: map[string]interface{}{"priority": 2.0}}, Meta: map[string]interface{}{"linkHash": "b"}},
 	}
 
 	sort.Sort(slice)
-	lastLinkHash := "a"
-	for _, s := range slice {
-		linkHash := s.Meta["linkHash"].(string)
-		if linkHash < lastLinkHash {
-			t.Fatal("expected segments to be sorted by link hashes")
+	wantGTE := "a"
+	for i, s := range slice {
+		got := s.Meta["linkHash"].(string)
+		if got < wantGTE {
+			t.Errorf("slice#%d: linkHash = %q want >= %q", i, got, wantGTE)
 		}
 
-		lastLinkHash = linkHash
+		wantGTE = got
 	}
 }
 
-func TestSegmentSliceSortableNoPriority(t *testing.T) {
+func TestSegmentSliceSort_noPriority(t *testing.T) {
 	slice := cs.SegmentSlice{
 		&cs.Segment{Link: cs.Link{Meta: map[string]interface{}{"priority": 2.3}}},
 		&cs.Segment{Link: cs.Link{Meta: map[string]interface{}{}}},
@@ -224,17 +159,17 @@ func TestSegmentSliceSortableNoPriority(t *testing.T) {
 	}
 
 	sort.Sort(slice)
-	lastPriority := 100.0
-	for _, s := range slice {
-		priority, ok := s.Link.Meta["priority"].(float64)
+	wantLTE := 100.0
+	for i, s := range slice {
+		got, ok := s.Link.Meta["priority"].(float64)
 		if ok {
-			if priority > lastPriority {
-				t.Fatal("expected segments to be sorted by priority")
+			if got > wantLTE {
+				t.Errorf("slice#%d: priority = %f want <= %f", i, got, wantLTE)
 			}
 
-			lastPriority = priority
+			wantLTE = got
 		} else {
-			lastPriority = 0
+			wantLTE = 0
 		}
 	}
 }

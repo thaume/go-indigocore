@@ -12,14 +12,14 @@ import (
 	"github.com/stratumn/go/store/storetestcases"
 )
 
-func TestFilestore(t *testing.T) {
+func BenchmarkFilestore(b *testing.B) {
 	storetestcases.Factory{
 		New: func() (store.Adapter, error) {
-			return createAdapter(t), nil
+			return createAdapter(b), nil
 		},
 		Free: func(s store.Adapter) {
 			a := s.(*FileStore)
 			defer os.RemoveAll(a.config.Path)
 		},
-	}.RunTests(t)
+	}.RunBenchmarks(b)
 }

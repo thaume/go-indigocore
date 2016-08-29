@@ -15,17 +15,15 @@ func (f Factory) TestGetInfo(t *testing.T) {
 		t.Fatal(err)
 	}
 	if a == nil {
-		t.Fatal("expected adapter not to be nil")
+		t.Fatal("a = nil want store.Adapter")
 	}
 	defer f.free(a)
 
 	info, err := a.GetInfo()
-
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if info == nil {
-		t.Fatal("info is nil")
+		t.Fatal("info = nil want interface{}")
 	}
 }
