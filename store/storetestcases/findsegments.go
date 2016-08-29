@@ -48,8 +48,8 @@ func (f Factory) TestFindSegments(t *testing.T) {
 	}
 }
 
-// TestFindSegments_pagination tests what happens when you search with pagination.
-func (f Factory) TestFindSegments_pagination(t *testing.T) {
+// TestFindSegmentsPagination tests what happens when you search with pagination.
+func (f Factory) TestFindSegmentsPagination(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -88,8 +88,8 @@ func (f Factory) TestFindSegments_pagination(t *testing.T) {
 	}
 }
 
-// TestFindSegment_empty tests what happens when there are no matches.
-func (f Factory) TestFindSegment_empty(t *testing.T) {
+// TestFindSegmentEmpty tests what happens when there are no matches.
+func (f Factory) TestFindSegmentEmpty(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -115,8 +115,8 @@ func (f Factory) TestFindSegment_empty(t *testing.T) {
 	}
 }
 
-// TestFindSegments_singleTag tests what happens when you search with only one tag.
-func (f Factory) TestFindSegments_singleTag(t *testing.T) {
+// TestFindSegmentsSingleTag tests what happens when you search with only one tag.
+func (f Factory) TestFindSegmentsSingleTag(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -153,8 +153,8 @@ func (f Factory) TestFindSegments_singleTag(t *testing.T) {
 	}
 }
 
-// TestFindSegments_multipleTags tests what happens when you search with more than one tag.
-func (f Factory) TestFindSegments_multipleTags(t *testing.T) {
+// TestFindSegmentsMultipleTags tests what happens when you search with more than one tag.
+func (f Factory) TestFindSegmentsMultipleTags(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -225,8 +225,8 @@ func (f Factory) TestFindSegmentsMapID(t *testing.T) {
 	}
 }
 
-// TestFindSegmentsMapID_notFound tests whan happens when you search for a nonexistent map ID.
-func (f Factory) TestFindSegmentsMapID_notFound(t *testing.T) {
+// TestFindSegmentsMapIDNotFound tests whan happens when you search for a nonexistent map ID.
+func (f Factory) TestFindSegmentsMapIDNotFound(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -248,8 +248,8 @@ func (f Factory) TestFindSegmentsMapID_notFound(t *testing.T) {
 	}
 }
 
-// TestFindSegments_prevLinkHash tests whan happens when you search for an existing previous link hash.
-func (f Factory) TestFindSegments_prevLinkHash(t *testing.T) {
+// TestFindSegmentsPrevLinkHash tests whan happens when you search for an existing previous link hash.
+func (f Factory) TestFindSegmentsPrevLinkHash(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -281,8 +281,8 @@ func (f Factory) TestFindSegments_prevLinkHash(t *testing.T) {
 	}
 }
 
-// TestFindSegments_prevLinkHashNotFound tests whan happens when you search for a nonexistent previous link hash.
-func (f Factory) TestFindSegments_prevLinkHashNotFound(t *testing.T) {
+// TestFindSegmentsPrevLinkHashNotFound tests whan happens when you search for a nonexistent previous link hash.
+func (f Factory) TestFindSegmentsPrevLinkHashNotFound(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)

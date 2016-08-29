@@ -49,8 +49,8 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 	}
 }
 
-// TestGetMapIDs_pagination tests what happens when you get map IDs with pagination.
-func (f Factory) TestGetMapIDs_pagination(t *testing.T) {
+// TestGetMapIDsPagination tests what happens when you get map IDs with pagination.
+func (f Factory) TestGetMapIDsPagination(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -78,8 +78,8 @@ func (f Factory) TestGetMapIDs_pagination(t *testing.T) {
 	}
 }
 
-// TestGetMapIDs_empty tests what happens when you should get no map IDs.
-func (f Factory) TestGetMapIDs_empty(t *testing.T) {
+// TestGetMapIDsEmpty tests what happens when you should get no map IDs.
+func (f Factory) TestGetMapIDsEmpty(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)

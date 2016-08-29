@@ -44,8 +44,8 @@ func (f Factory) TestGetSegment(t *testing.T) {
 	}
 }
 
-// TestGetSegment_updatedState tests what happens when you get a segment whose state was updated.
-func (f Factory) TestGetSegment_updatedState(t *testing.T) {
+// TestGetSegmentUpdatedState tests what happens when you get a segment whose state was updated.
+func (f Factory) TestGetSegmentUpdatedState(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -76,8 +76,8 @@ func (f Factory) TestGetSegment_updatedState(t *testing.T) {
 	}
 }
 
-// TestGetSegment_updatedMapID tests what happens when you get a segment whose map ID was updated.
-func (f Factory) TestGetSegment_updatedMapID(t *testing.T) {
+// TestGetSegmentUpdatedMapID tests what happens when you get a segment whose map ID was updated.
+func (f Factory) TestGetSegmentUpdatedMapID(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -108,8 +108,8 @@ func (f Factory) TestGetSegment_updatedMapID(t *testing.T) {
 	}
 }
 
-// TestGetSegment_notFound tests what happens when you get a nonexistent segment.
-func (f Factory) TestGetSegment_notFound(t *testing.T) {
+// TestGetSegmentNotFound tests what happens when you get a nonexistent segment.
+func (f Factory) TestGetSegmentNotFound(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -159,8 +159,8 @@ func (f Factory) BenchmarkGetSegment(b *testing.B) {
 	}
 }
 
-// BenchmarkGetSegment_parallel benchmarks getting existing segments in parallel.
-func (f Factory) BenchmarkGetSegment_parallel(b *testing.B) {
+// BenchmarkGetSegmentParallel benchmarks getting existing segments in parallel.
+func (f Factory) BenchmarkGetSegmentParallel(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
 		b.Fatal(err)

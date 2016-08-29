@@ -53,8 +53,8 @@ func (f Factory) TestDeleteSegment(t *testing.T) {
 	}
 }
 
-// TestDeleteSegment_notFound tests what happens when you delete a nonexistent segment.
-func (f Factory) TestDeleteSegment_notFound(t *testing.T) {
+// TestDeleteSegmentNotFound tests what happens when you delete a nonexistent segment.
+func (f Factory) TestDeleteSegmentNotFound(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
 		t.Fatal(err)
@@ -104,8 +104,8 @@ func (f Factory) BenchmarkDeleteSegment(b *testing.B) {
 	}
 }
 
-// BenchmarkDeleteSegment_parallel benchmarks deleting existing segments in parallel.
-func (f Factory) BenchmarkDeleteSegment_parallel(b *testing.B) {
+// BenchmarkDeleteSegmentParallel benchmarks deleting existing segments in parallel.
+func (f Factory) BenchmarkDeleteSegmentParallel(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
 		b.Fatal(err)
