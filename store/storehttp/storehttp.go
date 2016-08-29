@@ -36,6 +36,7 @@ import (
 	"github.com/stratumn/go/cs"
 	"github.com/stratumn/go/jsonhttp"
 	"github.com/stratumn/go/store"
+	"github.com/stratumn/go/types"
 )
 
 const (
@@ -111,7 +112,12 @@ func saveSegment(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c 
 }
 
 func getSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *context) (interface{}, error) {
-	s, err := c.adapter.GetSegment(p.ByName("linkHash"))
+	linkHash, err := types.NewBytes32FromString(p.ByName("linkHash"))
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := c.adapter.GetSegment(linkHash)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +129,12 @@ func getSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *
 }
 
 func deleteSegment(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *context) (interface{}, error) {
-	s, err := c.adapter.DeleteSegment(p.ByName("linkHash"))
+	linkHash, err := types.NewBytes32FromString(p.ByName("linkHash"))
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := c.adapter.DeleteSegment(linkHash)
 	if err != nil {
 		return nil, err
 	}
@@ -163,22 +174,29 @@ func getMapIDs(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *c
 }
 
 func parseFilter(r *http.Request) (*store.Filter, error) {
-	var tags []string
-
-	pagination, e := parsePagination(r)
-	if e != nil {
-		return nil, e
+	pagination, err := parsePagination(r)
+	if err != nil {
+		return nil, err
 	}
 
 	var (
-		mapID        = r.URL.Query().Get("mapId")
-		prevLinkHash = r.URL.Query().Get("prevLinkHash")
-		tagsStr      = r.URL.Query().Get("tags")
+		mapID           = r.URL.Query().Get("mapId")
+		prevLinkHashStr = r.URL.Query().Get("prevLinkHash")
+		tagsStr         = r.URL.Query().Get("tags")
+		prevLinkHash    *types.Bytes32
+		tags            []string
 	)
 
+	if prevLinkHashStr != "" {
+		prevLinkHash, err = types.NewBytes32FromString(prevLinkHashStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if tagsStr != "" {
-		spacetags := strings.Split(tagsStr, " ")
-		for _, t := range spacetags {
+		spaceTags := strings.Split(tagsStr, " ")
+		for _, t := range spaceTags {
 			tags = append(tags, strings.Split(t, "+")...)
 		}
 	}

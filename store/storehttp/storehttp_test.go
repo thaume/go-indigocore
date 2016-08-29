@@ -16,7 +16,10 @@ import (
 	"github.com/stratumn/go/jsonhttp"
 	"github.com/stratumn/go/store"
 	"github.com/stratumn/go/testutil"
+	"github.com/stratumn/go/types"
 )
+
+const zeros = "0000000000000000000000000000000000000000000000000000000000000000"
 
 func TestRoot(t *testing.T) {
 	s, a := createServer()
@@ -155,15 +158,15 @@ func TestSaveSegment_invalidJSON(t *testing.T) {
 func TestGetSegment(t *testing.T) {
 	s, a := createServer()
 	s1 := cstesting.RandomSegment()
-	a.MockGetSegment.Fn = func(string) (*cs.Segment, error) { return s1, nil }
+	a.MockGetSegment.Fn = func(*types.Bytes32) (*cs.Segment, error) { return s1, nil }
 
 	var s2 cs.Segment
-	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/abcde", nil, &s2)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/"+zeros, nil, &s2)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if got, want := a.MockGetSegment.LastCalledWith, "abcde"; got != want {
+	if got, want := a.MockGetSegment.LastCalledWith.String(), zeros; got != want {
 		t.Errorf("a.MockGetSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
 	if got, want := w.Code, http.StatusOK; got != want {
@@ -183,12 +186,12 @@ func TestGetSegment_notFound(t *testing.T) {
 	s, a := createServer()
 
 	var body map[string]interface{}
-	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/abcde", nil, &body)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/"+zeros, nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if got, want := a.MockGetSegment.LastCalledWith, "abcde"; got != want {
+	if got, want := a.MockGetSegment.LastCalledWith.String(), zeros; got != want {
 		t.Errorf("a.MockGetSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
 	if got, want := w.Code, jsonhttp.NewErrNotFound("").Status(); got != want {
@@ -204,15 +207,15 @@ func TestGetSegment_notFound(t *testing.T) {
 
 func TestGetSegment_err(t *testing.T) {
 	s, a := createServer()
-	a.MockGetSegment.Fn = func(string) (*cs.Segment, error) { return nil, errors.New("error") }
+	a.MockGetSegment.Fn = func(*types.Bytes32) (*cs.Segment, error) { return nil, errors.New("error") }
 
 	var body map[string]interface{}
-	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/abcde", nil, &body)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/"+zeros, nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if got, want := a.MockGetSegment.LastCalledWith, "abcde"; got != want {
+	if got, want := a.MockGetSegment.LastCalledWith.String(), zeros; got != want {
 		t.Errorf("a.MockGetSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
 	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); got != want {
@@ -229,15 +232,15 @@ func TestGetSegment_err(t *testing.T) {
 func TestDeleteSegment(t *testing.T) {
 	s, a := createServer()
 	s1 := cstesting.RandomSegment()
-	a.MockDeleteSegment.Fn = func(string) (*cs.Segment, error) { return s1, nil }
+	a.MockDeleteSegment.Fn = func(*types.Bytes32) (*cs.Segment, error) { return s1, nil }
 
 	var s2 cs.Segment
-	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/abcde", nil, &s2)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/"+zeros, nil, &s2)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if got, want := a.MockDeleteSegment.LastCalledWith, "abcde"; got != want {
+	if got, want := a.MockDeleteSegment.LastCalledWith.String(), zeros; got != want {
 		t.Errorf("a.MockDeleteSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
 	if got, want := w.Code, http.StatusOK; got != want {
@@ -257,12 +260,12 @@ func TestDeleteSegment_notFound(t *testing.T) {
 	s, a := createServer()
 
 	var body map[string]interface{}
-	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/abcde", nil, &body)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/"+zeros, nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if got, want := a.MockDeleteSegment.LastCalledWith, "abcde"; got != want {
+	if got, want := a.MockDeleteSegment.LastCalledWith.String(), zeros; got != want {
 		t.Errorf("a.MockDeleteSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
 	if got, want := w.Code, jsonhttp.NewErrNotFound("").Status(); got != want {
@@ -278,15 +281,15 @@ func TestDeleteSegment_notFound(t *testing.T) {
 
 func TestDeleteSegment_err(t *testing.T) {
 	s, a := createServer()
-	a.MockDeleteSegment.Fn = func(string) (*cs.Segment, error) { return nil, errors.New("error") }
+	a.MockDeleteSegment.Fn = func(*types.Bytes32) (*cs.Segment, error) { return nil, errors.New("error") }
 
 	var body map[string]interface{}
-	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/abcde", nil, &body)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/"+zeros, nil, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if got, want := a.MockDeleteSegment.LastCalledWith, "abcde"; got != want {
+	if got, want := a.MockDeleteSegment.LastCalledWith.String(), zeros; got != want {
 		t.Errorf("a.MockDeleteSegment.LastCalledWith = %q\nwant %q", got, want)
 	}
 	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); got != want {
@@ -309,7 +312,7 @@ func TestFindSegments(t *testing.T) {
 	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return s1, nil }
 
 	var s2 cs.SegmentSlice
-	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&limit=2&mapId=123&prevLinkHash=abc&tags=one+two", nil, &s2)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&limit=2&mapId=123&prevLinkHash=0000000000000000000000000000000000000000000000000000000000000000&tags=one+two", nil, &s2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,7 +339,7 @@ func TestFindSegments(t *testing.T) {
 	if got, want := f.MapID, "123"; got != want {
 		t.Errorf("a.MockFindSegments.LastCalledWith.MapID = %q want %q", got, want)
 	}
-	if got, want := f.PrevLinkHash, "abc"; got != want {
+	if got, want := f.PrevLinkHash.String(), zeros; got != want {
 		t.Errorf("a.MockFindSegments.LastCalledWith.PrevLinkHash = %q want %q", got, want)
 	}
 	if got, want := f.Tags, []string{"one", "two"}; !reflect.DeepEqual(got, want) {

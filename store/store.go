@@ -7,6 +7,7 @@ package store
 
 import (
 	"github.com/stratumn/go/cs"
+	"github.com/stratumn/go/types"
 )
 
 // Adapter must be implemented by a store.
@@ -19,11 +20,11 @@ type Adapter interface {
 	SaveSegment(segment *cs.Segment) error
 
 	// Get a segment by link hash. Returns nil if no match is found.
-	GetSegment(linkHash string) (*cs.Segment, error)
+	GetSegment(linkHash *types.Bytes32) (*cs.Segment, error)
 
 	// Deletes a segment by link hash. Returns the removed segment or nil
 	// if not found.
-	DeleteSegment(linkHash string) (*cs.Segment, error)
+	DeleteSegment(linkHash *types.Bytes32) (*cs.Segment, error)
 
 	// Find segments. Returns an empty slice if there are no results.
 	FindSegments(filter *Filter) (cs.SegmentSlice, error)
@@ -49,7 +50,7 @@ type Filter struct {
 	MapID string
 
 	// A previous link hash the segments must have.
-	PrevLinkHash string
+	PrevLinkHash *types.Bytes32
 
 	// A slice of tags the segments must contains.
 	Tags []string

@@ -21,6 +21,7 @@ import (
 
 	"github.com/stratumn/go/cs"
 	"github.com/stratumn/go/store"
+	"github.com/stratumn/go/types"
 )
 
 const (
@@ -90,8 +91,8 @@ func (a *FileStore) SaveSegment(segment *cs.Segment) error {
 }
 
 // GetSegment implements github.com/stratumn/go/store.Adapter.GetSegment.
-func (a *FileStore) GetSegment(linkHash string) (*cs.Segment, error) {
-	file, err := os.Open(path.Join(a.config.Path, linkHash+".json"))
+func (a *FileStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
+	file, err := os.Open(path.Join(a.config.Path, linkHash.String()+".json"))
 	if os.IsNotExist(err) {
 		return nil, nil
 	}
@@ -110,13 +111,13 @@ func (a *FileStore) GetSegment(linkHash string) (*cs.Segment, error) {
 }
 
 // DeleteSegment implements github.com/stratumn/go/store.Adapter.DeleteSegment.
-func (a *FileStore) DeleteSegment(linkHash string) (*cs.Segment, error) {
+func (a *FileStore) DeleteSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	segment, err := a.GetSegment(linkHash)
 	if segment == nil {
 		return segment, err
 	}
 
-	if err = os.Remove(path.Join(a.config.Path, linkHash+".json")); err != nil {
+	if err = os.Remove(path.Join(a.config.Path, linkHash.String()+".json")); err != nil {
 		return nil, err
 	}
 
@@ -132,9 +133,11 @@ func (a *FileStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) 
 			return nil
 		}
 
-		prevLinkHash, ok := segment.Link.Meta["prevLinkHash"].(string)
-		if filter.PrevLinkHash != "" && (!ok || filter.PrevLinkHash != prevLinkHash) {
-			return nil
+		if filter.PrevLinkHash != nil {
+			prevLinkHash, ok := segment.Link.Meta["prevLinkHash"].(string)
+			if !ok || filter.PrevLinkHash.String() != prevLinkHash {
+				return nil
+			}
 		}
 
 		if len(filter.Tags) > 0 {
@@ -195,7 +198,12 @@ func (a *FileStore) forEach(fn func(*cs.Segment) error) error {
 	for _, file := range files {
 		name := file.Name()
 		if segmentFileRegepx.MatchString(name) {
-			linkHash := name[:len(name)-5]
+			linkHashStr := name[:len(name)-5]
+			linkHash, err := types.NewBytes32FromString(linkHashStr)
+			if err != nil {
+				return err
+			}
+
 			segment, err := a.GetSegment(linkHash)
 			if err != nil {
 				return err

@@ -12,6 +12,7 @@ import (
 
 	"github.com/stratumn/go/cs/cstesting"
 	"github.com/stratumn/go/testutil"
+	"github.com/stratumn/go/types"
 )
 
 // TestDeleteSegment tests what happens when you delete an existing segments.
@@ -28,7 +29,11 @@ func (f Factory) TestDeleteSegment(t *testing.T) {
 	s1 := cstesting.RandomSegment()
 	a.SaveSegment(s1)
 
-	linkHash := s1.Meta["linkHash"].(string)
+	linkHash, err := types.NewBytes32FromString(s1.Meta["linkHash"].(string))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	s2, err := a.DeleteSegment(linkHash)
 	if err != nil {
 		t.Error(err)
@@ -64,7 +69,7 @@ func (f Factory) TestDeleteSegmentNotFound(t *testing.T) {
 	}
 	defer f.free(a)
 
-	s, err := a.DeleteSegment(testutil.RandomString(32))
+	s, err := a.DeleteSegment(testutil.RandomHash())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,11 +91,11 @@ func (f Factory) BenchmarkDeleteSegment(b *testing.B) {
 	}
 	defer f.free(a)
 
-	linkHashes := make([]string, b.N)
+	linkHashes := make([]*types.Bytes32, b.N)
 	for i := 0; i < b.N; i++ {
 		s := cstesting.RandomSegment()
 		a.SaveSegment(s)
-		linkHashes[i] = s.Meta["linkHash"].(string)
+		linkHashes[i], _ = types.NewBytes32FromString(s.Meta["linkHash"].(string))
 	}
 
 	b.ResetTimer()
@@ -115,11 +120,11 @@ func (f Factory) BenchmarkDeleteSegmentParallel(b *testing.B) {
 	}
 	defer f.free(a)
 
-	linkHashes := make([]string, b.N)
+	linkHashes := make([]*types.Bytes32, b.N)
 	for i := 0; i < b.N; i++ {
 		s := cstesting.RandomSegment()
 		a.SaveSegment(s)
-		linkHashes[i] = s.Meta["linkHash"].(string)
+		linkHashes[i], _ = types.NewBytes32FromString(s.Meta["linkHash"].(string))
 	}
 
 	var counter uint64

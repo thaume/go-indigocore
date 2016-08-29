@@ -13,6 +13,7 @@ import (
 
 	"github.com/stratumn/go/cs"
 	"github.com/stratumn/go/store"
+	"github.com/stratumn/go/types"
 )
 
 const (
@@ -72,7 +73,11 @@ func (a *DummyStore) SaveSegment(segment *cs.Segment) error {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 
-	linkHash := segment.Meta["linkHash"].(string)
+	linkHashStr := segment.Meta["linkHash"].(string)
+	linkHash, err := types.NewBytes32FromString(linkHashStr)
+	if err != nil {
+		return err
+	}
 
 	curr, err := a.GetSegment(linkHash)
 	if err != nil {
@@ -84,7 +89,7 @@ func (a *DummyStore) SaveSegment(segment *cs.Segment) error {
 	if curr != nil {
 		currMapID := curr.Link.Meta["mapId"].(string)
 		if currMapID != mapID {
-			delete(a.maps[currMapID], linkHash)
+			delete(a.maps[currMapID], linkHashStr)
 		}
 	}
 
@@ -93,29 +98,30 @@ func (a *DummyStore) SaveSegment(segment *cs.Segment) error {
 		a.maps[mapID] = hashSet{}
 	}
 
-	a.segments[linkHash] = segment
-	a.maps[mapID][linkHash] = struct{}{}
+	a.segments[linkHashStr] = segment
+	a.maps[mapID][linkHashStr] = struct{}{}
 
 	return nil
 }
 
 // GetSegment implements github.com/stratumn/go/store.Adapter.GetSegment.
-func (a *DummyStore) GetSegment(linkHash string) (*cs.Segment, error) {
-	return a.segments[linkHash], nil
+func (a *DummyStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
+	return a.segments[linkHash.String()], nil
 }
 
 // DeleteSegment implements github.com/stratumn/go/store.Adapter.DeleteSegment.
-func (a *DummyStore) DeleteSegment(linkHash string) (*cs.Segment, error) {
+func (a *DummyStore) DeleteSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 
-	segment, exists := a.segments[linkHash]
+	linkHashStr := linkHash.String()
+	segment, exists := a.segments[linkHashStr]
 	if !exists {
 		return nil, nil
 	}
 
-	delete(a.segments, linkHash)
-	delete(a.maps[segment.Link.Meta["mapId"].(string)], linkHash)
+	delete(a.segments, linkHashStr)
+	delete(a.maps[segment.Link.Meta["mapId"].(string)], linkHashStr)
 
 	return segment, nil
 }
@@ -168,9 +174,11 @@ HASH_LOOP:
 	for linkHash := range linkHashes {
 		segment := a.segments[linkHash]
 
-		prevLinkHash, ok := segment.Link.Meta["prevLinkHash"].(string)
-		if filter.PrevLinkHash != "" && (!ok || filter.PrevLinkHash != prevLinkHash) {
-			continue
+		if filter.PrevLinkHash != nil {
+			prevLinkHash, ok := segment.Link.Meta["prevLinkHash"].(string)
+			if !ok || filter.PrevLinkHash.String() != prevLinkHash {
+				continue
+			}
 		}
 
 		if len(filter.Tags) > 0 {

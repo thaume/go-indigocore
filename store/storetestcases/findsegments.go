@@ -12,6 +12,7 @@ import (
 	"github.com/stratumn/go/cs/cstesting"
 	"github.com/stratumn/go/store"
 	"github.com/stratumn/go/testutil"
+	"github.com/stratumn/go/types"
 )
 
 // TestFindSegments tests what happens when you search for all segments.
@@ -266,8 +267,13 @@ func (f Factory) TestFindSegmentsPrevLinkHash(t *testing.T) {
 		a.SaveSegment(cstesting.RandomBranch(s))
 	}
 
+	linkHash, err := types.NewBytes32FromString(s.Meta["linkHash"].(string))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	slice, err := a.FindSegments(&store.Filter{
-		PrevLinkHash: s.Meta["linkHash"].(string),
+		PrevLinkHash: linkHash,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -293,7 +299,7 @@ func (f Factory) TestFindSegmentsPrevLinkHashNotFound(t *testing.T) {
 	defer f.free(a)
 
 	slice, err := a.FindSegments(&store.Filter{
-		PrevLinkHash: testutil.RandomString(32),
+		PrevLinkHash: testutil.RandomHash(),
 	})
 	if err != nil {
 		t.Fatal(err)

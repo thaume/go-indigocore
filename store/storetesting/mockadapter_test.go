@@ -12,6 +12,8 @@ import (
 	"github.com/stratumn/go/cs"
 	"github.com/stratumn/go/cs/cstesting"
 	"github.com/stratumn/go/store"
+	"github.com/stratumn/go/testutil"
+	"github.com/stratumn/go/types"
 )
 
 func TestMockAdapter_GetInfo(t *testing.T) {
@@ -68,14 +70,20 @@ func TestMockAdapter_SaveSegment(t *testing.T) {
 func TestMockAdapter_GetSegment(t *testing.T) {
 	a := &MockAdapter{}
 
-	_, err := a.GetSegment("abcdef")
+	linkHash1 := testutil.RandomHash()
+	_, err := a.GetSegment(linkHash1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	s1 := cstesting.RandomSegment()
-	a.MockGetSegment.Fn = func(linkHash string) (*cs.Segment, error) { return s1, nil }
-	s2, err := a.GetSegment("ghij")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a.MockGetSegment.Fn = func(linkHash *types.Bytes32) (*cs.Segment, error) { return s1, nil }
+	linkHash2 := testutil.RandomHash()
+	s2, err := a.GetSegment(linkHash2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,10 +96,10 @@ func TestMockAdapter_GetSegment(t *testing.T) {
 	if got, want := a.MockGetSegment.CalledCount, 2; got != want {
 		t.Errorf(`a.MockGetSegment.CalledCount = %d want %d`, got, want)
 	}
-	if got, want := a.MockGetSegment.CalledWith, []string{"abcdef", "ghij"}; !reflect.DeepEqual(got, want) {
+	if got, want := a.MockGetSegment.CalledWith, []*types.Bytes32{linkHash1, linkHash2}; !reflect.DeepEqual(got, want) {
 		t.Errorf("a.MockGetSegment.CalledWith = %q\n want %q", got, want)
 	}
-	if got, want := a.MockGetSegment.LastCalledWith, "ghij"; got != want {
+	if got, want := *a.MockGetSegment.LastCalledWith, *linkHash2; got != want {
 		t.Errorf("a.MockGetSegment.LastCalledWith = %q want %q", got, want)
 	}
 }
@@ -99,14 +107,16 @@ func TestMockAdapter_GetSegment(t *testing.T) {
 func TestMockAdapter_DeleteSegment(t *testing.T) {
 	a := &MockAdapter{}
 
-	_, err := a.DeleteSegment("abcdef")
+	linkHash1 := testutil.RandomHash()
+	_, err := a.DeleteSegment(linkHash1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	s1 := cstesting.RandomSegment()
-	a.MockDeleteSegment.Fn = func(linkHash string) (*cs.Segment, error) { return s1, nil }
-	s2, err := a.DeleteSegment("ghij")
+	a.MockDeleteSegment.Fn = func(linkHash *types.Bytes32) (*cs.Segment, error) { return s1, nil }
+	linkHash2 := testutil.RandomHash()
+	s2, err := a.DeleteSegment(linkHash2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,10 +129,10 @@ func TestMockAdapter_DeleteSegment(t *testing.T) {
 	if got, want := a.MockDeleteSegment.CalledCount, 2; got != want {
 		t.Errorf(`a.MockDeleteSegment.CalledCount = %d want %d`, got, want)
 	}
-	if got, want := a.MockDeleteSegment.CalledWith, []string{"abcdef", "ghij"}; !reflect.DeepEqual(got, want) {
+	if got, want := a.MockDeleteSegment.CalledWith, []*types.Bytes32{linkHash1, linkHash2}; !reflect.DeepEqual(got, want) {
 		t.Errorf("a.MockDeleteSegment.CalledWith = %q\n want %q", got, want)
 	}
-	if got, want := a.MockDeleteSegment.LastCalledWith, "ghij"; got != want {
+	if got, want := a.MockDeleteSegment.LastCalledWith, linkHash2; got != want {
 		t.Errorf("a.MockDeleteSegment.LastCalledWith = %q want %q", got, want)
 	}
 }
@@ -137,7 +147,7 @@ func TestMockAdapter_FindSegments(t *testing.T) {
 
 	s := cstesting.RandomSegment()
 	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return cs.SegmentSlice{s}, nil }
-	f := store.Filter{PrevLinkHash: "test"}
+	f := store.Filter{PrevLinkHash: testutil.RandomHash()}
 	s1, err := a.FindSegments(&f)
 	if err != nil {
 		t.Fatal(err)

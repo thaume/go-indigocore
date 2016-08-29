@@ -11,9 +11,20 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+
+	"github.com/stratumn/go/types"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+// RandomHash creates a random hash.
+func RandomHash() *types.Bytes32 {
+	var hash types.Bytes32
+	for i := range hash {
+		hash[i] = byte(letters[rand.Intn(len(letters))])
+	}
+	return &hash
+}
 
 // RandomString generates a random string.
 func RandomString(n int) string {

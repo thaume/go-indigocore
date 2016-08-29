@@ -12,6 +12,7 @@ import (
 
 	"github.com/stratumn/go/cs/cstesting"
 	"github.com/stratumn/go/testutil"
+	"github.com/stratumn/go/types"
 )
 
 // TestGetSegment tests what happens when you get an existing segment.
@@ -26,7 +27,11 @@ func (f Factory) TestGetSegment(t *testing.T) {
 	defer f.free(a)
 
 	s1 := cstesting.RandomSegment()
-	linkHash := s1.Meta["linkHash"].(string)
+	linkHash, err := types.NewBytes32FromString(s1.Meta["linkHash"].(string))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	a.SaveSegment(s1)
 
 	s2, err := a.GetSegment(linkHash)
@@ -56,7 +61,11 @@ func (f Factory) TestGetSegmentUpdatedState(t *testing.T) {
 	defer f.free(a)
 
 	s1 := cstesting.RandomSegment()
-	linkHash := s1.Meta["linkHash"].(string)
+	linkHash, err := types.NewBytes32FromString(s1.Meta["linkHash"].(string))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	a.SaveSegment(s1)
 	s1 = cstesting.ChangeSegmentState(s1)
 	a.SaveSegment(s1)
@@ -88,7 +97,11 @@ func (f Factory) TestGetSegmentUpdatedMapID(t *testing.T) {
 	defer f.free(a)
 
 	s1 := cstesting.RandomSegment()
-	linkHash := s1.Meta["linkHash"].(string)
+	linkHash, err := types.NewBytes32FromString(s1.Meta["linkHash"].(string))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	a.SaveSegment(s1)
 	s1 = cstesting.ChangeSegmentMapID(s1)
 	a.SaveSegment(s1)
@@ -119,7 +132,7 @@ func (f Factory) TestGetSegmentNotFound(t *testing.T) {
 	}
 	defer f.free(a)
 
-	s, err := a.GetSegment(testutil.RandomString(32))
+	s, err := a.GetSegment(testutil.RandomHash())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,11 +154,15 @@ func (f Factory) BenchmarkGetSegment(b *testing.B) {
 	}
 	defer f.free(a)
 
-	linkHashes := make([]string, b.N)
+	linkHashes := make([]*types.Bytes32, b.N)
 	for i := 0; i < b.N; i++ {
 		s := cstesting.RandomSegment()
 		a.SaveSegment(s)
-		linkHashes[i] = s.Meta["linkHash"].(string)
+		linkHash, err := types.NewBytes32FromString(s.Meta["linkHash"].(string))
+		if err != nil {
+			b.Fatal(err)
+		}
+		linkHashes[i] = linkHash
 	}
 
 	b.ResetTimer()
@@ -170,11 +187,15 @@ func (f Factory) BenchmarkGetSegmentParallel(b *testing.B) {
 	}
 	defer f.free(a)
 
-	linkHashes := make([]string, b.N)
+	linkHashes := make([]*types.Bytes32, b.N)
 	for i := 0; i < b.N; i++ {
 		s := cstesting.RandomSegment()
 		a.SaveSegment(s)
-		linkHashes[i] = s.Meta["linkHash"].(string)
+		linkHash, err := types.NewBytes32FromString(s.Meta["linkHash"].(string))
+		if err != nil {
+			b.Fatal(err)
+		}
+		linkHashes[i] = linkHash
 	}
 
 	var counter uint64

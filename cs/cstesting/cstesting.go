@@ -45,7 +45,8 @@ func CreateSegment(linkHash, mapID, prevLinkHash string, tags []interface{}, pri
 
 // RandomSegment creates a random segment.
 func RandomSegment() *cs.Segment {
-	return CreateSegment(testutil.RandomString(32), testutil.RandomString(24), testutil.RandomString(32), RandomTags(), rand.Float64())
+	return CreateSegment(testutil.RandomHash().String(), testutil.RandomString(24),
+		testutil.RandomHash().String(), RandomTags(), rand.Float64())
 }
 
 // ChangeSegmentState clones a segment and randomly changes its state.
@@ -64,7 +65,8 @@ func ChangeSegmentMapID(s *cs.Segment) *cs.Segment {
 
 // RandomBranch appends a random segment to a segment.
 func RandomBranch(s *cs.Segment) *cs.Segment {
-	branch := CreateSegment(testutil.RandomString(32), testutil.RandomString(24), s.Meta["linkHash"].(string), RandomTags(), rand.Float64())
+	branch := CreateSegment(testutil.RandomHash().String(), testutil.RandomString(24),
+		s.Meta["linkHash"].(string), RandomTags(), rand.Float64())
 	branch.Link.Meta["mapId"] = s.Link.Meta["mapId"]
 	return branch
 }

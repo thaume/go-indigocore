@@ -7,6 +7,7 @@ package storetesting
 import (
 	"github.com/stratumn/go/cs"
 	"github.com/stratumn/go/store"
+	"github.com/stratumn/go/types"
 )
 
 // MockAdapter is used to mock a store.
@@ -62,13 +63,13 @@ type MockGetSegment struct {
 	CalledCount int
 
 	// The link hash that was passed to each call.
-	CalledWith []string
+	CalledWith []*types.Bytes32
 
 	// The last link hash that was passed.
-	LastCalledWith string
+	LastCalledWith *types.Bytes32
 
 	// An optional implementation of the function.
-	Fn func(string) (*cs.Segment, error)
+	Fn func(*types.Bytes32) (*cs.Segment, error)
 }
 
 // MockDeleteSegment mocks the DeleteSegment function.
@@ -77,13 +78,13 @@ type MockDeleteSegment struct {
 	CalledCount int
 
 	// The link hash that was passed to each call.
-	CalledWith []string
+	CalledWith []*types.Bytes32
 
 	// The last link hash that was passed.
-	LastCalledWith string
+	LastCalledWith *types.Bytes32
 
 	// An optional implementation of the function.
-	Fn func(string) (*cs.Segment, error)
+	Fn func(*types.Bytes32) (*cs.Segment, error)
 }
 
 // MockFindSegments mocks the FindSegments function.
@@ -141,7 +142,7 @@ func (a *MockAdapter) SaveSegment(segment *cs.Segment) error {
 }
 
 // GetSegment implements github.com/stratumn/go/store.Adapter.GetSegment.
-func (a *MockAdapter) GetSegment(linkHash string) (*cs.Segment, error) {
+func (a *MockAdapter) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	a.MockGetSegment.CalledCount++
 	a.MockGetSegment.CalledWith = append(a.MockGetSegment.CalledWith, linkHash)
 	a.MockGetSegment.LastCalledWith = linkHash
@@ -154,7 +155,7 @@ func (a *MockAdapter) GetSegment(linkHash string) (*cs.Segment, error) {
 }
 
 // DeleteSegment implements github.com/stratumn/go/store.Adapter.DeleteSegment.
-func (a *MockAdapter) DeleteSegment(linkHash string) (*cs.Segment, error) {
+func (a *MockAdapter) DeleteSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	a.MockDeleteSegment.CalledCount++
 	a.MockDeleteSegment.CalledWith = append(a.MockDeleteSegment.CalledWith, linkHash)
 	a.MockDeleteSegment.LastCalledWith = linkHash
