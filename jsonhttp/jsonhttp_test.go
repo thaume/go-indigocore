@@ -21,7 +21,7 @@ func TestGet(t *testing.T) {
 
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/test", nil, nil)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Body.String(), `{"test":true}`; got != want {
@@ -37,7 +37,7 @@ func TestPost(t *testing.T) {
 
 	w, err := testutil.RequestJSON(s.ServeHTTP, "POST", "/test", nil, nil)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Body.String(), `{"test":true}`; got != want {
@@ -53,7 +53,7 @@ func TestPut(t *testing.T) {
 
 	w, err := testutil.RequestJSON(s.ServeHTTP, "PUT", "/test", nil, nil)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Body.String(), `{"test":true}`; got != want {
@@ -69,7 +69,7 @@ func TestDelete(t *testing.T) {
 
 	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/test", nil, nil)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Body.String(), `{"test":true}`; got != want {
@@ -85,7 +85,7 @@ func TestPatch(t *testing.T) {
 
 	w, err := testutil.RequestJSON(s.ServeHTTP, "PATCH", "/test", nil, nil)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Body.String(), `{"test":true}`; got != want {
@@ -101,7 +101,7 @@ func TestOptions(t *testing.T) {
 
 	w, err := testutil.RequestJSON(s.ServeHTTP, "OPTIONS", "/test", nil, nil)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Body.String(), `{"test":true}`; got != want {
@@ -115,7 +115,7 @@ func TestNotFound(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/test", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, NewErrNotFound("").Status(); got != want {
@@ -139,7 +139,7 @@ func TestErrHTTP(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/test", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, NewErrBadRequest("").Status(); got != want {
@@ -163,7 +163,7 @@ func TestError(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/test", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, NewErrInternalServer("").Status(); got != want {

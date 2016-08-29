@@ -14,7 +14,7 @@ func TestGetInfo(t *testing.T) {
 	a := New(&Config{})
 	got, err := a.GetInfo()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetInfo(): err: %s", err)
 	}
 	if _, ok := got.(*Info); !ok {
 		t.Errorf("a.GetInfo(): info = %#v want *Info", got)
@@ -33,7 +33,7 @@ func TestFossilize(t *testing.T) {
 
 	go func() {
 		if err := a.Fossilize(data, meta); err != nil {
-			t.Error(err)
+			t.Errorf("a.Fossilize(): err: %s", err)
 		}
 	}()
 

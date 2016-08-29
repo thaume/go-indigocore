@@ -12,7 +12,7 @@ import (
 func createAdapter(tb testing.TB) *FileStore {
 	path, err := ioutil.TempDir("", "filestore")
 	if err != nil {
-		tb.Fatal(err)
+		tb.Fatalf("ioutil.TempDir(): err: %s", err)
 	}
 	return New(&Config{Path: path})
 }

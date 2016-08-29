@@ -34,7 +34,7 @@ func (h *resultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
-		h.t.Error(err)
+		h.t.Fatalf("ioutil.ReadAll(): err: %s", err)
 		return
 	}
 

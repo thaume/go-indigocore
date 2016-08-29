@@ -18,7 +18,7 @@ import (
 func (f Factory) TestSaveSegment(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -27,7 +27,7 @@ func (f Factory) TestSaveSegment(t *testing.T) {
 
 	s := cstesting.RandomSegment()
 	if err := a.SaveSegment(s); err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.SaveSegment(): err: %s", err)
 	}
 }
 
@@ -35,7 +35,7 @@ func (f Factory) TestSaveSegment(t *testing.T) {
 func (f Factory) TestSaveSegmentUpdatedState(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -44,12 +44,12 @@ func (f Factory) TestSaveSegmentUpdatedState(t *testing.T) {
 
 	s := cstesting.RandomSegment()
 	if err := a.SaveSegment(s); err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.SaveSegment(): err: %s", err)
 	}
 
 	cstesting.ChangeSegmentState(s)
 	if err := a.SaveSegment(s); err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.SaveSegment(): err: %s", err)
 	}
 }
 
@@ -57,7 +57,7 @@ func (f Factory) TestSaveSegmentUpdatedState(t *testing.T) {
 func (f Factory) TestSaveSegmentUpdatedMapID(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -66,12 +66,12 @@ func (f Factory) TestSaveSegmentUpdatedMapID(t *testing.T) {
 
 	s1 := cstesting.RandomSegment()
 	if err := a.SaveSegment(s1); err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.SaveSegment(): err: %s", err)
 	}
 
 	s2 := cstesting.ChangeSegmentMapID(s1)
 	if err := a.SaveSegment(s2); err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.SaveSegment(): err: %s", err)
 	}
 }
 
@@ -79,7 +79,7 @@ func (f Factory) TestSaveSegmentUpdatedMapID(t *testing.T) {
 func (f Factory) TestSaveSegmentBranch(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -88,12 +88,12 @@ func (f Factory) TestSaveSegmentBranch(t *testing.T) {
 
 	s := cstesting.RandomSegment()
 	if err := a.SaveSegment(s); err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.SaveSegment(): err: %s", err)
 	}
 
 	s = cstesting.RandomBranch(s)
 	if err := a.SaveSegment(s); err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.SaveSegment(): err: %s", err)
 	}
 }
 
@@ -101,7 +101,7 @@ func (f Factory) TestSaveSegmentBranch(t *testing.T) {
 func (f Factory) BenchmarkSaveSegment(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")
@@ -127,7 +127,7 @@ func (f Factory) BenchmarkSaveSegment(b *testing.B) {
 func (f Factory) BenchmarkSaveSegmentParallel(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")
@@ -158,7 +158,7 @@ func (f Factory) BenchmarkSaveSegmentParallel(b *testing.B) {
 func (f Factory) BenchmarkSaveSegmentUpdatedState(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")
@@ -186,7 +186,7 @@ func (f Factory) BenchmarkSaveSegmentUpdatedState(b *testing.B) {
 func (f Factory) BenchmarkSaveSegmentUpdatedStateParallel(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")
@@ -218,7 +218,7 @@ func (f Factory) BenchmarkSaveSegmentUpdatedStateParallel(b *testing.B) {
 func (f Factory) BenchmarkSaveSegmentUpdatedMapID(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")
@@ -246,7 +246,7 @@ func (f Factory) BenchmarkSaveSegmentUpdatedMapID(b *testing.B) {
 func (f Factory) BenchmarkSaveSegmentUpdatedMapIDParallel(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")

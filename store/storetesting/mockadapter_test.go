@@ -20,13 +20,13 @@ func TestMockAdapter_GetInfo(t *testing.T) {
 	a := &MockAdapter{}
 
 	if _, err := a.GetInfo(); err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetInfo(): err: %s", err)
 	}
 
 	a.MockGetInfo.Fn = func() (interface{}, error) { return map[string]string{"name": "test"}, nil }
 	info, err := a.GetInfo()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetInfo(): err: %s", err)
 	}
 
 	if got, want := info.(map[string]string)["name"], "test"; got != want {
@@ -43,13 +43,13 @@ func TestMockAdapter_SaveSegment(t *testing.T) {
 
 	err := a.SaveSegment(s)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.SaveSegment(): err: %s", err)
 	}
 
 	a.MockSaveSegment.Fn = func(s *cs.Segment) error { return nil }
 	err = a.SaveSegment(s)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.SaveSegment(): err: %s", err)
 	}
 
 	if got, want := a.MockSaveSegment.CalledCount, 2; got != want {
@@ -73,19 +73,15 @@ func TestMockAdapter_GetSegment(t *testing.T) {
 	linkHash1 := testutil.RandomHash()
 	_, err := a.GetSegment(linkHash1)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetSegment(): err: %s", err)
 	}
 
 	s1 := cstesting.RandomSegment()
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	a.MockGetSegment.Fn = func(linkHash *types.Bytes32) (*cs.Segment, error) { return s1, nil }
 	linkHash2 := testutil.RandomHash()
 	s2, err := a.GetSegment(linkHash2)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetSegment(): err: %s", err)
 	}
 
 	if got, want := s2, s1; got != want {
@@ -110,7 +106,7 @@ func TestMockAdapter_DeleteSegment(t *testing.T) {
 	linkHash1 := testutil.RandomHash()
 	_, err := a.DeleteSegment(linkHash1)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.DeleteSegment(): err: %s", err)
 	}
 
 	s1 := cstesting.RandomSegment()
@@ -118,7 +114,7 @@ func TestMockAdapter_DeleteSegment(t *testing.T) {
 	linkHash2 := testutil.RandomHash()
 	s2, err := a.DeleteSegment(linkHash2)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.DeleteSegment(): err: %s", err)
 	}
 
 	if got, want := s2, s1; got != want {
@@ -142,7 +138,7 @@ func TestMockAdapter_FindSegments(t *testing.T) {
 
 	_, err := a.FindSegments(nil)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	s := cstesting.RandomSegment()
@@ -150,7 +146,7 @@ func TestMockAdapter_FindSegments(t *testing.T) {
 	f := store.Filter{PrevLinkHash: testutil.RandomHash()}
 	s1, err := a.FindSegments(&f)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	if got, want := s1, (cs.SegmentSlice{s}); !reflect.DeepEqual(got, want) {
@@ -174,14 +170,14 @@ func TestMockAdapter_GetMapIDs(t *testing.T) {
 
 	_, err := a.GetMapIDs(nil)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
 
 	a.MockGetMapIDs.Fn = func(*store.Pagination) ([]string, error) { return []string{"one", "two"}, nil }
 	p := store.Pagination{Offset: 10}
 	s, err := a.GetMapIDs(&p)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
 
 	if got, want := s, []string{"one", "two"}; !reflect.DeepEqual(got, want) {

@@ -12,7 +12,7 @@ import (
 func (f Factory) TestGetInfo(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -21,7 +21,7 @@ func (f Factory) TestGetInfo(t *testing.T) {
 
 	info, err := a.GetInfo()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetInfo(): err: %s", err)
 	}
 	if info == nil {
 		t.Fatal("info = nil want interface{}")

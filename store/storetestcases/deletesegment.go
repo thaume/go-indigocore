@@ -21,7 +21,7 @@ import (
 func (f Factory) TestDeleteSegment(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -33,12 +33,12 @@ func (f Factory) TestDeleteSegment(t *testing.T) {
 
 	linkHash, err := types.NewBytes32FromString(s1.Meta["linkHash"].(string))
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("types.NewBytes32FromString(): err: %s", err)
 	}
 
 	s2, err := a.DeleteSegment(linkHash)
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("a.DeleteSegment(): err: %s", err)
 	}
 
 	if got := s2; got == nil {
@@ -52,7 +52,7 @@ func (f Factory) TestDeleteSegment(t *testing.T) {
 
 	s2, err = a.GetSegment(linkHash)
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("a.GetSegment(): err: %s", err)
 	}
 	if got := s2; got != nil {
 		gotJS, _ := json.MarshalIndent(got, "", "  ")
@@ -64,7 +64,7 @@ func (f Factory) TestDeleteSegment(t *testing.T) {
 func (f Factory) TestDeleteSegmentNotFound(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -73,7 +73,7 @@ func (f Factory) TestDeleteSegmentNotFound(t *testing.T) {
 
 	s, err := a.DeleteSegment(testutil.RandomHash())
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.DeleteSegment(): err: %s", err)
 	}
 
 	if got := s; got != nil {
@@ -86,7 +86,7 @@ func (f Factory) TestDeleteSegmentNotFound(t *testing.T) {
 func (f Factory) BenchmarkDeleteSegment(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")
@@ -116,7 +116,7 @@ func (f Factory) BenchmarkDeleteSegment(b *testing.B) {
 func (f Factory) BenchmarkDeleteSegmentParallel(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")

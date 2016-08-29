@@ -28,7 +28,7 @@ func TestRoot(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, http.StatusOK; want != got {
@@ -49,7 +49,7 @@ func TestRoot_err(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); want != got {
@@ -71,7 +71,7 @@ func TestSaveSegment(t *testing.T) {
 	var s2 cs.Segment
 	w, err := testutil.RequestJSON(s.ServeHTTP, "POST", "/segments", s1, &s2)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if !reflect.DeepEqual(a.MockSaveSegment.LastCalledWith, s1) {
@@ -99,7 +99,7 @@ func TestSaveSegment_err(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "POST", "/segments", cstesting.RandomSegment(), &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); got != want {
@@ -121,7 +121,7 @@ func TestSaveSegment_invalidSegment(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "POST", "/segments", s1, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, jsonhttp.NewErrBadRequest("").Status(); got != want {
@@ -141,7 +141,7 @@ func TestSaveSegment_invalidJSON(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "POST", "/segments", "azertyuio", &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, jsonhttp.NewErrBadRequest("").Status(); got != want {
@@ -163,7 +163,7 @@ func TestGetSegment(t *testing.T) {
 	var s2 cs.Segment
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/"+zeros, nil, &s2)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := a.MockGetSegment.LastCalledWith.String(), zeros; got != want {
@@ -188,7 +188,7 @@ func TestGetSegment_notFound(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/"+zeros, nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := a.MockGetSegment.LastCalledWith.String(), zeros; got != want {
@@ -212,7 +212,7 @@ func TestGetSegment_err(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments/"+zeros, nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := a.MockGetSegment.LastCalledWith.String(), zeros; got != want {
@@ -237,7 +237,7 @@ func TestDeleteSegment(t *testing.T) {
 	var s2 cs.Segment
 	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/"+zeros, nil, &s2)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := a.MockDeleteSegment.LastCalledWith.String(), zeros; got != want {
@@ -262,7 +262,7 @@ func TestDeleteSegment_notFound(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/"+zeros, nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := a.MockDeleteSegment.LastCalledWith.String(), zeros; got != want {
@@ -286,7 +286,7 @@ func TestDeleteSegment_err(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "DELETE", "/segments/"+zeros, nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := a.MockDeleteSegment.LastCalledWith.String(), zeros; got != want {
@@ -312,9 +312,9 @@ func TestFindSegments(t *testing.T) {
 	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return s1, nil }
 
 	var s2 cs.SegmentSlice
-	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&limit=2&mapId=123&prevLinkHash=0000000000000000000000000000000000000000000000000000000000000000&tags=one+two", nil, &s2)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&limit=2&mapId=123&prevLinkHash="+zeros+"&tags=one+two", nil, &s2)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, http.StatusOK; got != want {
@@ -354,7 +354,7 @@ func TestFindSegments_err(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); got != want {
@@ -374,7 +374,7 @@ func TestFindSegments_invalidOffset(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=a", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, newErrOffset("").Status(); got != want {
@@ -396,7 +396,7 @@ func TestGetMapIDs(t *testing.T) {
 	var s2 []string
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/maps?offset=20&limit=10", nil, &s2)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, http.StatusOK; got != want {
@@ -425,7 +425,7 @@ func TestGetMapIDs_err(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/maps", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); got != want {
@@ -445,7 +445,7 @@ func TestGetMapIDs_invalidLimit(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/maps?limit=-1", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, newErrOffset("").Status(); got != want {
@@ -465,7 +465,7 @@ func TestNotFound(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/azerty", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, jsonhttp.NewErrNotFound("").Status(); want != got {

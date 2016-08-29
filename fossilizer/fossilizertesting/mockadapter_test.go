@@ -15,13 +15,13 @@ func TestMockAdapter_GetInfo(t *testing.T) {
 	a := &MockAdapter{}
 
 	if _, err := a.GetInfo(); err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetInfo(): err: %s", err)
 	}
 
 	a.MockGetInfo.Fn = func() (interface{}, error) { return map[string]string{"name": "test"}, nil }
 	info, err := a.GetInfo()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetInfo(): err: %s", err)
 	}
 
 	if got, want := info.(map[string]string)["name"], "test"; got != want {
@@ -65,7 +65,7 @@ func TestMockAdapter_Fossilize(t *testing.T) {
 	m1 := []byte("meta1")
 
 	if err := a.Fossilize(d1, m1); err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.Fossilize(): err: %s", err)
 	}
 
 	a.MockFossilize.Fn = func([]byte, []byte) error { return nil }
@@ -74,7 +74,7 @@ func TestMockAdapter_Fossilize(t *testing.T) {
 	m2 := []byte("meta2")
 
 	if err := a.Fossilize(d2, m2); err != nil {
-		t.Error(err)
+		t.Errorf("a.Fossilize(): err: %s", err)
 	}
 
 	if got, want := a.MockFossilize.CalledCount, 2; got != want {

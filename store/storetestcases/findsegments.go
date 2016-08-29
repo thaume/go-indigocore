@@ -19,7 +19,7 @@ import (
 func (f Factory) TestFindSegments(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -32,7 +32,7 @@ func (f Factory) TestFindSegments(t *testing.T) {
 
 	slice, err := a.FindSegments(&store.Filter{})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	if got, want := len(slice), 100; got != want {
@@ -53,7 +53,7 @@ func (f Factory) TestFindSegments(t *testing.T) {
 func (f Factory) TestFindSegmentsPagination(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -72,7 +72,7 @@ func (f Factory) TestFindSegmentsPagination(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	if got, want := len(slice), limit; want != got {
@@ -93,7 +93,7 @@ func (f Factory) TestFindSegmentsPagination(t *testing.T) {
 func (f Factory) TestFindSegmentEmpty(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -108,7 +108,7 @@ func (f Factory) TestFindSegmentEmpty(t *testing.T) {
 		Tags: []string{"blablabla"},
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	if got, want := len(slice), 0; want != got {
@@ -120,7 +120,7 @@ func (f Factory) TestFindSegmentEmpty(t *testing.T) {
 func (f Factory) TestFindSegmentsSingleTag(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -146,7 +146,7 @@ func (f Factory) TestFindSegmentsSingleTag(t *testing.T) {
 		Tags: []string{tag1},
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	if got, want := len(slice), 20; want != got {
@@ -158,7 +158,7 @@ func (f Factory) TestFindSegmentsSingleTag(t *testing.T) {
 func (f Factory) TestFindSegmentsMultipleTags(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -184,7 +184,7 @@ func (f Factory) TestFindSegmentsMultipleTags(t *testing.T) {
 		Tags: []string{tag2, tag1},
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	if got, want := len(slice), 10; want != got {
@@ -196,7 +196,7 @@ func (f Factory) TestFindSegmentsMultipleTags(t *testing.T) {
 func (f Factory) TestFindSegmentsMapID(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -215,7 +215,7 @@ func (f Factory) TestFindSegmentsMapID(t *testing.T) {
 		MapID: "map1",
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	if got := slice; got == nil {
@@ -230,7 +230,7 @@ func (f Factory) TestFindSegmentsMapID(t *testing.T) {
 func (f Factory) TestFindSegmentsMapIDNotFound(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -241,7 +241,7 @@ func (f Factory) TestFindSegmentsMapIDNotFound(t *testing.T) {
 		MapID: testutil.RandomString(10),
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	if got, want := len(slice), 0; want != got {
@@ -253,7 +253,7 @@ func (f Factory) TestFindSegmentsMapIDNotFound(t *testing.T) {
 func (f Factory) TestFindSegmentsPrevLinkHash(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -269,14 +269,14 @@ func (f Factory) TestFindSegmentsPrevLinkHash(t *testing.T) {
 
 	linkHash, err := types.NewBytes32FromString(s.Meta["linkHash"].(string))
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("types.NewBytes32FromString(): err: %s", err)
 	}
 
 	slice, err := a.FindSegments(&store.Filter{
 		PrevLinkHash: linkHash,
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	if got := slice; got == nil {
@@ -291,7 +291,7 @@ func (f Factory) TestFindSegmentsPrevLinkHash(t *testing.T) {
 func (f Factory) TestFindSegmentsPrevLinkHashNotFound(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -302,7 +302,7 @@ func (f Factory) TestFindSegmentsPrevLinkHashNotFound(t *testing.T) {
 		PrevLinkHash: testutil.RandomHash(),
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
 	if got, want := len(slice), 0; want != got {

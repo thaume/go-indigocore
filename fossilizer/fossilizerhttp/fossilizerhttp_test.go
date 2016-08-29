@@ -25,7 +25,7 @@ func TestRoot(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, http.StatusOK; want != got {
@@ -46,7 +46,7 @@ func TestRoot_err(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, jsonhttp.NewErrInternalServer("").Status(); want != got {
@@ -64,7 +64,7 @@ func TestFossilize(t *testing.T) {
 	s, a := createServer()
 	l, err := net.Listen("tcp", ":6666")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("net.Listen(): err: %s", err)
 	}
 	h := &resultHandler{t: t, listener: l, want: "\"it is known\""}
 
@@ -197,7 +197,7 @@ func TestNotFound(t *testing.T) {
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/azerty", nil, &body)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
 
 	if got, want := w.Code, jsonhttp.NewErrNotFound("").Status(); want != got {

@@ -17,7 +17,7 @@ import (
 func (f Factory) TestGetMapIDs(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -34,7 +34,7 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 
 	slice, err := a.GetMapIDs(&store.Pagination{})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
 
 	if got, want := len(slice), 10; want != got {
@@ -53,7 +53,7 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 func (f Factory) TestGetMapIDsPagination(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -70,7 +70,7 @@ func (f Factory) TestGetMapIDsPagination(t *testing.T) {
 
 	slice, err := a.GetMapIDs(&store.Pagination{Offset: 3, Limit: 5})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
 
 	if got, want := len(slice), 5; want != got {
@@ -82,7 +82,7 @@ func (f Factory) TestGetMapIDsPagination(t *testing.T) {
 func (f Factory) TestGetMapIDsEmpty(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -91,7 +91,7 @@ func (f Factory) TestGetMapIDsEmpty(t *testing.T) {
 
 	slice, err := a.GetMapIDs(&store.Pagination{Offset: 100000, Limit: 5})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
 
 	if got, want := len(slice), 0; want != got {

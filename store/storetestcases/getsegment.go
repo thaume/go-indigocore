@@ -21,7 +21,7 @@ import (
 func (f Factory) TestGetSegment(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -31,14 +31,14 @@ func (f Factory) TestGetSegment(t *testing.T) {
 	s1 := cstesting.RandomSegment()
 	linkHash, err := types.NewBytes32FromString(s1.Meta["linkHash"].(string))
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("types.NewBytes32FromString(): err: %s", err)
 	}
 
 	a.SaveSegment(s1)
 
 	s2, err := a.GetSegment(linkHash)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetSegment(): err: %s", err)
 	}
 
 	if got := s2; got == nil {
@@ -55,7 +55,7 @@ func (f Factory) TestGetSegment(t *testing.T) {
 func (f Factory) TestGetSegmentUpdatedState(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -65,7 +65,7 @@ func (f Factory) TestGetSegmentUpdatedState(t *testing.T) {
 	s1 := cstesting.RandomSegment()
 	linkHash, err := types.NewBytes32FromString(s1.Meta["linkHash"].(string))
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("types.NewBytes32FromString(): err: %s", err)
 	}
 
 	a.SaveSegment(s1)
@@ -74,7 +74,7 @@ func (f Factory) TestGetSegmentUpdatedState(t *testing.T) {
 
 	s2, err := a.GetSegment(linkHash)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetSegment(): err: %s", err)
 	}
 
 	if got := s2; got == nil {
@@ -91,7 +91,7 @@ func (f Factory) TestGetSegmentUpdatedState(t *testing.T) {
 func (f Factory) TestGetSegmentUpdatedMapID(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -101,7 +101,7 @@ func (f Factory) TestGetSegmentUpdatedMapID(t *testing.T) {
 	s1 := cstesting.RandomSegment()
 	linkHash, err := types.NewBytes32FromString(s1.Meta["linkHash"].(string))
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("types.NewBytes32FromString(): err: %s", err)
 	}
 
 	a.SaveSegment(s1)
@@ -110,7 +110,7 @@ func (f Factory) TestGetSegmentUpdatedMapID(t *testing.T) {
 
 	s2, err := a.GetSegment(linkHash)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetSegment(): err: %s", err)
 	}
 
 	if got := s2; got == nil {
@@ -127,7 +127,7 @@ func (f Factory) TestGetSegmentUpdatedMapID(t *testing.T) {
 func (f Factory) TestGetSegmentNotFound(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		t.Fatal("a = nil want store.Adapter")
@@ -136,7 +136,7 @@ func (f Factory) TestGetSegmentNotFound(t *testing.T) {
 
 	s, err := a.GetSegment(testutil.RandomHash())
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("a.GetSegment(): err: %s", err)
 	}
 
 	if got := s; got != nil {
@@ -149,7 +149,7 @@ func (f Factory) TestGetSegmentNotFound(t *testing.T) {
 func (f Factory) BenchmarkGetSegment(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")
@@ -162,7 +162,7 @@ func (f Factory) BenchmarkGetSegment(b *testing.B) {
 		a.SaveSegment(s)
 		linkHash, err := types.NewBytes32FromString(s.Meta["linkHash"].(string))
 		if err != nil {
-			b.Fatal(err)
+			b.Fatalf("types.NewBytes32FromString(): err: %s", err)
 		}
 		linkHashes[i] = linkHash
 	}
@@ -183,7 +183,7 @@ func (f Factory) BenchmarkGetSegment(b *testing.B) {
 func (f Factory) BenchmarkGetSegmentParallel(b *testing.B) {
 	a, err := f.New()
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("f.New(): err: %s", err)
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")
@@ -196,7 +196,7 @@ func (f Factory) BenchmarkGetSegmentParallel(b *testing.B) {
 		a.SaveSegment(s)
 		linkHash, err := types.NewBytes32FromString(s.Meta["linkHash"].(string))
 		if err != nil {
-			b.Fatal(err)
+			b.Fatalf("types.NewBytes32FromString(): err: %s", err)
 		}
 		linkHashes[i] = linkHash
 	}
