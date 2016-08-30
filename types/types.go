@@ -24,7 +24,7 @@ import (
 // Bytes20Size is the size of a 20-byte long byte array.
 const Bytes20Size = 20
 
-// Bytes20 is the 20-byte long byte array.
+// Bytes20 is a 20-byte long byte array.
 type Bytes20 [Bytes20Size]byte
 
 // NewBytes20FromString creates a Bytes20 from a hex encoded string.
@@ -76,7 +76,7 @@ func (b *Bytes20) Reverse(rb *ReversedBytes20) {
 	}
 }
 
-// ReversedBytes20 is the 20-byte long byte reversed array.
+// ReversedBytes20 is a 20-byte long byte reversed array.
 // While the bytes are reversed, the hex encoded strings are not.
 type ReversedBytes20 [Bytes20Size]byte
 
@@ -135,7 +135,7 @@ func (rb *ReversedBytes20) Reverse(b *Bytes20) {
 // Bytes32Size is the size of a 32-byte long byte array.
 const Bytes32Size = 32
 
-// Bytes32 is the 32-byte long byte array.
+// Bytes32 is a 32-byte long byte array.
 type Bytes32 [Bytes32Size]byte
 
 // NewBytes32FromString creates a Bytes32 from a hex encoded string.
@@ -188,7 +188,7 @@ func (b *Bytes32) Reverse(rb *ReversedBytes32) {
 	}
 }
 
-// ReversedBytes32 is the 32-byte long byte reversed array.
+// ReversedBytes32 is a 32-byte long byte reversed array.
 // While the bytes are reversed, the hex encoded strings are not.
 type ReversedBytes32 [Bytes32Size]byte
 
