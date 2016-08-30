@@ -107,7 +107,7 @@ func New(a fossilizer.Adapter, config *Config, httpConfig *jsonhttp.Config) *jso
 	s.Post("/fossils", handler{ctx, fossilize}.serve)
 
 	// Launch result workers.
-	rc := make(chan *fossilizer.Result)
+	rc := make(chan *fossilizer.Result, config.NumResultWorkers)
 	a.AddResultChan(rc)
 	client := http.Client{Timeout: config.CallbackTimeout}
 	for i := 0; i < config.NumResultWorkers; i++ {
@@ -142,8 +142,7 @@ func fossilize(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *c
 }
 
 func handleResults(resultChan chan *fossilizer.Result, client *http.Client) {
-	for {
-		r := <-resultChan
+	for r := range resultChan {
 		body, err := json.Marshal(r.Evidence)
 		if err != nil {
 			log.Println(err)
