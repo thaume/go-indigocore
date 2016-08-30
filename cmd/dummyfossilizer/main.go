@@ -47,7 +47,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	log.Printf("%s v%s@%s", dummyfossilizer.Description, version, commit[:6])
+	log.Printf("%s v%s@%s", dummyfossilizer.Description, version, commit[:7])
 	log.Print("Copyright (c) 2016 Stratumn SAS")
 	log.Print("Apache License 2.0")
 	log.Printf("Runtime %s %s %s", runtime.Version(), runtime.GOOS, runtime.GOARCH)
