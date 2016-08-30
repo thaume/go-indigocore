@@ -1,4 +1,8 @@
 ## Change log
+ * Lots of polish and improved testing.
+
+### 0.11.0-alpha
+  * More idiomatic Makefile.
 
 ### 0.8.2-alpha
   * More idiomatic Makefile.
