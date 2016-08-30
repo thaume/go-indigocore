@@ -21,7 +21,7 @@ import (
 	"fmt"
 )
 
-// Bytes20Size is the size of a 20-byte long byrte array...
+// Bytes20Size is the size of a 20-byte long byte array.
 const Bytes20Size = 20
 
 // Bytes20 is the 20-byte long byte array.
@@ -132,7 +132,7 @@ func (rb *ReversedBytes20) Reverse(b *Bytes20) {
 	}
 }
 
-// Bytes32Size is the size of a 32-byte long byrte array...
+// Bytes32Size is the size of a 32-byte long byte array.
 const Bytes32Size = 32
 
 // Bytes32 is the 32-byte long byte array.
