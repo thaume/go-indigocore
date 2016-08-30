@@ -33,7 +33,7 @@ func TestNewBytes20FromString(t *testing.T) {
 }
 
 func TestNewBytes20FromString_invalidHex(t *testing.T) {
-	if _, err := NewBytes20FromString("azertyuiop"); err == nil {
+	if _, err := NewBytes20FromString("z234567890123456789012345678901234567890"); err == nil {
 		t.Error("NewBytes20FromString(): err = nil want Error")
 	}
 }
@@ -62,7 +62,14 @@ func TestBytes20Unstring(t *testing.T) {
 
 func TestBytes20Unstring_invalidHex(t *testing.T) {
 	var b Bytes20
-	if err := b.Unstring("azertyuiop"); err == nil {
+	if err := b.Unstring("123456789012345678901234567890123456789q"); err == nil {
+		t.Error("b.Unstring(): err = nil want Error")
+	}
+}
+
+func TestBytes20Unstring_invalidSize(t *testing.T) {
+	var b Bytes20
+	if err := b.Unstring("12345678901234567890"); err == nil {
 		t.Error("b.Unstring(): err = nil want Error")
 	}
 }
@@ -109,7 +116,7 @@ func TestBytes20UnmarshalJSON_invalidStr(t *testing.T) {
 }
 
 func TestBytes20UnmarshalJSON_invalidHex(t *testing.T) {
-	str := "azertyu"
+	str := "+234567890123456789012345678901234567890"
 	marshalled := fmt.Sprintf(`"%s"`, str)
 	var b Bytes20
 	err := json.Unmarshal([]byte(marshalled), &b)
@@ -144,6 +151,12 @@ func TestNewReversedBytes20FromString(t *testing.T) {
 	}
 }
 
+func TestNewReversedBytes20FromString_invalidHex(t *testing.T) {
+	if _, err := NewReversedBytes20FromString("z234567890123456789012345678901234567890"); err == nil {
+		t.Error("NewReversedBytes20FromString(): err = nil want Error")
+	}
+}
+
 func TestReversedBytes20String(t *testing.T) {
 	str := "1234567890123456789012345678901234567890"
 	revStr := "9078563412907856341290785634129078563412"
@@ -169,7 +182,14 @@ func TestReversedBytes20Unstring(t *testing.T) {
 
 func TestReversedBytes20Unstring_invalidHex(t *testing.T) {
 	var b ReversedBytes20
-	if err := b.Unstring("azertyuiop"); err == nil {
+	if err := b.Unstring("u234567890123456789012345678901234567890"); err == nil {
+		t.Error("b.Unstring(): err = nil want Error")
+	}
+}
+
+func TestReversedBytes20Unstring_invalidSize(t *testing.T) {
+	var b ReversedBytes20
+	if err := b.Unstring("12345678901245678901234567890123456901234567891234567890234567"); err == nil {
 		t.Error("b.Unstring(): err = nil want Error")
 	}
 }
@@ -217,7 +237,7 @@ func TestReversedBytes20UnmarshalJSON_invalidStr(t *testing.T) {
 }
 
 func TestReversedBytes20UnmarshalJSON_invalidHex(t *testing.T) {
-	str := "azertyu"
+	str := "1234o67890123456789012345678901234567890"
 	marshalled := fmt.Sprintf(`"%s"`, str)
 	var b ReversedBytes20
 	err := json.Unmarshal([]byte(marshalled), &b)
@@ -253,14 +273,8 @@ func TestNewBytes32FromString(t *testing.T) {
 }
 
 func TestNewBytes32FromString_invalidHex(t *testing.T) {
-	if _, err := NewBytes32FromString("azertyuiop"); err == nil {
+	if _, err := NewBytes32FromString("$234567890123456789012345678901234567890123456789012345678901234"); err == nil {
 		t.Error("NewBytes32FromString(): err = nil want Error")
-	}
-}
-
-func TestNewReversedBytes20FromString_invalidHex(t *testing.T) {
-	if _, err := NewReversedBytes20FromString("azertyuiop"); err == nil {
-		t.Error("NewReversedBytes20FromString(): err = nil want Error")
 	}
 }
 
@@ -288,7 +302,14 @@ func TestBytes32Unstring(t *testing.T) {
 
 func TestBytes32Unstring_invalidHex(t *testing.T) {
 	var b Bytes32
-	if err := b.Unstring("azertyuiop"); err == nil {
+	if err := b.Unstring("123y567890123456789012345678901234567890123456789012345678901234"); err == nil {
+		t.Error("b.Unstring(): err = nil want Error")
+	}
+}
+
+func TestBytes32Unstring_invalidSize(t *testing.T) {
+	var b Bytes32
+	if err := b.Unstring("17890123456789012345678901234567890123456789012345"); err == nil {
 		t.Error("b.Unstring(): err = nil want Error")
 	}
 }
@@ -335,7 +356,7 @@ func TestBytes32UnmarshalJSON_invalidStr(t *testing.T) {
 }
 
 func TestBytes32UnmarshalJSON_invalidHex(t *testing.T) {
-	str := "azertyu"
+	str := "t234567890123456789012345678901234567890123456789012345678901234"
 	marshalled := fmt.Sprintf(`"%s"`, str)
 	var b Bytes32
 	err := json.Unmarshal([]byte(marshalled), &b)
@@ -371,7 +392,7 @@ func TestNewReversedBytes32FromString(t *testing.T) {
 }
 
 func TestNewReversedBytes32FromString_invalidHex(t *testing.T) {
-	if _, err := NewReversedBytes32FromString("azertyuiop"); err == nil {
+	if _, err := NewReversedBytes32FromString("^234567890123456789012345678901234567890123456789012345678901234"); err == nil {
 		t.Error("NewReversedBytes32FromString(): err = nil want Error")
 	}
 }
@@ -401,7 +422,14 @@ func TestReversedBytes32Unstring(t *testing.T) {
 
 func TestReversedBytes32Unstring_invalidHex(t *testing.T) {
 	var b ReversedBytes32
-	if err := b.Unstring("azertyuiop"); err == nil {
+	if err := b.Unstring("12345678901à3456789012345678901234567890123456789012345678901234"); err == nil {
+		t.Error("b.Unstring(): err = nil want Error")
+	}
+}
+
+func TestReversedBytes32Unstring_invalidSize(t *testing.T) {
+	var b ReversedBytes32
+	if err := b.Unstring("123456789015678456789012345678901234567890123456789012345678901234"); err == nil {
 		t.Error("b.Unstring(): err = nil want Error")
 	}
 }
@@ -449,7 +477,7 @@ func TestReversedBytes32UnmarshalJSON_invalidStr(t *testing.T) {
 }
 
 func TestReversedBytes32UnmarshalJSON_invalidHex(t *testing.T) {
-	str := "azertyu"
+	str := "12345'7890123456789012345678901234567890123456789012345678901234"
 	marshalled := fmt.Sprintf(`"%s"`, str)
 	var b ReversedBytes32
 	err := json.Unmarshal([]byte(marshalled), &b)

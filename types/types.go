@@ -18,6 +18,7 @@ package types
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 )
 
 // Bytes20Size is the size of a 20-byte long byrte array...
@@ -42,8 +43,16 @@ func (b *Bytes20) String() string {
 
 // Unstring sets the value from a hex encoded string.
 func (b *Bytes20) Unstring(src string) error {
-	_, err := hex.Decode(b[:], []byte(src))
-	return err
+	buf, err := hex.DecodeString(src)
+	if err != nil {
+		return err
+	}
+	if n := len(buf); n != Bytes20Size {
+		return fmt.Errorf("invalid Bytes20 size got %d want %d", n, Bytes20Size)
+	}
+
+	copy(b[:], buf)
+	return nil
 }
 
 // MarshalJSON implements encoding/json.Marshaler.MarshalJSON.
@@ -57,14 +66,7 @@ func (b *Bytes20) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
-
-	buf, err := hex.DecodeString(s)
-	if err != nil {
-		return err
-	}
-
-	copy(b[:], buf)
-	return nil
+	return b.Unstring(s)
 }
 
 // Reverse reverse the bytes order.
@@ -151,8 +153,16 @@ func (b *Bytes32) String() string {
 
 // Unstring sets the value from a hex encoded string.
 func (b *Bytes32) Unstring(src string) error {
-	_, err := hex.Decode(b[:], []byte(src))
-	return err
+	buf, err := hex.DecodeString(src)
+	if err != nil {
+		return err
+	}
+	if n := len(buf); n != Bytes32Size {
+		return fmt.Errorf("invalid Bytes32 size got %d want %d", n, Bytes32Size)
+	}
+
+	copy(b[:], buf)
+	return nil
 }
 
 // MarshalJSON implements encoding/json.Marshaler.MarshalJSON.
@@ -167,13 +177,7 @@ func (b *Bytes32) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	buf, err := hex.DecodeString(s)
-	if err != nil {
-		return err
-	}
-
-	copy(b[:], buf)
-	return nil
+	return b.Unstring(s)
 }
 
 // Reverse reverse the bytes order.
