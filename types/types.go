@@ -58,10 +58,12 @@ func (b *Bytes20) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if _, err := hex.Decode(b[:], []byte(s)); err != nil {
+	buf, err := hex.DecodeString(s)
+	if err != nil {
 		return err
 	}
 
+	copy(b[:], buf)
 	return nil
 }
 
@@ -113,7 +115,7 @@ func (rb *ReversedBytes20) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements encoding/json.Unmarshaler.UnmarshalJSON.
 func (rb *ReversedBytes20) UnmarshalJSON(data []byte) error {
 	var b Bytes20
-	if err := json.Unmarshal(data, b); err != nil {
+	if err := json.Unmarshal(data, &b); err != nil {
 		return err
 	}
 	b.Reverse(rb)
@@ -165,10 +167,12 @@ func (b *Bytes32) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if _, err := hex.Decode(b[:], []byte(s)); err != nil {
+	buf, err := hex.DecodeString(s)
+	if err != nil {
 		return err
 	}
 
+	copy(b[:], buf)
 	return nil
 }
 
@@ -220,7 +224,7 @@ func (rb *ReversedBytes32) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements encoding/json.Unmarshaler.UnmarshalJSON.
 func (rb *ReversedBytes32) UnmarshalJSON(data []byte) error {
 	var b Bytes32
-	if err := json.Unmarshal(data, b); err != nil {
+	if err := json.Unmarshal(data, &b); err != nil {
 		return err
 	}
 	b.Reverse(rb)
