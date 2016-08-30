@@ -21,12 +21,34 @@ import (
 	"testing"
 )
 
+func TestNewBytes20FromString(t *testing.T) {
+	str := "1234567890123456789012345678901234567890"
+	b, err := NewBytes20FromString(str)
+	if err != nil {
+		t.Fatalf("NewBytes20FromString(): err: %s", err)
+	}
+	if got, want := b.String(), str; got != want {
+		t.Errorf("b.String() = %q want %q", got, want)
+	}
+}
+
 func TestBytes20String(t *testing.T) {
 	str := "1234567890123456789012345678901234567890"
 	buf, _ := hex.DecodeString(str)
 	var b Bytes20
 	copy(b[:], buf)
 
+	if got, want := b.String(), str; got != want {
+		t.Errorf("b.String() = %q want %q", got, want)
+	}
+}
+
+func TestBytes20Unstring(t *testing.T) {
+	str := "1234567890123456789012345678901234567890"
+	var b Bytes20
+	if err := b.Unstring(str); err != nil {
+		t.Fatalf("b.Unstring(): err: %s", err)
+	}
 	if got, want := b.String(), str; got != want {
 		t.Errorf("b.String() = %q want %q", got, want)
 	}
@@ -86,6 +108,17 @@ func TestBytes20Reverse(t *testing.T) {
 	}
 }
 
+func TestNewReversedBytes20FromString(t *testing.T) {
+	str := "1234567890123456789012345678901234567890"
+	b, err := NewReversedBytes20FromString(str)
+	if err != nil {
+		t.Fatalf("NewReversedBytes20FromString(): err: %s", err)
+	}
+	if got, want := b.String(), str; got != want {
+		t.Errorf("b.String() = %q want %q", got, want)
+	}
+}
+
 func TestReversedBytes20String(t *testing.T) {
 	str := "1234567890123456789012345678901234567890"
 	revStr := "9078563412907856341290785634129078563412"
@@ -94,6 +127,17 @@ func TestReversedBytes20String(t *testing.T) {
 	copy(b[:], buf)
 
 	if got, want := b.String(), revStr; got != want {
+		t.Errorf("b.String() = %q want %q", got, want)
+	}
+}
+
+func TestReversedBytes20Unstring(t *testing.T) {
+	str := "1234567890123456789012345678901234567890"
+	var b ReversedBytes20
+	if err := b.Unstring(str); err != nil {
+		t.Fatalf("b.Unstring(): err: %s", err)
+	}
+	if got, want := b.String(), str; got != want {
 		t.Errorf("b.String() = %q want %q", got, want)
 	}
 }
@@ -153,12 +197,34 @@ func TestReversedBytes20Reverse(t *testing.T) {
 	}
 }
 
+func TestNewBytes32FromString(t *testing.T) {
+	str := "1234567890123456789012345678901234567890123456789012345678901234"
+	b, err := NewBytes32FromString(str)
+	if err != nil {
+		t.Fatalf("NewBytes32FromString(): err: %s", err)
+	}
+	if got, want := b.String(), str; got != want {
+		t.Errorf("b.String() = %q want %q", got, want)
+	}
+}
+
 func TestBytes32String(t *testing.T) {
 	str := "1234567890123456789012345678901234567890123456789012345678901234"
 	buf, _ := hex.DecodeString(str)
 	var b Bytes32
 	copy(b[:], buf)
 
+	if got, want := b.String(), str; got != want {
+		t.Errorf("b.String() = %q want %q", got, want)
+	}
+}
+
+func TestBytes32Unstring(t *testing.T) {
+	str := "1234567890123456789012345678901234567890123456789012345678901234"
+	var b Bytes32
+	if err := b.Unstring(str); err != nil {
+		t.Fatalf("b.Unstring(): err: %s", err)
+	}
 	if got, want := b.String(), str; got != want {
 		t.Errorf("b.String() = %q want %q", got, want)
 	}
@@ -218,6 +284,17 @@ func TestBytes32Reverse(t *testing.T) {
 	}
 }
 
+func TestNewReversedBytes32FromString(t *testing.T) {
+	str := "1234567890123456789012345678901234567890123456789012345678901234"
+	b, err := NewReversedBytes32FromString(str)
+	if err != nil {
+		t.Fatalf("NewReversedBytes32FromString(): err: %s", err)
+	}
+	if got, want := b.String(), str; got != want {
+		t.Errorf("b.String() = %q want %q", got, want)
+	}
+}
+
 func TestReversedBytes32String(t *testing.T) {
 	str := "1234567890123456789012345678901234567890123456789012345678901234"
 	revStr := "3412907856341290785634129078563412907856341290785634129078563412"
@@ -226,6 +303,17 @@ func TestReversedBytes32String(t *testing.T) {
 	copy(b[:], buf)
 
 	if got, want := b.String(), revStr; got != want {
+		t.Errorf("b.String() = %q want %q", got, want)
+	}
+}
+
+func TestReversedBytes32Unstring(t *testing.T) {
+	str := "1234567890123456789012345678901234567890123456789012345678901234"
+	var b ReversedBytes32
+	if err := b.Unstring(str); err != nil {
+		t.Fatalf("b.Unstring(): err: %s", err)
+	}
+	if got, want := b.String(), str; got != want {
 		t.Errorf("b.String() = %q want %q", got, want)
 	}
 }
