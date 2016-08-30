@@ -69,7 +69,7 @@ func (b *Bytes20) UnmarshalJSON(data []byte) error {
 	return b.Unstring(s)
 }
 
-// Reverse reverse the bytes order.
+// Reverse reverses the bytes order.
 func (b *Bytes20) Reverse(rb *ReversedBytes20) {
 	for i, v := range b {
 		rb[Bytes20Size-i-1] = v
@@ -77,6 +77,7 @@ func (b *Bytes20) Reverse(rb *ReversedBytes20) {
 }
 
 // ReversedBytes20 is the 20-byte long byte reversed array.
+// While the bytes are reversed, the hex encoded strings are not.
 type ReversedBytes20 [Bytes20Size]byte
 
 // NewReversedBytes20FromString creates a ReversedBytes20 from a hex encoded string.
@@ -124,7 +125,7 @@ func (rb *ReversedBytes20) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Reverse reverse the bytes order.
+// Reverse reverses the bytes order.
 func (rb *ReversedBytes20) Reverse(b *Bytes20) {
 	for i, v := range rb {
 		b[Bytes20Size-i-1] = v
@@ -180,7 +181,7 @@ func (b *Bytes32) UnmarshalJSON(data []byte) error {
 	return b.Unstring(s)
 }
 
-// Reverse reverse the bytes order.
+// Reverse reverses the bytes order.
 func (b *Bytes32) Reverse(rb *ReversedBytes32) {
 	for i, v := range b {
 		rb[Bytes32Size-i-1] = v
@@ -188,6 +189,7 @@ func (b *Bytes32) Reverse(rb *ReversedBytes32) {
 }
 
 // ReversedBytes32 is the 32-byte long byte reversed array.
+// While the bytes are reversed, the hex encoded strings are not.
 type ReversedBytes32 [Bytes32Size]byte
 
 // NewReversedBytes32FromString creates a ReversedBytes32 from a hex encoded string.
@@ -235,7 +237,7 @@ func (rb *ReversedBytes32) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Reverse reverse the bytes order.
+// Reverse reverses the bytes order.
 func (rb *ReversedBytes32) Reverse(b *Bytes32) {
 	for i, v := range rb {
 		b[Bytes32Size-i-1] = v
