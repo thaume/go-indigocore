@@ -52,10 +52,10 @@ type FileStore struct {
 
 // Config contains configuration options for the store.
 type Config struct {
-	// A version string that will set in the store's information.
+	// A version string that will be set in the store's information.
 	Version string
 
-	// A git commit hash that will set in the store's information.
+	// A git commit hash that will be set in the store's information.
 	Commit string
 
 	// Path where segments will be saved.
