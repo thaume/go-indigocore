@@ -26,7 +26,7 @@ import (
 
 func createServer() (*jsonhttp.Server, *fossilizertesting.MockAdapter) {
 	a := &fossilizertesting.MockAdapter{}
-	s := New(a, &Config{MinDataLen: 2, MaxDataLen: 16})
+	s := New(a, &Config{MinDataLen: 2, MaxDataLen: 16}, &jsonhttp.Config{})
 
 	return s, a
 }

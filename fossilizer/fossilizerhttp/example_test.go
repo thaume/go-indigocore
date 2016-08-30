@@ -31,14 +31,15 @@ import (
 func Example() {
 	// Create a dummy adapter.
 	a := dummyfossilizer.New(&dummyfossilizer.Config{Version: "0.1.0", Commit: "abc"})
-	c := &fossilizerhttp.Config{
-		Config: jsonhttp.Config{
-			Port: ":6000",
-		},
+	config := &fossilizerhttp.Config{
+		MaxDataLen: 64,
+	}
+	httpConfig := &jsonhttp.Config{
+		Port: ":6000",
 	}
 
 	// Create a server.
-	s := fossilizerhttp.New(a, c)
+	s := fossilizerhttp.New(a, config, httpConfig)
 
 	// Create a test server.
 	ts := httptest.NewServer(s)

@@ -60,8 +60,6 @@ const (
 
 // Config contains configuration options for the server.
 type Config struct {
-	jsonhttp.Config
-
 	// The default number of goroutines that will be used to handle fossilizer results.
 	NumResultWorkers int
 
@@ -97,13 +95,13 @@ func (h handler) serve(w http.ResponseWriter, r *http.Request, p httprouter.Para
 }
 
 // New create an instance of a server.
-func New(a fossilizer.Adapter, c *Config) *jsonhttp.Server {
-	if c.NumResultWorkers < 1 {
-		c.NumResultWorkers = DefaultNumResultWorkers
+func New(a fossilizer.Adapter, config *Config, httpConfig *jsonhttp.Config) *jsonhttp.Server {
+	if config.NumResultWorkers < 1 {
+		config.NumResultWorkers = DefaultNumResultWorkers
 	}
 
-	s := jsonhttp.New(&c.Config)
-	ctx := &context{a, c}
+	s := jsonhttp.New(httpConfig)
+	ctx := &context{a, config}
 
 	s.Get("/", handler{ctx, root}.serve)
 	s.Post("/fossils", handler{ctx, fossilize}.serve)
@@ -111,8 +109,8 @@ func New(a fossilizer.Adapter, c *Config) *jsonhttp.Server {
 	// Launch result workers.
 	rc := make(chan *fossilizer.Result)
 	a.AddResultChan(rc)
-	client := http.Client{Timeout: c.CallbackTimeout}
-	for i := 0; i < c.NumResultWorkers; i++ {
+	client := http.Client{Timeout: config.CallbackTimeout}
+	for i := 0; i < config.NumResultWorkers; i++ {
 		go handleResults(rc, &client)
 	}
 
