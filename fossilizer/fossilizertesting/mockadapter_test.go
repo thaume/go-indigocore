@@ -110,7 +110,7 @@ func TestMockAdapter_Fossilize(t *testing.T) {
 	}
 	want = []string{string(m1), string(m2)}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf(`a.MockFossilize.CalledWithData = %q want %q`, got, want)
+		t.Errorf(`a.MockFossilize.CalledWithMeta = %q want %q`, got, want)
 	}
 
 	if got, want := string(a.MockFossilize.LastCalledWithMeta), string(m2); got != want {
