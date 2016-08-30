@@ -16,7 +16,8 @@ TEXT_FILES=LICENSE RELEASE_NOTES.md CHANGE_LOG.md
 DOCKER_USER=$(GITHUB_USER)
 DOCKER_FILE_TEMPLATE=Dockerfile.tpl
 COVERAGE_FILE=coverage.txt
-CLEAN_PATHS=$(DIST_DIR) $(COVERAGE_FILE)
+COVERHTML_FILE=coverhtml.txt
+CLEAN_PATHS=$(DIST_DIR) $(COVERAGE_FILE) $(COVERHTML_FILE)
 TMP_DIR:=$(shell mktemp -d)
 
 GO_CMD=go
@@ -86,6 +87,18 @@ $(COVERAGE_FILE): $(COVERAGE_SOURCES)
 	        rm profile.out; \
 	    fi \
 	done
+
+coverhtml:
+	echo 'mode: set' > $(COVERHTML_FILE)
+	@for d in $(TEST_PACKAGES); do \
+	    $(GO_TEST) -coverprofile=profile.out $$d; \
+	    if [ -f profile.out ]; then \
+	        tail -n +2 profile.out >> $(COVERHTML_FILE); \
+	        rm profile.out; \
+	    fi \
+	done
+	$(GO_CMD) tool cover -html $(COVERHTML_FILE)
+
 
 # == benchmark ================================================================
 benchmark: $(BENCHMARK_LIST)
