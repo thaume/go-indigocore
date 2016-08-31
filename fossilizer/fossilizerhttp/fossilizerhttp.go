@@ -159,7 +159,7 @@ func handleResults(resultChan chan *fossilizer.Result, client *http.Client) {
 		req.Close = true
 		res, err := client.Do(req)
 		if err != nil {
-			log.Printf("Error: %q: %d %s", url, res.StatusCode, err)
+			log.Printf("Error: %q: %s", url, err)
 		} else if res.StatusCode >= 300 {
 			log.Printf("Error: %q: %d\n", url, res.StatusCode)
 		}
