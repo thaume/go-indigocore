@@ -93,7 +93,9 @@ func (a *FileStore) SaveSegment(segment *cs.Segment) error {
 	}
 
 	if err = os.MkdirAll(a.config.Path, 0755); err != nil {
-		return err
+		if !os.IsExist(err) {
+			return err
+		}
 	}
 
 	segmentPath := path.Join(a.config.Path, segment.Meta["linkHash"].(string)+".json")
