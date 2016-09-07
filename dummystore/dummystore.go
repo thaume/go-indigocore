@@ -89,11 +89,7 @@ func (a *DummyStore) SaveSegment(segment *cs.Segment) error {
 		return err
 	}
 
-	curr, err := a.GetSegment(linkHash)
-	if err != nil {
-		return err
-	}
-
+	curr := a.segments[linkHash.String()]
 	mapID := segment.Link.Meta["mapId"].(string)
 
 	if curr != nil {
@@ -116,6 +112,9 @@ func (a *DummyStore) SaveSegment(segment *cs.Segment) error {
 
 // GetSegment implements github.com/stratumn/go/store.Adapter.GetSegment.
 func (a *DummyStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
+	a.mutex.RLock()
+	defer a.mutex.RUnlock()
+
 	return a.segments[linkHash.String()], nil
 }
 
