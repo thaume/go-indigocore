@@ -152,16 +152,16 @@ func handleResults(resultChan chan *fossilizer.Result, client *http.Client) {
 		url := string(r.Meta)
 		req, err := http.NewRequest("POST", string(r.Meta), bytes.NewReader(body))
 		if err != nil {
-			log.Printf("Error: %q: %s", url, err)
+			log.Printf("Error: %s", err)
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
 		req.Close = true
 		res, err := client.Do(req)
 		if err != nil {
-			log.Printf("Error: %q: %s", url, err)
+			log.Printf("Error: %s", err)
 		} else if res.StatusCode >= 300 {
-			log.Printf("Error: %q: %d\n", url, res.StatusCode)
+			log.Printf("Error: %s %d\n", url, res.StatusCode)
 		}
 	}
 }
