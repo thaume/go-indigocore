@@ -156,12 +156,15 @@ func handleResults(resultChan chan *fossilizer.Result, client *http.Client) {
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
-		req.Close = true
 		res, err := client.Do(req)
 		if err != nil {
 			log.Printf("Error: %s", err)
+			continue
 		} else if res.StatusCode >= 300 {
 			log.Printf("Error: %s %d\n", url, res.StatusCode)
+		}
+		if err := res.Body.Close(); err != nil {
+			log.Printf("Error: %s", err)
 		}
 	}
 }
