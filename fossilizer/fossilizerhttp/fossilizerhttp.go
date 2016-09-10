@@ -69,7 +69,7 @@ type Config struct {
 	// The maximum fossilize data length.
 	MaxDataLen int
 
-	// THe timeout of requests to the callback URLs.
+	// The timeout of requests to the callback URLs.
 	CallbackTimeout time.Duration
 }
 
