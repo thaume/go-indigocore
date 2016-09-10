@@ -104,7 +104,7 @@ coverhtml:
 benchmark: $(BENCHMARK_LIST)
 
 $(BENCHMARK_LIST): benchmark_%:
-	@$(GO_BENCHMARK) $*
+	@$(GO_BENCHMARK) -benchmem $*
 
 # == list =====================================================================
 lint: $(LINT_LIST)
