@@ -145,7 +145,7 @@ func handleResults(resultChan chan *fossilizer.Result, client *http.Client) {
 	for r := range resultChan {
 		body, err := json.Marshal(r.Evidence)
 		if err != nil {
-			log.Println(err)
+			log.Printf("Error: %s", err)
 			continue
 		}
 
