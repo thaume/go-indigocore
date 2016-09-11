@@ -1,5 +1,8 @@
 ## Change log
 
+### 0.12.0-alpha
+ * Store queries with pagination now have a default limit set to 20 and a maximum limit set to 200.
+
 ### 0.11.2-alpha
  * Bug fixes.
 
