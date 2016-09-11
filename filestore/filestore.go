@@ -244,32 +244,22 @@ func containsString(a []string, s string) bool {
 
 func paginateStrings(a []string, p *store.Pagination) []string {
 	l := len(a)
-
 	if p.Offset >= l {
 		return []string{}
 	}
 
-	if p.Limit > 0 {
-		end := min(l, p.Offset+p.Limit)
-		return a[p.Offset:end]
-	}
-
-	return a[p.Offset:]
+	end := min(l, p.Offset+p.Limit)
+	return a[p.Offset:end]
 }
 
 func paginateSegments(a cs.SegmentSlice, p *store.Pagination) cs.SegmentSlice {
 	l := len(a)
-
 	if p.Offset >= l {
 		return cs.SegmentSlice{}
 	}
 
-	if p.Limit > 0 {
-		end := min(l, p.Offset+p.Limit)
-		return a[p.Offset:end]
-	}
-
-	return a[p.Offset:]
+	end := min(l, p.Offset+p.Limit)
+	return a[p.Offset:end]
 }
 
 // Min of two ints, duh.
@@ -277,6 +267,5 @@ func min(a, b int) int {
 	if a < b {
 		return a
 	}
-
 	return b
 }

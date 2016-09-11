@@ -25,7 +25,7 @@ import (
 	"github.com/stratumn/go/types"
 )
 
-// TestFindSegments tests what happens when you search for all segments.
+// TestFindSegments tests what happens when you search with default pagination.
 func (f Factory) TestFindSegments(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
@@ -36,16 +36,20 @@ func (f Factory) TestFindSegments(t *testing.T) {
 	}
 	defer f.free(a)
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < store.DefaultLimit*2; i++ {
 		a.SaveSegment(cstesting.RandomSegment())
 	}
 
-	slice, err := a.FindSegments(&store.Filter{})
+	slice, err := a.FindSegments(&store.Filter{
+		Pagination: store.Pagination{
+			Limit: store.DefaultLimit,
+		},
+	})
 	if err != nil {
 		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
-	if got, want := len(slice), 100; got != want {
+	if got, want := len(slice), store.DefaultLimit; got != want {
 		t.Errorf("len(slice) = %d want %d", got, want)
 	}
 
@@ -140,26 +144,29 @@ func (f Factory) TestFindSegmentsSingleTag(t *testing.T) {
 	tag1 := testutil.RandomString(5)
 	tag2 := testutil.RandomString(5)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < store.DefaultLimit; i++ {
 		s := cstesting.RandomSegment()
 		s.Link.Meta["tags"] = []interface{}{tag1, testutil.RandomString(5)}
 		a.SaveSegment(s)
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < store.DefaultLimit; i++ {
 		s := cstesting.RandomSegment()
 		s.Link.Meta["tags"] = []interface{}{tag1, tag2, testutil.RandomString(5)}
 		a.SaveSegment(s)
 	}
 
 	slice, err := a.FindSegments(&store.Filter{
+		Pagination: store.Pagination{
+			Limit: store.DefaultLimit * 2,
+		},
 		Tags: []string{tag1},
 	})
 	if err != nil {
 		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
-	if got, want := len(slice), 20; want != got {
+	if got, want := len(slice), store.DefaultLimit*2; want != got {
 		t.Errorf("len(slice) = %d want %d", got, want)
 	}
 }
@@ -178,26 +185,29 @@ func (f Factory) TestFindSegmentsMultipleTags(t *testing.T) {
 	tag1 := testutil.RandomString(5)
 	tag2 := testutil.RandomString(5)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < store.DefaultLimit; i++ {
 		s := cstesting.RandomSegment()
 		s.Link.Meta["tags"] = []interface{}{tag1, testutil.RandomString(5)}
 		a.SaveSegment(s)
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < store.DefaultLimit; i++ {
 		s := cstesting.RandomSegment()
 		s.Link.Meta["tags"] = []interface{}{tag1, tag2, testutil.RandomString(5)}
 		a.SaveSegment(s)
 	}
 
 	slice, err := a.FindSegments(&store.Filter{
+		Pagination: store.Pagination{
+			Limit: store.DefaultLimit * 2,
+		},
 		Tags: []string{tag2, tag1},
 	})
 	if err != nil {
 		t.Fatalf("a.FindSegments(): err: %s", err)
 	}
 
-	if got, want := len(slice), 10; want != got {
+	if got, want := len(slice), store.DefaultLimit; want != got {
 		t.Errorf("len(slice) = %d want %d", got, want)
 	}
 }
@@ -214,7 +224,7 @@ func (f Factory) TestFindSegmentsMapID(t *testing.T) {
 	defer f.free(a)
 
 	for i := 0; i < 2; i++ {
-		for j := 0; j < 10; j++ {
+		for j := 0; j < store.DefaultLimit; j++ {
 			s := cstesting.RandomSegment()
 			s.Link.Meta["mapId"] = fmt.Sprintf("map%d", i)
 			a.SaveSegment(s)
@@ -222,6 +232,9 @@ func (f Factory) TestFindSegmentsMapID(t *testing.T) {
 	}
 
 	slice, err := a.FindSegments(&store.Filter{
+		Pagination: store.Pagination{
+			Limit: store.DefaultLimit * 2,
+		},
 		MapID: "map1",
 	})
 	if err != nil {
@@ -231,7 +244,7 @@ func (f Factory) TestFindSegmentsMapID(t *testing.T) {
 	if got := slice; got == nil {
 		t.Fatal("slice = nit want cs.SegmentSlice")
 	}
-	if got, want := len(slice), 10; want != got {
+	if got, want := len(slice), store.DefaultLimit; want != got {
 		t.Errorf("len(slice) = %d want %d", got, want)
 	}
 }
@@ -248,6 +261,9 @@ func (f Factory) TestFindSegmentsMapIDNotFound(t *testing.T) {
 	defer f.free(a)
 
 	slice, err := a.FindSegments(&store.Filter{
+		Pagination: store.Pagination{
+			Limit: store.DefaultLimit,
+		},
 		MapID: testutil.RandomString(10),
 	})
 	if err != nil {
@@ -273,7 +289,7 @@ func (f Factory) TestFindSegmentsPrevLinkHash(t *testing.T) {
 	s := cstesting.RandomSegment()
 	a.SaveSegment(s)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < store.DefaultLimit; i++ {
 		a.SaveSegment(cstesting.RandomBranch(s))
 	}
 
@@ -283,6 +299,9 @@ func (f Factory) TestFindSegmentsPrevLinkHash(t *testing.T) {
 	}
 
 	slice, err := a.FindSegments(&store.Filter{
+		Pagination: store.Pagination{
+			Limit: store.DefaultLimit * 2,
+		},
 		PrevLinkHash: linkHash,
 	})
 	if err != nil {
@@ -292,7 +311,7 @@ func (f Factory) TestFindSegmentsPrevLinkHash(t *testing.T) {
 	if got := slice; got == nil {
 		t.Fatal("slice = nit want cs.SegmentSlice")
 	}
-	if got, want := len(slice), 10; want != got {
+	if got, want := len(slice), store.DefaultLimit; want != got {
 		t.Errorf("len(slice) = %d want %d", got, want)
 	}
 }
@@ -309,6 +328,9 @@ func (f Factory) TestFindSegmentsPrevLinkHashNotFound(t *testing.T) {
 	defer f.free(a)
 
 	slice, err := a.FindSegments(&store.Filter{
+		Pagination: store.Pagination{
+			Limit: store.DefaultLimit,
+		},
 		PrevLinkHash: testutil.RandomHash(),
 	})
 	if err != nil {
