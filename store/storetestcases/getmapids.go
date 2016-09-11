@@ -23,7 +23,7 @@ import (
 	"github.com/stratumn/go/testutil"
 )
 
-// TestGetMapIDs tests what happens when you get all the map IDs.
+// TestGetMapIDs tests what happens when you get map IDs with default pagination.
 func (f Factory) TestGetMapIDs(t *testing.T) {
 	a, err := f.New()
 	if err != nil {
@@ -34,24 +34,24 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 	}
 	defer f.free(a)
 
-	for i := 0; i < 10; i++ {
-		for j := 0; j < 10; j++ {
+	for i := 0; i < store.DefaultLimit; i++ {
+		for j := 0; j < store.DefaultLimit; j++ {
 			s := cstesting.RandomSegment()
 			s.Link.Meta["mapId"] = fmt.Sprintf("map%d", i)
 			a.SaveSegment(s)
 		}
 	}
 
-	slice, err := a.GetMapIDs(&store.Pagination{})
+	slice, err := a.GetMapIDs(&store.Pagination{Limit: store.DefaultLimit * store.DefaultLimit})
 	if err != nil {
 		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
 
-	if got, want := len(slice), 10; want != got {
+	if got, want := len(slice), store.DefaultLimit; want != got {
 		t.Errorf("len(slice) = %d want %d", got, want)
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < store.DefaultLimit; i++ {
 		mapID := fmt.Sprintf("map%d", i)
 		if !testutil.ContainsString(slice, mapID) {
 			t.Errorf("slice does not contain %q", mapID)

@@ -17,6 +17,7 @@ package storehttp
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"reflect"
 	"testing"
@@ -357,6 +358,50 @@ func TestFindSegments(t *testing.T) {
 	}
 }
 
+func TestFindSegments_defaultLimit(t *testing.T) {
+	s, a := createServer()
+	var s1 cs.SegmentSlice
+	for i := 0; i < 2; i++ {
+		s1 = append(s1, cstesting.RandomSegment())
+	}
+	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return s1, nil }
+
+	var s2 cs.SegmentSlice
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&&mapId=123&prevLinkHash="+zeros+"&tags=one+two", nil, &s2)
+	if err != nil {
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
+	}
+
+	if got, want := w.Code, http.StatusOK; got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
+	}
+	if !reflect.DeepEqual(s2, s1) {
+		got, _ := json.MarshalIndent(s2, "", "  ")
+		want, _ := json.MarshalIndent(s1, "", "  ")
+		t.Errorf("s2 = %s\nwant %s", got, want)
+	}
+	if got, want := a.MockFindSegments.CalledCount, 1; got != want {
+		t.Errorf("a.MockFindSegments.CalledCount = %d want %d", got, want)
+	}
+
+	f := a.MockFindSegments.LastCalledWith
+	if got, want := f.Offset, 1; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.Offset = %d want %d", got, want)
+	}
+	if got, want := f.Limit, store.DefaultLimit; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.Limit = %d want %d", got, want)
+	}
+	if got, want := f.MapID, "123"; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.MapID = %q want %q", got, want)
+	}
+	if got, want := f.PrevLinkHash.String(), zeros; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.PrevLinkHash = %q want %q", got, want)
+	}
+	if got, want := f.Tags, []string{"one", "two"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("a.MockFindSegments.LastCalledWith.Tags = %v want %v", got, want)
+	}
+}
+
 func TestFindSegments_err(t *testing.T) {
 	s, a := createServer()
 	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return nil, errors.New("test") }
@@ -454,6 +499,27 @@ func TestGetMapIDs_invalidLimit(t *testing.T) {
 
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/maps?limit=-1", nil, &body)
+	if err != nil {
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
+	}
+
+	if got, want := w.Code, newErrOffset("").Status(); got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
+	}
+	if got, want := body["error"].(string), newErrLimit("").Error(); got != want {
+		t.Errorf(`body["error"] = %q want %q`, got, want)
+	}
+	if got, want := a.MockGetMapIDs.CalledCount, 0; got != want {
+		t.Errorf("a.MockGetMapIDs.CalledCount = %d want %d", got, want)
+	}
+}
+
+func TestGetMapIDs_limitTooLarge(t *testing.T) {
+	s, a := createServer()
+
+	var body map[string]interface{}
+	limit := store.MaxLimit + 1
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", fmt.Sprintf("/maps?limit=%d", limit), nil, &body)
 	if err != nil {
 		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}

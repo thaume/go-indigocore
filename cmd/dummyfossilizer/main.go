@@ -52,7 +52,7 @@ func main() {
 	log.Print("Apache License 2.0")
 	log.Printf("Runtime %s %s %s", runtime.Version(), runtime.GOOS, runtime.GOARCH)
 
-	a := dummyfossilizer.New((&dummyfossilizer.Config{Version: version, Commit: commit}))
+	a := dummyfossilizer.New(&dummyfossilizer.Config{Version: version, Commit: commit})
 
 	go func() {
 		sigc := make(chan os.Signal)

@@ -15,7 +15,10 @@
 package storehttp
 
 import (
+	"fmt"
+
 	"github.com/stratumn/go/jsonhttp"
+	"github.com/stratumn/go/store"
 )
 
 func newErrOffset(msg string) jsonhttp.ErrHTTP {
@@ -27,7 +30,7 @@ func newErrOffset(msg string) jsonhttp.ErrHTTP {
 
 func newErrLimit(msg string) jsonhttp.ErrHTTP {
 	if msg == "" {
-		msg = "limit must be a posive integer"
+		msg = fmt.Sprintf("limit must be a posive integer less than or equal to %d", store.MaxLimit)
 	}
 	return jsonhttp.NewErrBadRequest(msg)
 }

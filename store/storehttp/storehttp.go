@@ -231,11 +231,15 @@ func parsePagination(r *http.Request) (*store.Pagination, error) {
 	}
 
 	limitstr := r.URL.Query().Get("limit")
-	limit := 0
+	limit := store.DefaultLimit
 	if limitstr != "" {
 		if limit, err = strconv.Atoi(limitstr); err != nil || limit < 0 {
 			return nil, newErrLimit("")
 		}
+	}
+
+	if limit > store.MaxLimit {
+		return nil, newErrLimit("")
 	}
 
 	return &store.Pagination{

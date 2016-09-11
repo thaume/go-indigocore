@@ -20,6 +20,14 @@ import (
 	"github.com/stratumn/go/types"
 )
 
+const (
+	// DefaultLimit is the default pagination limit.
+	DefaultLimit = 20
+
+	// MaxLimit is the maximum pagination limit.
+	MaxLimit = 200
+)
+
 // Adapter must be implemented by a store.
 type Adapter interface {
 	// Returns arbitrary information about the adapter.
@@ -45,14 +53,16 @@ type Adapter interface {
 
 // Pagination contains pagination options.
 type Pagination struct {
-	// Index of the first segment.
+	// Index of the first entry.
 	Offset int
 
-	// Maximum number of segments, all if zero.
+	// Maximum number of entries, all if zero.
 	Limit int
 }
 
-// Filter contains filtering options.
+// Filter contains filtering options for segments.
+// If PrevLinkHash is not nil, MapID is ignored because a previous link hash
+// implies the map ID of the previous segment.
 type Filter struct {
 	Pagination
 
@@ -62,6 +72,6 @@ type Filter struct {
 	// A previous link hash the segments must have.
 	PrevLinkHash *types.Bytes32
 
-	// A slice of tags the segments must contains.
+	// A slice of tags the segments must all contain.
 	Tags []string
 }
