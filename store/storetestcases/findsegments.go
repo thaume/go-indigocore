@@ -16,7 +16,10 @@ package storetestcases
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"math/rand"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stratumn/go/cs/cstesting"
@@ -482,4 +485,253 @@ func (f Factory) TestFindSegmentsPrevLinkHashNotFound(t *testing.T) {
 	if got, want := len(slice), 0; want != got {
 		t.Errorf("len(slice) = %d want %d", got, want)
 	}
+}
+
+// BenchmarkFindSegments benchmarks finding segments.
+func (f Factory) BenchmarkFindSegments(b *testing.B, numSegments int, segmentFunc SegmentFunc, filterFunc FilterFunc) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatalf("f.New(): err: %s", err)
+	}
+	if a == nil {
+		b.Fatal("a = nil want store.Adapter")
+	}
+	defer f.free(a)
+
+	for i := 0; i < numSegments; i++ {
+		a.SaveSegment(segmentFunc(b, numSegments, i))
+	}
+
+	filters := make([]*store.Filter, b.N)
+	for i := 0; i < b.N; i++ {
+		filters[i] = filterFunc(b, numSegments, i)
+	}
+
+	b.ResetTimer()
+	log.SetOutput(ioutil.Discard)
+
+	for i := 0; i < b.N; i++ {
+		if s, err := a.FindSegments(filters[i]); err != nil {
+			b.Fatal(err)
+		} else if s == nil {
+			b.Error("s = nil want cs.SegmentSlice")
+		}
+	}
+}
+
+// BenchmarkFindSegments100 benchmarks finding segments within 100 segments.
+func (f Factory) BenchmarkFindSegments100(b *testing.B) {
+	f.BenchmarkFindSegments(b, 100, RandomSegment, RandomFilterOffset)
+}
+
+// BenchmarkFindSegments1000 benchmarks finding segments within 1000 segments.
+func (f Factory) BenchmarkFindSegments1000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 1000, RandomSegment, RandomFilterOffset)
+}
+
+// BenchmarkFindSegments10000 benchmarks finding segments within 10000 segments.
+func (f Factory) BenchmarkFindSegments10000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 10000, RandomSegment, RandomFilterOffset)
+}
+
+// BenchmarkFindSegmentsMapID100 benchmarks finding segments with a map ID within 100 segments.
+func (f Factory) BenchmarkFindSegmentsMapID100(b *testing.B) {
+	f.BenchmarkFindSegments(b, 100, RandomSegmentMapID, RandomFilterOffsetMapID)
+}
+
+// BenchmarkFindSegmentsMapID1000 benchmarks finding segments with a map ID within 1000 segments.
+func (f Factory) BenchmarkFindSegmentsMapID1000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 1000, RandomSegmentMapID, RandomFilterOffsetMapID)
+}
+
+// BenchmarkFindSegmentsMapID10000 benchmarks finding segments with a map ID within 10000 segments.
+func (f Factory) BenchmarkFindSegmentsMapID10000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 10000, RandomSegmentMapID, RandomFilterOffsetMapID)
+}
+
+// BenchmarkFindSegmentsPrevLinkHash100 benchmarks finding segments with previous link hash within 100 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHash100(b *testing.B) {
+	f.BenchmarkFindSegments(b, 100, RandomSegmentPrevLinkHash, RandomFilterOffsetPrevLinkHash)
+}
+
+// BenchmarkFindSegmentsPrevLinkHash1000 benchmarks finding segments with previous link hash within 1000 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHash1000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 1000, RandomSegmentPrevLinkHash, RandomFilterOffsetPrevLinkHash)
+}
+
+// BenchmarkFindSegmentsPrevLinkHash10000 benchmarks finding segments with previous link hash within 10000 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHash10000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 10000, RandomSegmentPrevLinkHash, RandomFilterOffsetPrevLinkHash)
+}
+
+// BenchmarkFindSegmentsTags100 benchmarks finding segments with tags within 100 segments.
+func (f Factory) BenchmarkFindSegmentsTags100(b *testing.B) {
+	f.BenchmarkFindSegments(b, 100, RandomSegmentTags, RandomFilterOffsetTags)
+}
+
+// BenchmarkFindSegmentsTags1000 benchmarks finding segments with tags within 1000 segments.
+func (f Factory) BenchmarkFindSegmentsTags1000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 1000, RandomSegmentTags, RandomFilterOffsetTags)
+}
+
+// BenchmarkFindSegmentsTags10000 benchmarks finding segments with tags within 10000 segments.
+func (f Factory) BenchmarkFindSegmentsTags10000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 10000, RandomSegmentTags, RandomFilterOffsetTags)
+}
+
+// BenchmarkFindSegmentsMapIDTags100 benchmarks finding segments with map ID and tags within 100 segments.
+func (f Factory) BenchmarkFindSegmentsMapIDTags100(b *testing.B) {
+	f.BenchmarkFindSegments(b, 100, RandomSegmentMapIDTags, RandomFilterOffsetMapIDTags)
+}
+
+// BenchmarkFindSegmentsMapIDTags1000 benchmarks finding segments with map ID and tags within 1000 segments.
+func (f Factory) BenchmarkFindSegmentsMapIDTags1000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 1000, RandomSegmentMapIDTags, RandomFilterOffsetMapIDTags)
+}
+
+// BenchmarkFindSegmentsMapIDTags10000 benchmarks finding segments with map ID and tags within 10000 segments.
+func (f Factory) BenchmarkFindSegmentsMapIDTags10000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 10000, RandomSegmentMapIDTags, RandomFilterOffsetMapIDTags)
+}
+
+// BenchmarkFindSegmentsPrevLinkHashTags100 benchmarks finding segments with previous link hash and tags within 100 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHashTags100(b *testing.B) {
+	f.BenchmarkFindSegments(b, 100, RandomSegmentPrevLinkHashTags, RandomFilterOffsetPrevLinkHashTags)
+}
+
+// BenchmarkFindSegmentsPrevLinkHashTags1000 benchmarks finding segments with previous link hash and tags within 1000 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHashTags1000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 1000, RandomSegmentPrevLinkHashTags, RandomFilterOffsetPrevLinkHashTags)
+}
+
+// BenchmarkFindSegmentsPrevLinkHashTags10000 benchmarks finding segments with previous link hash and tags within 10000 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHashTags10000(b *testing.B) {
+	f.BenchmarkFindSegments(b, 10000, RandomSegmentPrevLinkHashTags, RandomFilterOffsetPrevLinkHashTags)
+}
+
+// BenchmarkFindSegmentsParallel benchmarks finding segments.
+func (f Factory) BenchmarkFindSegmentsParallel(b *testing.B, numSegments int, segmentFunc SegmentFunc, filterFunc FilterFunc) {
+	a, err := f.New()
+	if err != nil {
+		b.Fatalf("f.New(): err: %s", err)
+	}
+	if a == nil {
+		b.Fatal("a = nil want store.Adapter")
+	}
+	defer f.free(a)
+
+	for i := 0; i < numSegments; i++ {
+		a.SaveSegment(segmentFunc(b, numSegments, i))
+	}
+
+	filters := make([]*store.Filter, b.N)
+	for i := 0; i < b.N; i++ {
+		filters[i] = filterFunc(b, numSegments, i)
+	}
+
+	var counter uint64
+
+	b.ResetTimer()
+	log.SetOutput(ioutil.Discard)
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			i := int(atomic.AddUint64(&counter, 1) - 1)
+			if s, err := a.FindSegments(filters[i]); err != nil {
+				b.Error(err)
+			} else if s == nil {
+				b.Error("s = nil want cs.SegmentSlice")
+			}
+		}
+	})
+}
+
+// BenchmarkFindSegments100Parallel benchmarks finding segments within 100 segments.
+func (f Factory) BenchmarkFindSegments100Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 100, RandomSegment, RandomFilterOffset)
+}
+
+// BenchmarkFindSegments1000Parallel benchmarks finding segments within 1000 segments.
+func (f Factory) BenchmarkFindSegments1000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 1000, RandomSegment, RandomFilterOffset)
+}
+
+// BenchmarkFindSegments10000Parallel benchmarks finding segments within 10000 segments.
+func (f Factory) BenchmarkFindSegments10000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 10000, RandomSegment, RandomFilterOffset)
+}
+
+// BenchmarkFindSegmentsMapID100Parallel benchmarks finding segments with a map ID within 100 segments.
+func (f Factory) BenchmarkFindSegmentsMapID100Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 100, RandomSegmentMapID, RandomFilterOffsetMapID)
+}
+
+// BenchmarkFindSegmentsMapID1000Parallel benchmarks finding segments with a map ID within 1000 segments.
+func (f Factory) BenchmarkFindSegmentsMapID1000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 1000, RandomSegmentMapID, RandomFilterOffsetMapID)
+}
+
+// BenchmarkFindSegmentsMapID10000Parallel benchmarks finding segments with a map ID within 10000 segments.
+func (f Factory) BenchmarkFindSegmentsMapID10000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 10000, RandomSegmentMapID, RandomFilterOffsetMapID)
+}
+
+// BenchmarkFindSegmentsPrevLinkHash100Parallel benchmarks finding segments with a previous link hash within 100 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHash100Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 100, RandomSegmentPrevLinkHash, RandomFilterOffsetPrevLinkHash)
+}
+
+// BenchmarkFindSegmentsPrevLinkHash1000Parallel benchmarks finding segments with a previous link hash within 1000 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHash1000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 1000, RandomSegmentPrevLinkHash, RandomFilterOffsetPrevLinkHash)
+}
+
+// BenchmarkFindSegmentsPrevLinkHash10000Parallel benchmarks finding segments with a previous link hash within 10000 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHash10000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 10000, RandomSegmentPrevLinkHash, RandomFilterOffsetPrevLinkHash)
+}
+
+// BenchmarkFindSegmentsTags100Parallel benchmarks finding segments with tags within 100 segments.
+func (f Factory) BenchmarkFindSegmentsTags100Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 100, RandomSegmentTags, RandomFilterOffsetTags)
+}
+
+// BenchmarkFindSegmentsTags1000Parallel benchmarks finding segments with tags within 1000 segments.
+func (f Factory) BenchmarkFindSegmentsTags1000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 1000, RandomSegmentTags, RandomFilterOffsetTags)
+}
+
+// BenchmarkFindSegmentsTags10000Parallel benchmarks finding segments with tags within 10000 segments.
+func (f Factory) BenchmarkFindSegmentsTags10000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 10000, RandomSegmentTags, RandomFilterOffsetTags)
+}
+
+// BenchmarkFindSegmentsMapIDTags100Parallel benchmarks finding segments with map ID and tags within 100 segments.
+func (f Factory) BenchmarkFindSegmentsMapIDTags100Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 100, RandomSegmentMapIDTags, RandomFilterOffsetMapIDTags)
+}
+
+// BenchmarkFindSegmentsMapIDTags1000Parallel benchmarks finding segments with map ID and tags within 1000 segments.
+func (f Factory) BenchmarkFindSegmentsMapIDTags1000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 1000, RandomSegmentMapIDTags, RandomFilterOffsetMapIDTags)
+}
+
+// BenchmarkFindSegmentsMapIDTags10000Parallel benchmarks finding segments with map ID and tags within 10000 segments.
+func (f Factory) BenchmarkFindSegmentsMapIDTags10000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 10000, RandomSegmentMapIDTags, RandomFilterOffsetMapIDTags)
+}
+
+// BenchmarkFindSegmentsPrevLinkHashTags100Parallel benchmarks finding segments with map ID and tags within 100 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHashTags100Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 100, RandomSegmentPrevLinkHashTags, RandomFilterOffsetPrevLinkHashTags)
+}
+
+// BenchmarkFindSegmentsPrevLinkHashTags1000Parallel benchmarks finding segments with map ID and tags within 1000 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHashTags1000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 1000, RandomSegmentPrevLinkHashTags, RandomFilterOffsetPrevLinkHashTags)
+}
+
+// BenchmarkFindSegmentsPrevLinkHashTags10000Parallel benchmarks finding segments with map ID and tags within 10000 segments.
+func (f Factory) BenchmarkFindSegmentsPrevLinkHashTags10000Parallel(b *testing.B) {
+	f.BenchmarkFindSegmentsParallel(b, 10000, RandomSegmentPrevLinkHashTags, RandomFilterOffsetPrevLinkHashTags)
 }
