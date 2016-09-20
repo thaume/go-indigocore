@@ -19,6 +19,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -124,7 +125,8 @@ type Generator struct {
 // NewFromDir create a new generator from a directory.
 func NewFromDir(src string, opts *Options) (*Generator, error) {
 	defFile := filepath.Join(src, DefinitionFile)
-	def, err := NewDefinitionFromFile(defFile, opts.DefVars, opts.DefFuncs)
+	funcs := extendFuncs(DefaultDefinitionFuncs(), opts.DefFuncs)
+	def, err := NewDefinitionFromFile(defFile, opts.DefVars, funcs)
 	if err != nil {
 		return nil, err
 	}
@@ -145,11 +147,11 @@ func NewFromDir(src string, opts *Options) (*Generator, error) {
 
 // DefaultTmplFuncs return the default function map used when parsing a template
 // It adds the following functions:
-// - ask(json): create an input on-the-fly and return its value
+// - ask(json): creates an input on-the-fly and returns its value
 // - input(id): returns the value of an input
 // - now(format): returns a formatted representation of the current date
 // - nowUTC(format): returns a formatted representation of the current UTC date
-// - partial(path, vars): executes the partial with given name and variables (path relative to partials folder)
+// - partial(path, [vars]): executes the partial with given name and variables (path relative to partials folder)
 func (gen *Generator) DefaultTmplFuncs() template.FuncMap {
 	return template.FuncMap{
 		"ask":     gen.ask,
@@ -183,11 +185,7 @@ func (gen *Generator) parsePartials() error {
 		}
 		return err
 	}
-	if gen.opts.TmplFuncs == nil {
-		gen.partials.Funcs(gen.DefaultTmplFuncs())
-	} else {
-		gen.partials.Funcs(gen.opts.TmplFuncs)
-	}
+	gen.partials.Funcs(extendFuncs(gen.DefaultTmplFuncs(), gen.opts.TmplFuncs))
 	if err := walkTmpl(dir, dir, gen.partials); err != nil {
 		return err
 	}
@@ -203,18 +201,22 @@ func (gen *Generator) parseFiles() error {
 		}
 		return err
 	}
-	if gen.opts.TmplFuncs == nil {
-		gen.files.Funcs(gen.DefaultTmplFuncs())
-	} else {
-		gen.files.Funcs(gen.opts.TmplFuncs)
-	}
+	gen.files.Funcs(extendFuncs(gen.DefaultTmplFuncs(), gen.opts.TmplFuncs))
 	if err := walkTmpl(dir, dir, gen.files); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (gen *Generator) execPartial(name string, vars interface{}) (string, error) {
+func (gen *Generator) execPartial(name string, opts ...interface{}) (string, error) {
+	l := len(opts)
+	if l > 1 {
+		return "", errors.New("too many arguments")
+	}
+	var vars interface{}
+	if l == 1 {
+		vars = opts[0]
+	}
 	var buf bytes.Buffer
 	if err := gen.partials.ExecuteTemplate(&buf, name, vars); err != nil {
 		return "", err
@@ -273,9 +275,6 @@ func (gen *Generator) generate(dst string) error {
 	for _, desc := range descs {
 		tmpl := desc.tmpl
 		name := tmpl.Name()
-		if name == "files" {
-			continue
-		}
 		in := filepath.Join(gen.src, FilesDir, name)
 		info, err := os.Stat(in)
 		if err != nil {
@@ -389,4 +388,16 @@ func now(format string) string {
 
 func nowUTC(format string) string {
 	return time.Now().UTC().Format(format)
+}
+
+func extendFuncs(maps ...template.FuncMap) template.FuncMap {
+	funcs := template.FuncMap{}
+	for _, m := range maps {
+		if m != nil {
+			for k, v := range m {
+				funcs[k] = v
+			}
+		}
+	}
+	return funcs
 }
