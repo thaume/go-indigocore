@@ -31,6 +31,9 @@ import (
 
 // Generate is a command to generate projects.
 type Generate struct {
+	repo      string
+	generator string
+	owner     string
 }
 
 // Name implements github.com/google/subcommands.Command.Name().
@@ -45,77 +48,87 @@ func (*Generate) Synopsis() string {
 
 // Usage implements github.com/google/subcommands.Command.Usage().
 func (*Generate) Usage() string {
-	return `generate [out]:
+	return `generate [flags] [out]:
   Generate a project.
 `
 }
 
 // SetFlags implements github.com/google/subcommands.Command.SetFlags().
-func (*Generate) SetFlags(f *flag.FlagSet) {
+func (cmd *Generate) SetFlags(f *flag.FlagSet) {
+	f.StringVar(&cmd.owner, "owner", "", "Github owner")
+	f.StringVar(&cmd.repo, "repo", "", "Github repository")
+	f.StringVar(&cmd.generator, "generator", "", "generator name")
 }
 
 // Execute implements github.com/google/subcommands.Command.Execute().
 func (cmd *Generate) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	args := f.Args()
 
-	if len(args) > 1 {
+	if len(args) != 1 {
 		fmt.Println(cmd.Usage())
 		return subcommands.ExitUsageError
 	}
 
-	out := ""
-	if len(args) > 0 {
-		out = args[0]
+	out := args[0]
+
+	if cmd.owner == "" {
+		cmd.owner = DefaultGeneratorsOwner
+	}
+	if cmd.repo == "" {
+		cmd.repo = DefaultGeneratorsRepo
 	}
 
-	path, err := generatorPath()
+	path, err := generatorPath(cmd.owner, cmd.repo)
+	if err != nil {
+		fmt.Println(err)
+		return subcommands.ExitFailure
+	}
+	repo := repo.New(path, cmd.owner, cmd.repo)
 	if err != nil {
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
 
-	repo := repo.New(path, GeneratorsOwner, GeneratorsRepo)
-	if err != nil {
-		fmt.Println(err)
-		return subcommands.ExitFailure
-	}
-
-	list, err := repo.List()
-	if err != nil {
-		fmt.Println(err)
-		return subcommands.ExitFailure
-	}
-
-	in := generator.StringSelect{
-		InputShared: generator.InputShared{
-			Prompt: "What would you like to generate?",
-		},
-		Options: []generator.StringSelectOption{},
-	}
-	for i, desc := range list {
-		in.Options = append(in.Options, generator.StringSelectOption{
-			Input: strconv.Itoa(i + 1),
-			Value: desc.Name,
-			Text:  desc.Description,
-		})
-	}
-	fmt.Print(in.Msg())
-	reader := bufio.NewReader(os.Stdin)
-	name := ""
-	for {
-		fmt.Print("? ")
-		str, err := reader.ReadString('\n')
+	name := cmd.generator
+	if name == "" {
+		list, err := repo.List()
 		if err != nil {
 			fmt.Println(err)
 			return subcommands.ExitFailure
 		}
-		str = strings.TrimSpace(str)
-		if err := in.Set(str); err != nil {
-			fmt.Println(err)
-			continue
+
+		in := generator.StringSelect{
+			InputShared: generator.InputShared{
+				Prompt: "What would you like to generate?",
+			},
+			Options: []generator.StringSelectOption{},
 		}
-		name = in.Get().(string)
-		break
+		for i, desc := range list {
+			in.Options = append(in.Options, generator.StringSelectOption{
+				Input: strconv.Itoa(i + 1),
+				Value: desc.Name,
+				Text:  desc.Description,
+			})
+		}
+
+		fmt.Print(in.Msg())
+		reader := bufio.NewReader(os.Stdin)
+
+		for {
+			fmt.Print("? ")
+			str, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Println(err)
+				return subcommands.ExitFailure
+			}
+			str = strings.TrimSpace(str)
+			if err := in.Set(str); err != nil {
+				fmt.Println(err)
+				continue
+			}
+			name = in.Get().(string)
+			break
+		}
 	}
 
 	varsPath, err := varsPath()
@@ -151,6 +164,8 @@ func (cmd *Generate) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
+
+	fmt.Println("Done!")
 
 	return subcommands.ExitSuccess
 }
