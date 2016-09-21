@@ -56,7 +56,7 @@ $ strat up
 To launch tests, run within the project folder: 
 
 ```bash
-$ strat tests
+$ strat test
 ```
 
 To update the generators, run: 
