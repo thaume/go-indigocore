@@ -270,7 +270,7 @@ func (r *Repo) download(ref, sha1 string) (*State, error) {
 		}
 
 		if hdr.Typeflag == tar.TypeReg {
-			parts := strings.Split(hdr.Name, string(filepath.Separator))
+			parts := strings.Split(hdr.Name, "/")
 			parts = parts[1:]
 			dst := filepath.Join(r.path, SrcDir, ref, filepath.Join(parts...))
 			err = os.MkdirAll(filepath.Dir(dst), SrcPerm)

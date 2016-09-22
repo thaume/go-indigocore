@@ -1,5 +1,8 @@
 ## Change log
 
+### 0.15.3-alpha
+ * Fixed an issue when downloading generators on Windows.
+
 ### 0.15.2-alpha
  * Fixed some Windows compatibility issues.
 
