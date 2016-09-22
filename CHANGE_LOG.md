@@ -1,5 +1,8 @@
 ## Change log
 
+### 0.15.2-alpha
+ * Fixed some Windows compatibility issues.
+
 ### 0.15.1-alpha
  * Fixed a problem when updating generators that would result in the
    generators not being saved to the correct directory.
