@@ -104,9 +104,9 @@ func (cmd *Update) updateGenerators() subcommands.ExitStatus {
 		return subcommands.ExitFailure
 	}
 
-	for _, path = range matches {
+	for _, match := range matches {
 		var (
-			parts = strings.Split(path, string(filepath.Separator))
+			parts = strings.Split(match, string(filepath.Separator))
 			l     = len(parts)
 			owner = parts[l-4]
 			rep   = parts[l-3]
