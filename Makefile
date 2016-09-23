@@ -49,8 +49,8 @@ NIX_EXECS=$(foreach command, $(COMMANDS), $(foreach os-arch, $(NIX_OS_ARCHS), $(
 WIN_EXECS=$(foreach command, $(COMMANDS), $(foreach os-arch, $(WIN_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).exe))
 EXECS=$(NIX_EXECS) $(WIN_EXECS)
 NIX_ZIP_FILES=$(foreach command, $(COMMANDS), $(foreach os-arch, $(NIX_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).zip))
-WIN_DIST_FILES=$(foreach command, $(COMMANDS), $(foreach os-arch, $(WIN_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).zip))
-ZIP_FILES=$(NIX_ZIP_FILES) $(WIN_DIST_FILES)
+WIN_ZIP_FILES=$(foreach command, $(COMMANDS), $(foreach os-arch, $(WIN_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).zip))
+ZIP_FILES=$(NIX_ZIP_FILES) $(WIN_ZIP_FILES)
 DOCKER_FILES=$(foreach command, $(COMMANDS), $(DIST_DIR)/$(command).Dockerfile)
 
 TEST_LIST=$(foreach package, $(TEST_PACKAGES), test_$(package))
