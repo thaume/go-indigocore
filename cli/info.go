@@ -58,8 +58,8 @@ func (cmd *Info) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) s
 	}
 
 	fmt.Printf("%s v%s@%s\n", "Stratumn CLI", cmd.Version, cmd.Commit[:7])
-	fmt.Print("Copyright (c) 2016 Stratumn SAS")
-	fmt.Print("Apache License 2.0")
+	fmt.Println("Copyright (c) 2016 Stratumn SAS")
+	fmt.Println("Apache License 2.0")
 	fmt.Printf("Runtime %s %s %s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)
 
 	return subcommands.ExitSuccess
