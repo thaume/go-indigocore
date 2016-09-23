@@ -1,5 +1,8 @@
 ## Change log
 
+### 0.15.5-alpha
+ * Added a secret function to generators to generate random strings.
+
 ### 0.15.4-alpha
  * Fixed an issue when updating generators.
 
