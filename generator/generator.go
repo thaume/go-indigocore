@@ -45,14 +45,32 @@ const (
 
 // Definition contains properties for a template generator definition.
 type Definition struct {
-	Name        string                 `json:"name"`
-	Version     string                 `json:"version"`
-	Description string                 `json:"description"`
-	Author      string                 `json:"author"`
-	License     string                 `json:"license"`
-	Variables   map[string]interface{} `json:"variables"`
-	Inputs      InputMap               `json:"inputs"`
-	Priorities  []string               `json:"priorities"`
+	// Name is the name of the generator.
+	// It should be short, lowercase, and contain only letters, numbers, and dashes.
+	Name string `json:"name"`
+
+	// Version is the version string of the generator.
+	Version string `json:"version"`
+
+	// Description is a short description of the generator.
+	Description string `json:"description"`
+
+	// Author is the name of the author of the generator.
+	Author string `json:"author"`
+
+	// License is the license of the generator (not of the generated code).
+	// If the generated project has a license, it should be defined within the templates.
+	License string `json:"license"`
+
+	// Variables is a map of variables for the templates and partials.
+	Variables map[string]interface{} `json:"variables"`
+
+	// Inputs is a map of user inputs.
+	Inputs InputMap `json:"inputs"`
+
+	// Priorities is an array of files which should be parsed first.
+	// The paths are relative to the `files` directory.
+	Priorities []string `json:"priorities"`
 }
 
 // NewDefinitionFromFile loads a generator definition from a file.
@@ -79,11 +97,12 @@ func NewDefinitionFromFile(path string, vars map[string]interface{}, funcs templ
 	return &gen, nil
 }
 
-// StdDefinitionFuncs return the standard function map used when parsing a generator definition.
+// StdDefinitionFuncs returns the standard function map used when parsing a generator definition.
 // It adds the following functions:
-// - now(format): returns a formatted representation of the current date
-// - nowUTC(format): returns a formatted representation of the current UTC date
-// - secret(length): returns a random secret string
+//
+// 	- now(format string) string: returns a formatted representation of the current date
+// 	- nowUTC(format string) string: returns a formatted representation of the current UTC date
+// 	- secret(length int) (string, error): returns a random secret string
 func StdDefinitionFuncs() template.FuncMap {
 	return template.FuncMap{
 		"now":    now,
@@ -143,21 +162,23 @@ func NewFromDir(src string, opts *Options) (*Generator, error) {
 	}, nil
 }
 
-// StdTmplFuncs return the standard function map used when parsing a template
+// StdTmplFuncs returns the standard function map used when parsing a template
 // It adds the following functions:
-// - ask(json): creates an input on-the-fly and returns its value
-// - input(id): returns the value of an input
-// - now(format): returns a formatted representation of the current date
-// - nowUTC(format): returns a formatted representation of the current UTC date
-// - partial(path, [vars]): executes the partial with given name and variables (path relative to partials folder)
-// - secret(length): returns a random secret string
+//
+// 	- ask(json string) (interface{}, error): creates an input on-the-fly and returns its value
+// 	- input(id string) (interface{}, error): returns the value of an input
+// 	- now(format string) string: returns a formatted representation of the current date
+// 	- nowUTC(format string) string: returns a formatted representation of the current UTC date
+// 	- partial(path, vars []interface{}...) (string, error): executes the partial with given name
+//	  and variables (path relative to `partials` directory)
+// 	- secret(length int) (string, error): returns a random secret string
 func (gen *Generator) StdTmplFuncs() template.FuncMap {
 	return template.FuncMap{
 		"ask":     gen.ask,
 		"input":   gen.input,
 		"now":     now,
 		"nowUTC":  nowUTC,
-		"partial": gen.execPartial,
+		"partial": gen.partial,
 		"secret":  secret,
 	}
 }
@@ -208,7 +229,7 @@ func (gen *Generator) parseFiles() error {
 	return nil
 }
 
-func (gen *Generator) execPartial(name string, opts ...interface{}) (string, error) {
+func (gen *Generator) partial(name string, opts ...interface{}) (string, error) {
 	l := len(opts)
 	if l > 1 {
 		return "", errors.New("too many arguments")

@@ -13,6 +13,12 @@
 // limitations under the License.
 
 // Package repo deals with a Github repository of generators.
+//
+// It provides functionality to store and update remote generators from
+// a Github repository locally. It can track a Git branch, a tag, or a
+// commit SHA1.
+//
+// It uses the Github API and doesn't rely on Git.
 package repo
 
 import (
@@ -51,12 +57,20 @@ const (
 	SrcPerm = 0755
 )
 
-// State stateibes a repository.
+// State describes a repository.
 type State struct {
+	// Owner is the Github username of the owner of the repository.
 	Owner string `json:"owner"`
-	Repo  string `json:"repo"`
-	Ref   string `json:"ref"`
-	SHA1  string `json:"sha1"`
+
+	// Repo is the name of the Github repository.
+	Repo string `json:"repo"`
+
+	// Ref is a branch, a tag, or a commit SHA1.
+	Ref string `json:"ref"`
+
+	// SHA1 is the commit SHA1 of the downloaded version.
+	// It is used to check if an update is available on Github.
+	SHA1 string `json:"sha1"`
 }
 
 // Repo manages a Github repository.
@@ -77,8 +91,8 @@ func New(path, owner, repo string) *Repo {
 	}
 }
 
-// Update download the latest release if needed.
-// Ref can be branch, a tag, or a commit SHA1.
+// Update downloads the latest release if needed.
+// Ref can be a branch, a tag, or a commit SHA1.
 func (r *Repo) Update(ref string) (*State, bool, error) {
 	state, err := r.GetState(ref)
 	if err != nil {
@@ -126,8 +140,8 @@ func (r *Repo) Update(ref string) (*State, bool, error) {
 }
 
 // GetState returns the state of the repository.
-// Ref can be branch, a tag, or a commit SHA1.
-// If the repository does not exist, it returns nil.
+// Ref can be a branch, a tag, or a commit SHA1.
+// If the repository does not exist locally, it returns nil.
 func (r *Repo) GetState(ref string) (*State, error) {
 	path := filepath.Join(r.path, StatesDir, ref, StateFile)
 	var state *State
@@ -148,8 +162,8 @@ func (r *Repo) GetState(ref string) (*State, error) {
 }
 
 // GetStateOrCreate returns the state of the repository.
-// If the repository does not exist, it returns creates it by calling Update().
-// Ref can be branch, a tag, or a commit SHA1.
+// If the repository does not exist locally, it creates it by calling Update().
+// Ref can be a branch, a tag, or a commit SHA1.
 func (r *Repo) GetStateOrCreate(ref string) (*State, error) {
 	state, err := r.GetState(ref)
 	if err != nil {
@@ -164,7 +178,8 @@ func (r *Repo) GetStateOrCreate(ref string) (*State, error) {
 }
 
 // List lists the generators of the repository.
-// Ref can be branch, a tag, or a commit SHA1.
+// If the repository does not exist locally, it creates it by calling Update().
+// Ref can be a branch, a tag, or a commit SHA1.
 func (r *Repo) List(ref string) ([]*generator.Definition, error) {
 	_, err := r.GetStateOrCreate(ref)
 	if err != nil {
@@ -197,7 +212,7 @@ func (r *Repo) List(ref string) ([]*generator.Definition, error) {
 }
 
 // Generate executes a generator by name.
-// Ref can be branch, a tag, or a commit SHA1.
+// Ref can be a branch, a tag, or a commit SHA1.
 func (r *Repo) Generate(name, dst string, opts *generator.Options, ref string) error {
 	_, err := r.GetStateOrCreate(ref)
 	if err != nil {

@@ -35,7 +35,7 @@ const noValue = "<no value>"
 // Input must be implemented by all input types.
 type Input interface {
 	// Set must set the value of the input or return an error.
-	// It should be able to at least set the value from a string.
+	// It should be able to, at the very least, set the value from a string.
 	Set(interface{}) error
 
 	// Get must return the value of the input.
@@ -92,16 +92,24 @@ func UnmarshalJSONInput(data []byte) (Input, error) {
 
 // InputShared contains properties shared by all input types.
 type InputShared struct {
-	Type   string `json:"type"`
+	// Type is the type of the input.
+	Type string `json:"type"`
+
+	// Prompt is the string that will be displayed to the user when asking the value.
 	Prompt string `json:"prompt"`
 }
 
 // StringInput contains properties for string inputs.
 type StringInput struct {
 	InputShared
+
+	// Default is the default value.
 	Default string `json:"default"`
-	Format  string `json:"format"`
-	value   string
+
+	// Format is a string containing a regexp the value must have.
+	Format string `json:"format"`
+
+	value string
 }
 
 // Set implements github.com/stratumn/go/generator.Input.
@@ -145,9 +153,14 @@ func (in *StringInput) Msg() string {
 // StringSelect contains properties for string select inputs.
 type StringSelect struct {
 	InputShared
-	Default string               `json:"default"`
+
+	// Default is the default value.
+	Default string `json:"default"`
+
+	// Options is an array of possible values.
 	Options []StringSelectOption `json:"options"`
-	value   string
+
+	value string
 }
 
 // Set implements github.com/stratumn/go/generator.Input.
@@ -196,7 +209,12 @@ func (in *StringSelect) Msg() string {
 
 // StringSelectOption contains properties for string select options.
 type StringSelectOption struct {
+	// Input is the string the user must enter to choose this option.
 	Input string `json:"input"`
+
+	// Value is the value the input will have if this option is selected.
 	Value string `json:"value"`
-	Text  string `json:"text"`
+
+	// Text will be displayed when presenting this option to the user.
+	Text string `json:"text"`
 }
