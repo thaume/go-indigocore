@@ -73,7 +73,7 @@
 //      // Directory where the project will be generated.
 //      dst := "path/to/generated/project"
 //
-//      // Add a `dir` variable for the definition file set the the name
+//      // Add a `dir` variable for the definition file set to the name
 //      // of the project directory.
 //      opts := generator.Options{
 //              DefVars: map[string]interface{}{
