@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	http     = flag.String("http", storehttp.DefaultAddress, "server http")
+	http     = flag.String("http", storehttp.DefaultAddress, "HTTP address")
 	path     = flag.String("path", filestore.DefaultPath, "path to directory where files are stored")
 	certFile = flag.String("tlscert", "", "TLS certificate file")
 	keyFile  = flag.String("tlskey", "", "TLS private key file")

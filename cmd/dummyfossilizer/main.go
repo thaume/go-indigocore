@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	http             = flag.String("http", fossilizerhttp.DefaultAddress, "http address")
+	http             = flag.String("http", fossilizerhttp.DefaultAddress, "HTTP address")
 	certFile         = flag.String("tlscert", "", "TLS certificate file")
 	keyFile          = flag.String("tlskey", "", "TLS private key file")
 	numResultWorkers = flag.Int("workers", fossilizerhttp.DefaultNumResultWorkers, "number of result workers")
