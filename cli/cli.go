@@ -83,7 +83,7 @@ const (
 	TestScript = "test"
 
 	// DownTestScript is the name of the project down script for test.
-	DownTestScript = "test:down"
+	DownTestScript = "down:test"
 )
 
 const win = "windows"
