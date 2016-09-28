@@ -21,7 +21,7 @@ import (
 	"runtime"
 	"syscall"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/stratumn/go/filestore"
 	"github.com/stratumn/go/jsonhttp"
