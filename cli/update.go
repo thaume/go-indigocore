@@ -277,11 +277,11 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
-	defer binRC.Close()
 
 	// Get the current file info.
 	info, err := os.Stat(execPath)
 	if err != nil {
+		binRC.Close()
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
@@ -290,16 +290,20 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 	newBinPath := filepath.Join(tempDir, filepath.Base(execPath)+CLINewExt)
 	newBin, err := os.OpenFile(newBinPath, os.O_CREATE|os.O_WRONLY, info.Mode())
 	if err != nil {
+		binRC.Close()
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
-	defer newBin.Close()
 
 	// Copy the new binary.
 	if _, err := io.Copy(newBin, binRC); err != nil {
+		binRC.Close()
+		newBin.Close()
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
+	binRC.Close()
+	newBin.Close()
 
 	// Read the signature.
 	sigRC, err := sigZF.Open()
@@ -307,22 +311,25 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
-	defer sigRC.Close()
 
 	// Create and open a file for the signature.
 	sigPath := filepath.Join(tempDir, filepath.Base(execPath)+CLISigExt)
 	sig, err := os.OpenFile(sigPath, os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
+		sigRC.Close()
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
-	defer sig.Close()
 
 	// Copy the signature.
 	if _, err := io.Copy(sig, sigRC); err != nil {
+		sigRC.Close()
+		sig.Close()
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
+	sigRC.Close()
+	sig.Close()
 
 	// Check the signature.
 	fmt.Println("Verifying cryptographic signature...")
@@ -340,12 +347,6 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 
 	// Move new binary to final destination.
 	if err := os.Rename(newBinPath, execPath); err != nil {
-		fmt.Println(err)
-		return subcommands.ExitFailure
-	}
-
-	// Set new binary file mode.
-	if err := os.Chmod(execPath, info.Mode()); err != nil {
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
