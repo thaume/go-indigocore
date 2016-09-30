@@ -48,6 +48,7 @@ COMMANDS=$(shell ls $(COMMAND_DIR))
 NIX_EXECS=$(foreach command, $(COMMANDS), $(foreach os-arch, $(NIX_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command)))
 WIN_EXECS=$(foreach command, $(COMMANDS), $(foreach os-arch, $(WIN_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).exe))
 EXECS=$(NIX_EXECS) $(WIN_EXECS)
+SIGNATURES=$(foreach exec, $(EXECS), $(exec).sig)
 NIX_ZIP_FILES=$(foreach command, $(COMMANDS), $(foreach os-arch, $(NIX_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).zip))
 WIN_ZIP_FILES=$(foreach command, $(COMMANDS), $(foreach os-arch, $(WIN_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).zip))
 ZIP_FILES=$(NIX_ZIP_FILES) $(WIN_ZIP_FILES)
@@ -124,23 +125,31 @@ BUILD_PACKAGE=$(shell $(GO_LIST) ./$(COMMAND_DIR)/$(BUILD_COMMAND))
 $(EXECS): $(BUILD_SOURCES)
 	GOOS=$(BUILD_OS) GOARCH=$(BUILD_ARCH) $(GO_BUILD) -o $@ $(BUILD_PACKAGE)
 
+# == sign =====================================================================
+sign: $(SIGNATURES)
+
+%.sig:
+	$(KEYBASE_SIGN) -d -i $* -o $@
+
 # == zip ======================================================================
 zip: $(ZIP_FILES)
 
 ZIP_TMP_OS_ARCH_DIR=$(TMP_DIR)/$(BUILD_OS_ARCH)
 ZIP_TMP_CMD_DIR=$(ZIP_TMP_OS_ARCH_DIR)/$(BUILD_COMMAND)
 
-%.zip: %.exe
+%.zip: %.exe %.exe.sig
 	mkdir -p $(ZIP_TMP_CMD_DIR)
 	cp $*.exe $(ZIP_TMP_CMD_DIR)
+	cp $*.exe.sig $(ZIP_TMP_CMD_DIR)
 	cp $(TEXT_FILES) $(ZIP_TMP_CMD_DIR)
 	mv $(ZIP_TMP_CMD_DIR)/LICENSE $(ZIP_TMP_CMD_DIR)/LICENSE.txt
 	cd $(ZIP_TMP_OS_ARCH_DIR) && zip -r $(BUILD_COMMAND){.zip,} 1>/dev/null
 	cp $(ZIP_TMP_CMD_DIR).zip $@
 
-%.zip: %
+%.zip: % %.sig
 	mkdir -p $(ZIP_TMP_CMD_DIR)
 	cp $* $(ZIP_TMP_CMD_DIR)
+	cp $*.sig $(ZIP_TMP_CMD_DIR)
 	cp $(TEXT_FILES) $(ZIP_TMP_CMD_DIR)
 	cd $(ZIP_TMP_OS_ARCH_DIR) && zip -r $(BUILD_COMMAND){.zip,} 1>/dev/null
 	cp $(ZIP_TMP_CMD_DIR).zip $@

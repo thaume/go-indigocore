@@ -76,3 +76,22 @@ To update the generators, run:
 ```bash
 $ strat update -generators
 ```
+
+## PGP signatures
+
+Each zip file contains a cryptographic signature of the binary.
+
+The signature can be verified using this public key:
+
+https://keybase.io/stephan83/key.asc
+
+This key is linked to the CTO of Stratumn on Keybase:
+
+https://keybase.io/stephan83
+
+If you have Keybase installed, you can verify the binary using
+(replace `BINARY` with the name of the binary):
+
+```
+$ keybase verify -d BINARY.sig -i BINARY
+```

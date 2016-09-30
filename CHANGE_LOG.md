@@ -1,5 +1,8 @@
 ## Change log
 
+### 0.14.0-alpha
+* All releases binaries are now signed.
+
 ### 0.21.0-alpha
 * Added `strat` command `down` that executes a project script that
   should stop running services.
