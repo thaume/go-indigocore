@@ -360,10 +360,12 @@ func checkSig(targetPath, sigPath string) error {
 	if err != nil {
 		return err
 	}
+	defer target.Close()
 	sig, err := os.Open(sigPath)
 	if err != nil {
 		return err
 	}
+	defer sig.Close()
 	r := bytes.NewReader([]byte(pubKey))
 	keyring, err := openpgp.ReadArmoredKeyRing(r)
 	if err != nil {
