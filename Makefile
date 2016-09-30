@@ -34,7 +34,7 @@ GO_BUILD=$(GO_CMD) build -ldflags '-X main.version=$(VERSION) -X main.commit=$(G
 GO_TEST=$(GO_CMD) test
 GO_BENCHMARK=$(GO_TEST) -bench .
 GO_LINT=$(GO_LINT_CMD) -set_exit_status
-KEYBASE_SIGN=$(KEYBASE_CMD) sign
+KEYBASE_SIGN=$(KEYBASE_CMD) pgp sign
 GITHUB_RELEASE_RELEASE=$(GITHUB_RELEASE_COMMAND) release $(GITHUB_RELEASE_RELEASE_FLAGS)
 GITHUB_RELEASE_UPLOAD=$(GITHUB_RELEASE_COMMAND) upload $(GITHUB_RELEASE_FLAGS)
 GITHUB_RELEASE_EDIT=$(GITHUB_RELEASE_COMMAND) edit $(GITHUB_RELEASE_RELEASE_FLAGS)
@@ -130,7 +130,7 @@ $(EXECS): $(BUILD_SOURCES)
 # == sign =====================================================================
 sign: $(SIGNATURES)
 
-%.sig:
+%.sig: %
 	$(KEYBASE_SIGN) -d -i $* -o $@
 
 # == zip ======================================================================
