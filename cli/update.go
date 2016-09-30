@@ -210,7 +210,6 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
-	defer os.RemoveAll(tempDir)
 
 	// Create a temporary file.
 	tempZipFile := filepath.Join(tempDir, "temp.zip")
@@ -273,7 +272,7 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 	}
 
 	// Read the new binary.
-	binRC, err := sigZF.Open()
+	binRC, err := binZF.Open()
 	if err != nil {
 		fmt.Println(err)
 		return subcommands.ExitFailure

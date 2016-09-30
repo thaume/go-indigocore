@@ -1,5 +1,9 @@
 ## Change log
 
+### 0.23.1-alpha
+* `strat update` will now properly check the cryptographic signature of
+  downloaded binaries.
+
 ### 0.23.0-alpha
 * `strat update` will now check the cryptographic signature of
   downloaded binaries.
