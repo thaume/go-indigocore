@@ -101,7 +101,7 @@ With OpenGPG (replace `BINARY` with the name of the binary):
 ```
 $ wget https://keybase.io/stephan83/key.asc
 $ gpg2 --import key.asc
-$ gpg --edit-key "Stephan FLorquin <stephan@stratumn.com>"
+$ gpg2 --edit-key "Stephan FLorquin <stephan@stratumn.com>"
         > trust
         > 5
         > y
