@@ -279,9 +279,16 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 	}
 	defer binRC.Close()
 
+	// Get the current file info.
+	info, err := os.Stat(execPath)
+	if err != nil {
+		fmt.Println(err)
+		return subcommands.ExitFailure
+	}
+
 	// Create and open a file for the new binary.
 	newBinPath := filepath.Join(tempDir, filepath.Base(execPath)+CLINewExt)
-	newBin, err := os.OpenFile(newBinPath, os.O_CREATE|os.O_WRONLY, 0600)
+	newBin, err := os.OpenFile(newBinPath, os.O_CREATE|os.O_WRONLY, info.Mode())
 	if err != nil {
 		fmt.Println(err)
 		return subcommands.ExitFailure
@@ -324,19 +331,6 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 		return subcommands.ExitFailure
 	}
 
-	// Get the current file info.
-	info, err := os.Stat(execPath)
-	if err != nil {
-		fmt.Println(err)
-		return subcommands.ExitFailure
-	}
-
-	// Make current binary non executable.
-	if err := os.Chmod(execPath, 0600); err != nil {
-		fmt.Println(err)
-		return subcommands.ExitFailure
-	}
-
 	// Rename old binary.
 	oldBinPath := filepath.Join(tempDir, filepath.Base(execPath)+CLIOldExt)
 	if err := os.Rename(execPath, oldBinPath); err != nil {
@@ -346,10 +340,6 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 
 	// Move new binary to final destination.
 	if err := os.Rename(newBinPath, execPath); err != nil {
-		os.Rename(oldBinPath, execPath)
-		if err := os.Chmod(execPath, info.Mode()); err != nil {
-			fmt.Println(err)
-		}
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
