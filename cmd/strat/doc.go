@@ -16,29 +16,29 @@
 //
 // Usage
 //
-//      $ strat
-//              Subcommands for CLI:
-//              	info             print program info
-//              	update           update the CLI or generators
-//              	version          print version info
+//	$ strat
+//	Subcommands for CLI:
+//		info             print program info
+//		update           update the CLI or generators
+//		version          print version info
 //
-//              Subcommands for generator:
-//              	generate         generate a project
-//              	generators       list generators
+//	Subcommands for generator:
+//		generate         generate a project
+//		generators       list generators
 //
-//              Subcommands for help:
-//              	commands         list all command names
-//              	flags            describe all known top-level flags
-//              	help             describe subcommands and their syntax
+//	Subcommands for help:
+//		commands         list all command names
+//		flags            describe all known top-level flags
+//		help             describe subcommands and their syntax
 //
-//              Subcommands for project:
-//              	build            run build script
-//              	down             stop services
-//              	pull             pull updates
-//              	push             push updates
-//              	run              run script by name
-//              	test             run tests
-//              	up               start services
+//	Subcommands for project:
+//		build            run build script
+//		down             stop services
+//		pull             pull updates
+//		push             push updates
+//		run              run script by name
+//		test             run tests
+//		up               start services
 //
 // Env
 //
