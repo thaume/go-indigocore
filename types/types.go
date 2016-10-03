@@ -71,8 +71,10 @@ func (b *Bytes20) UnmarshalJSON(data []byte) error {
 
 // Reverse reverses the bytes order.
 func (b *Bytes20) Reverse(rb *ReversedBytes20) {
-	for i, v := range b {
-		rb[Bytes20Size-i-1] = v
+	i := Bytes20Size - 1
+	for _, v := range b {
+		rb[i] = v
+		i--
 	}
 }
 
@@ -127,8 +129,10 @@ func (rb *ReversedBytes20) UnmarshalJSON(data []byte) error {
 
 // Reverse reverses the bytes order.
 func (rb *ReversedBytes20) Reverse(b *Bytes20) {
-	for i, v := range rb {
-		b[Bytes20Size-i-1] = v
+	i := Bytes20Size - 1
+	for _, v := range rb {
+		b[i] = v
+		i--
 	}
 }
 
