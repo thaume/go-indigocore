@@ -16,16 +16,14 @@
 //
 // Usage
 //
-// The following flags are available:
-//
 //	$ dummystore -h
 //	Usage of dummystore:
-//        -http string
-//          	http address (default ":5000")
-//        -tlscert string
-//          	TLS certificate file
-//        -tlskey string
-//          	TLS private key file
+//	  -http string
+//	    	http address (default ":5000")
+//	  -tlscert string
+//	    	TLS certificate file
+//	  -tlskey string
+//	    	TLS private key file
 //
 // Docker
 //

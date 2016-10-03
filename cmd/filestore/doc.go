@@ -16,18 +16,16 @@
 //
 // Usage
 //
-// The following flags are available:
-//
 //	$ filestore -h
-//      Usage of filestore:
-//        -http string
-//          	server http (default ":5000")
-//        -path string
-//          	path to directory where files are stored (default "/var/filestore")
-//        -tlscert string
-//          	TLS certificate file
-//        -tlskey string
-//          	TLS private key file
+//	Usage of filestore:
+//	  -http string
+//	    	server http (default ":5000")
+//	  -path string
+//	    	path to directory where files are stored (default "/var/filestore")
+//	  -tlscert string
+//	    	TLS certificate file
+//	  -tlskey string
+//	    	TLS private key file
 //
 // Docker
 //

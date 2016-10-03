@@ -16,24 +16,22 @@
 //
 // Usage
 //
-// The following flags are available:
-//
 //	$ dummyfossilizer -h
 //	Usage of dummyfossilizer:
-//        -callbacktimeout duration
-//          	callback requests timeout (default 10s)
-//        -http string
-//          	http address (default ":6000")
-//        -maxdata int
-//          	maximum data length (default 64)
-//        -mindata int
-//          	minimum data length (default 32)
-//        -tlscert string
-//          	TLS certificate file
-//        -tlskey string
-//          	TLS private key file
-//        -workers int
-//          	number of result workers (default 8)
+//	  -callbacktimeout duration
+//	    	callback requests timeout (default 10s)
+//	  -http string
+//	    	http address (default ":6000")
+//	  -maxdata int
+//	    	maximum data length (default 64)
+//	  -mindata int
+//	    	minimum data length (default 32)
+//	  -tlscert string
+//	    	TLS certificate file
+//	  -tlskey string
+//	    	TLS private key file
+//	  -workers int
+//	    	number of result workers (default 8)
 //
 // Docker
 //
