@@ -1,6 +1,7 @@
 ## Change log
 
-### 0.25.0-alpha
+### 0.0.1-dev
+* Reset version to `0.0.1-dev`.
 * Added the `strat deploy` command. It expects an environment name as the first
   argument, and will try to execute the `deploy:{env}` script of the project.
 * Minor fixes and improvements.
