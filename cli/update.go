@@ -235,7 +235,7 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 
 	// Remove previous old binary if present.
 	oldPath := filepath.Join(filepath.Dir(execPath), CLIOldBinary)
-	if err := os.Remove(oldPath); !os.IsNotExist(err) {
+	if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
@@ -250,7 +250,7 @@ func (cmd *Update) updateCLI() subcommands.ExitStatus {
 	if err := copyF(execPath, binPath, info.Mode()); err != nil {
 		fmt.Println(err)
 		// Try to recover old binary.
-		if err := os.Remove(execPath); !os.IsNotExist(err) {
+		if err := os.Remove(execPath); err != nil && !os.IsNotExist(err) {
 			fmt.Println(err)
 		}
 		if err := os.Rename(oldPath, execPath); err != nil {
