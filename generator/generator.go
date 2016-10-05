@@ -105,8 +105,10 @@ func NewDefinitionFromFile(path string, vars map[string]interface{}, funcs templ
 // generator definition.
 // It adds the following functions:
 //
-// 	- now(format string) string: returns a formatted representation of the current date
-// 	- nowUTC(format string) string: returns a formatted representation of the current UTC date
+// 	- now(format string) string: returns a formatted representation of the
+//	  current date
+// 	- nowUTC(format string) string: returns a formatted representation of
+//	  the current UTC date
 // 	- secret(length int) (string, error): returns a random secret string
 func StdDefinitionFuncs() template.FuncMap {
 	return template.FuncMap{
