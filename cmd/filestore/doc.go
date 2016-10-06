@@ -21,7 +21,7 @@
 //	  -http string
 //	    	server http (default ":5000")
 //	  -path string
-//	    	path to directory where files are stored (default "/var/filestore")
+//	    	path to directory where files are stored (default "/var/stratumn/filestore")
 //	  -tlscert string
 //	    	TLS certificate file
 //	  -tlskey string
@@ -31,6 +31,5 @@
 //
 // A Docker image is available. To create a container, run:
 //
-//	$ docker run -p 5000:5000 -v /path/to/save/files:/var/filestore \
-//              stratumn/filestore
+//	$ docker run -p 5000:5000 stratumn/filestore
 package main
