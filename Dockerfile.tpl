@@ -1,4 +1,4 @@
-FROM stratumn/gobase:latest
+FROM stratumn/gobase:v0.2.0
 
 MAINTAINER Stephan Florquin <stephan@paymium.com>
 
