@@ -93,7 +93,7 @@ func (cmd *Update) updateGenerators() subcommands.ExitStatus {
 	fmt.Println("Updating generators...")
 
 	if cmd.ghToken == "" {
-		cmd.ghToken = os.Getenv("GITHUB_TOKEN")
+		cmd.ghToken = os.Getenv(GithubTokenEnv)
 	}
 
 	path, err := generatorsPath()

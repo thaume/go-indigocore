@@ -83,7 +83,7 @@ func (cmd *Generate) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 		cmd.repo = DefaultGeneratorsRepo
 	}
 	if cmd.ghToken == "" {
-		cmd.ghToken = os.Getenv("GITHUB_TOKEN")
+		cmd.ghToken = os.Getenv(GithubTokenEnv)
 	}
 
 	path, err := generatorPath(cmd.owner, cmd.repo)

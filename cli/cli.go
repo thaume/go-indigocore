@@ -69,6 +69,10 @@ const (
 	// the default configuration path.
 	StratumnConfigEnv = "STRATUMN_CONFIG"
 
+	// GithubTokenEnv is the name of the environ variable to set a Github
+	// token.
+	GithubTokenEnv = "GITHUB_TOKEN"
+
 	// DefaultStratumnDir is the name of the Stratumn directory within the
 	// home folder.
 	DefaultStratumnDir = ".stratumn"
