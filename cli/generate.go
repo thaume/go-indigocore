@@ -64,7 +64,7 @@ func (cmd *Generate) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&cmd.ref, "ref", DefaultGeneratorsRef, "Github branch, tag, or commit SHA1")
 	f.StringVar(&cmd.name, "name", "", "generator name")
 	f.StringVar(&cmd.ghToken, "ghtoken", "", "Github token for private repos")
-	f.BoolVar(&cmd.stdin, "stdin", false, "attach stdin to command")
+	f.BoolVar(&cmd.stdin, "stdin", true, "attach stdin to command")
 }
 
 // Execute implements github.com/google/subcommands.Command.Execute().

@@ -46,7 +46,7 @@ func (*Deploy) Usage() string {
 
 // SetFlags implements github.com/google/subcommands.Command.SetFlags().
 func (cmd *Deploy) SetFlags(f *flag.FlagSet) {
-	f.BoolVar(&cmd.stdin, "stdin", false, "attach stdin to command")
+	f.BoolVar(&cmd.stdin, "stdin", true, "attach stdin to command")
 }
 
 // Execute implements github.com/google/subcommands.Command.Execute().
