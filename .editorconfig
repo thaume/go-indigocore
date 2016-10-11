@@ -1,6 +1,6 @@
 root = true
 
-[*]
+[*.go, *.json]
 end_of_line = lf
 insert_final_newline = true
 charset = utf-8
@@ -10,6 +10,6 @@ trim_trailing_whitespace = true
 indent_style = tab
 indent_size = 8
 
-[*.js, *.json]
+[*.json]
 indent_style = space
 indent_size = 2
