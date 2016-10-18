@@ -180,7 +180,7 @@ func NewFromDir(src string, opts *Options) (*Generator, error) {
 //	  current date
 // 	- nowUTC(format string) string: returns a formatted representation of
 //	  the current UTC date
-// 	- partial(path, vars []interface{}...) (string, error): executes the
+// 	- partial(path, vars ...interface{}) (string, error): executes the
 //	  partial with given name
 //	  and variables (path relative to `partials` directory)
 // 	- secret(length int) (string, error): returns a random secret string
