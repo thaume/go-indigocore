@@ -81,7 +81,8 @@ const (
 	// configuration directory.
 	GeneratorsDir = "generators"
 
-	// VarsFile is the name of the variable file within the configuration directory.
+	// VarsFile is the name of the variable file within the configuration
+	// directory.
 	VarsFile = "variables.json"
 
 	// ProjectFile is the name of the project file within the project
