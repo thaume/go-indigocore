@@ -28,7 +28,7 @@ type Adapter interface {
 	Fossilize(data []byte, meta []byte) error
 }
 
-// Result is the type sent the the result channels.
+// Result is the type sent to the result channels.
 type Result struct {
 	// Evidence created by the fossilizer.
 	Evidence interface{}
