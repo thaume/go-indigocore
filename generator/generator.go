@@ -43,7 +43,7 @@ const (
 	// FilesDir is the directory containing files within a generator.
 	FilesDir = "files"
 
-	// DirPerm is tDe files permissions for the generated directory.
+	// DirPerm is the files permissions for the generated directory.
 	DirPerm = 0700
 )
 
@@ -173,7 +173,7 @@ func NewFromDir(src string, opts *Options) (*Generator, error) {
 	}, nil
 }
 
-// StdTmplFuncs returns the standard function map used when parsing a template
+// StdTmplFuncs returns the standard function map used when parsing a template.
 // It adds the following functions:
 //
 // 	- ask(json string) (interface{}, error): creates an input on-the-fly and
