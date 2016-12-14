@@ -169,7 +169,7 @@ func TestGenerate(t *testing.T) {
 
 	r := New(dir, "stratumn", "generators", "")
 	opts := generator.Options{
-		Reader: strings.NewReader("test\n\nStephan\n\nStratumn\n\n\n\n"),
+		Reader: strings.NewReader("test\n\nStephan\n\nStratumn\n\n\nstratumn\n\n"),
 	}
 
 	err = r.Generate("agent-basic-js", dst, &opts, "master")
