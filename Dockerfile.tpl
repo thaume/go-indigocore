@@ -1,6 +1,6 @@
 FROM stratumn/gobase:0.2.0
 
-MAINTAINER Stephan Florquin <stephan@paymium.com>
+MAINTAINER Stephan Florquin <stephan@stratumn.com>
 
 RUN addgroup -S -g 999 stratumn
 RUN adduser -H -D -u 999 -G stratumn stratumn
