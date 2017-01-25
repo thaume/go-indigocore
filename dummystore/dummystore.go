@@ -169,7 +169,7 @@ func (a *DummyStore) GetMapIDs(pagination *store.Pagination) ([]string, error) {
 	}
 
 	sort.Strings(mapIDs)
-	return paginateStrings(mapIDs, pagination), nil
+	return pagination.PaginateStrings(mapIDs), nil
 }
 
 func (a *DummyStore) findHashesSegments(linkHashes hashSet, filter *store.Filter) (cs.SegmentSlice, error) {
@@ -204,7 +204,7 @@ HASH_LOOP:
 
 	sort.Sort(segments)
 
-	return paginateSegments(segments, &filter.Pagination), nil
+	return filter.Pagination.PaginateSegments(segments), nil
 }
 
 func containsString(a []string, s string) bool {
@@ -214,31 +214,4 @@ func containsString(a []string, s string) bool {
 		}
 	}
 	return false
-}
-
-func paginateStrings(a []string, p *store.Pagination) []string {
-	l := len(a)
-	if p.Offset >= l {
-		return []string{}
-	}
-
-	end := min(l, p.Offset+p.Limit)
-	return a[p.Offset:end]
-}
-
-func paginateSegments(a cs.SegmentSlice, p *store.Pagination) cs.SegmentSlice {
-	l := len(a)
-	if p.Offset >= l {
-		return cs.SegmentSlice{}
-	}
-
-	end := min(l, p.Offset+p.Limit)
-	return a[p.Offset:end]
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

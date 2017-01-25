@@ -171,7 +171,7 @@ func (a *FileStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) 
 
 	sort.Sort(segments)
 
-	return paginateSegments(segments, &filter.Pagination), nil
+	return filter.Pagination.PaginateSegments(segments), nil
 }
 
 // GetMapIDs implements github.com/stratumn/go/store.Adapter.GetMapIDs.
@@ -191,7 +191,7 @@ func (a *FileStore) GetMapIDs(pagination *store.Pagination) ([]string, error) {
 	}
 
 	sort.Strings(mapIDs)
-	return paginateStrings(mapIDs, pagination), nil
+	return pagination.PaginateStrings(mapIDs), nil
 }
 
 func (a *FileStore) getSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
@@ -257,32 +257,4 @@ func containsString(a []string, s string) bool {
 	}
 
 	return false
-}
-
-func paginateStrings(a []string, p *store.Pagination) []string {
-	l := len(a)
-	if p.Offset >= l {
-		return []string{}
-	}
-
-	end := min(l, p.Offset+p.Limit)
-	return a[p.Offset:end]
-}
-
-func paginateSegments(a cs.SegmentSlice, p *store.Pagination) cs.SegmentSlice {
-	l := len(a)
-	if p.Offset >= l {
-		return cs.SegmentSlice{}
-	}
-
-	end := min(l, p.Offset+p.Limit)
-	return a[p.Offset:end]
-}
-
-// Min of two ints, duh.
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

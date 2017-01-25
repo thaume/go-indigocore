@@ -75,3 +75,33 @@ type Filter struct {
 	// A slice of tags the segments must all contain.
 	Tags []string `json:"tags"`
 }
+
+// PaginateStrings paginates a list of strings
+func (p *Pagination) PaginateStrings(a []string) []string {
+	l := len(a)
+	if p.Offset >= l {
+		return []string{}
+	}
+
+	end := min(l, p.Offset+p.Limit)
+	return a[p.Offset:end]
+}
+
+// PaginateSegments paginate a list of segments
+func (p *Pagination) PaginateSegments(a cs.SegmentSlice) cs.SegmentSlice {
+	l := len(a)
+	if p.Offset >= l {
+		return cs.SegmentSlice{}
+	}
+
+	end := min(l, p.Offset+p.Limit)
+	return a[p.Offset:end]
+}
+
+// Min of two ints, duh.
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
