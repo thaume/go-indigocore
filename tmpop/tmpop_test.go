@@ -222,7 +222,7 @@ func TestQuery(t *testing.T) {
 			Limit: limit,
 		}
 
-		got := make([]string, 0)
+		var got []string
 		err := h.makeQuery("GetMapIDs", args, &got)
 		if err != nil {
 			t.Fatal(err)
