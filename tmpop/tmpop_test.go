@@ -112,18 +112,24 @@ func TestCommit_SavesLastBlockInfo(t *testing.T) {
 func TestCommit_AppendsEvidence(t *testing.T) {
 	a := &storetesting.MockAdapter{}
 	h := createDefaultTMPop(a)
+	chainID := "MyChain"
 
 	height := uint64(12)
 
 	_, tx := makeMockTx(t)
 	h.BeginBlock(nil, &tmtypes.Header{
-		Height: height,
+		Height:  height,
+		ChainId: chainID,
 	})
 	h.DeliverTx(tx)
 
 	a.MockSaveSegment.Fn = func(s *cs.Segment) error {
-		if !strings.Contains(fmt.Sprint(s.Meta["evidence"]), fmt.Sprint(height)) {
-			return fmt.Errorf("Expected evidence to contain %v, got %v", height, s.Meta["evidence"])
+		evidence := fmt.Sprint(s.Meta["evidence"])
+		if !strings.Contains(evidence, fmt.Sprint(height)) {
+			return fmt.Errorf("Expected evidence to contain %v, got %v", height, evidence)
+		}
+		if !strings.Contains(evidence, chainID) {
+			return fmt.Errorf("Expected evidence to contain %v, got %v", chainID, evidence)
 		}
 		return nil
 	}

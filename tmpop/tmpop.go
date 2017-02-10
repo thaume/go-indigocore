@@ -139,7 +139,7 @@ func (t *TMPop) Commit() tmtypes.Result {
 	for _, segment := range t.newSegments {
 		evidence := make(map[string]interface{})
 		evidence["state"] = "COMPLETE"
-		evidence["transactions"] = map[string]string{"[tmpop]:[]": fmt.Sprintf("%v", t.blockHeader.Height)}
+		evidence["transactions"] = map[string]string{fmt.Sprintf("[tmpop]:[%v]", t.blockHeader.ChainId): fmt.Sprintf("%v", t.blockHeader.Height)}
 
 		segment.Meta["evidence"] = evidence
 
