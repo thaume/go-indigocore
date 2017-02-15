@@ -6,9 +6,8 @@
 
 // Stratumn's SDK to create Indigo applications and networks.
 //
-// Unless otherwise noted, the Stratumn Agent Javascript Library source files
-// are distributed under the Mozilla Public License 2.0 found in the LICENSE
-// file.
+// Unless otherwise noted, the source files are distributed under the Mozilla
+// Public License 2.0 found in the LICENSE file.
 //
 // Third party dependencies included in the vendor directory are distributed
 // under their respective licenses.
