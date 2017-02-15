@@ -35,7 +35,7 @@ It outputs version, copyright, license, and runtime information.`,
 		}
 		fmt.Printf("%s v%s@%s\n", "Stratumn CLI", version, commit[:7])
 		fmt.Println("Copyright (c) 2016 Stratumn SAS")
-		fmt.Println("Apache License 2.0")
+		fmt.Println("Mozilla Public License 2.0")
 		fmt.Printf("Runtime %s %s %s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)
 		return nil
 	},

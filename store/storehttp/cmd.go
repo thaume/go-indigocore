@@ -27,7 +27,7 @@ func Run(
 	bufConnConfig *jsonws.BufferedConnConfig,
 ) {
 	log.Info("Copyright (c) 2017 Stratumn SAS")
-	log.Info("Apache License 2.0")
+	log.Info("Mozilla Public License 2.0")
 	log.Infof("Runtime %s %s %s", runtime.Version(), runtime.GOOS, runtime.GOARCH)
 
 	h := New(a, httpConfig, basicConfig, bufConnConfig)

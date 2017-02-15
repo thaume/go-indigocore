@@ -37,7 +37,7 @@ func main() {
 
 	log.Infof("%s v%s@%s", dummyfossilizer.Description, version, commit[:7])
 	log.Info("Copyright (c) 2016 Stratumn SAS")
-	log.Info("Apache License 2.0")
+	log.Info("Mozilla Public License 2.0")
 	log.Infof("Runtime %s %s %s", runtime.Version(), runtime.GOOS, runtime.GOARCH)
 
 	a := dummyfossilizer.New(&dummyfossilizer.Config{Version: version, Commit: commit})

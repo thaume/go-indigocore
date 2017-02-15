@@ -28,7 +28,7 @@ func Run(a store.Adapter, config *Config, addrPtr, abciPtr *string) {
 	log.Infof("TMPop v%s@%s", config.Version, config.Commit[:7])
 	log.Infof("Adapter %v", adapterInfo)
 	log.Info("Copyright (c) 2017 Stratumn SAS")
-	log.Info("Apache License 2.0")
+	log.Info("Mozilla Public License 2.0")
 	log.Infof("Runtime %s %s %s", runtime.Version(), runtime.GOOS, runtime.GOARCH)
 
 	tmpop := New(a, config)
