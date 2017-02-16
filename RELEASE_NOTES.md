@@ -1,7 +1,6 @@
 ## Release notes
 
-This is an early version of Stratumn Go packages and tools for experimental
-testing.
+This is an early version of Stratumn's SDK to create Indigo applications and networks.
 
 [Change log](CHANGE_LOG.md)
 
