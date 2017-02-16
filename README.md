@@ -1,4 +1,4 @@
-# Stratumn Go packages [ALPHA - incompatible with production]
+# Stratumn SDK [ALPHA - incompatible with production]
 
 Stratumn's SDK to create Indigo applications and networks.
 
