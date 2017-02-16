@@ -1,4 +1,4 @@
-# Stratumn SDK [ALPHA - incompatible with production]
+# Stratumn SDK [alpha]
 
 Stratumn's SDK to create Indigo applications and networks.
 
@@ -9,9 +9,9 @@ Stratumn's SDK to create Indigo applications and networks.
 
 --
 
-Download the latest release:
+Download the latest prerelease:
 
-https://github.com/stratumn/go/releases
+https://github.com/stratumn/go/releases/latest
 
 --
 
