@@ -28,8 +28,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/stratumn/go/fossilizer"
-	"github.com/stratumn/go/jsonhttp"
+	"github.com/stratumn/sdk/fossilizer"
+	"github.com/stratumn/sdk/jsonhttp"
 )
 
 const (

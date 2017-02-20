@@ -12,8 +12,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stratumn/go/fossilizer/fossilizertesting"
-	"github.com/stratumn/go/jsonhttp"
+	"github.com/stratumn/sdk/fossilizer/fossilizertesting"
+	"github.com/stratumn/sdk/jsonhttp"
 )
 
 func createServer() (*jsonhttp.Server, *fossilizertesting.MockAdapter) {

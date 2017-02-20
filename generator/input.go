@@ -106,7 +106,7 @@ type StringInput struct {
 	value string
 }
 
-// Set implements github.com/stratumn/go/generator.Input.
+// Set implements github.com/stratumn/sdk/generator.Input.
 func (in *StringInput) Set(val interface{}) error {
 	str, ok := val.(string)
 	if !ok {
@@ -128,7 +128,7 @@ func (in *StringInput) Set(val interface{}) error {
 	return nil
 }
 
-// Get implements github.com/stratumn/go/generator.Input.
+// Get implements github.com/stratumn/sdk/generator.Input.
 func (in *StringInput) Get() interface{} {
 	if in.value == "" && in.Default != noValue {
 		return in.Default
@@ -136,7 +136,7 @@ func (in *StringInput) Get() interface{} {
 	return in.value
 }
 
-// Msg implements github.com/stratumn/go/generator.Prompt.
+// Msg implements github.com/stratumn/sdk/generator.Prompt.
 func (in *StringInput) Msg() string {
 	if in.Default != "" && in.Default != noValue {
 		return fmt.Sprintf("%s (default %q)\n", in.Prompt, in.Default)
@@ -157,7 +157,7 @@ type StringSelect struct {
 	value string
 }
 
-// Set implements github.com/stratumn/go/generator.Input.
+// Set implements github.com/stratumn/sdk/generator.Input.
 func (in *StringSelect) Set(val interface{}) error {
 	str, ok := val.(string)
 	if !ok {
@@ -180,7 +180,7 @@ func (in *StringSelect) Set(val interface{}) error {
 	return fmt.Errorf("invalid value %q", str)
 }
 
-// Get implements github.com/stratumn/go/generator.Input.
+// Get implements github.com/stratumn/sdk/generator.Input.
 func (in *StringSelect) Get() interface{} {
 	if in.value == "" && in.Default != noValue {
 		return in.Default
@@ -188,7 +188,7 @@ func (in *StringSelect) Get() interface{} {
 	return in.value
 }
 
-// Msg implements github.com/stratumn/go/generator.Prompt.
+// Msg implements github.com/stratumn/sdk/generator.Prompt.
 func (in *StringSelect) Msg() string {
 	p := in.Prompt + "\n"
 	for _, v := range in.Options {

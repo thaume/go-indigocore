@@ -10,8 +10,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/store/storetestcases"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/store/storetestcases"
 )
 
 func BenchmarkFilestore(b *testing.B) {

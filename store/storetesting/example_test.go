@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/stratumn/go/store/storetesting"
+	"github.com/stratumn/sdk/store/storetesting"
 )
 
 // This example shows how to use a mock adapter.

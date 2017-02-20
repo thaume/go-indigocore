@@ -6,7 +6,7 @@
 
 package main
 
-import "github.com/stratumn/go/strat/cmd"
+import "github.com/stratumn/sdk/strat/cmd"
 
 var (
 	version = "0.1.0"

@@ -9,7 +9,7 @@ package cs_test
 import (
 	"testing"
 
-	"github.com/stratumn/go/cs"
+	"github.com/stratumn/sdk/cs"
 )
 
 func testSegmentValidateError(t *testing.T, s *cs.Segment, want string) {

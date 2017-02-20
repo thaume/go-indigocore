@@ -14,9 +14,9 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/types"
 )
 
 const (
@@ -44,7 +44,7 @@ type Info struct {
 	Commit      string `json:"commit"`
 }
 
-// DummyStore is the type that implements github.com/stratumn/go/store.Adapter.
+// DummyStore is the type that implements github.com/stratumn/sdk/store.Adapter.
 type DummyStore struct {
 	config       *Config
 	didSaveChans []chan *cs.Segment
@@ -68,7 +68,7 @@ func New(config *Config) *DummyStore {
 	}
 }
 
-// GetInfo implements github.com/stratumn/go/store.Adapter.GetInfo.
+// GetInfo implements github.com/stratumn/sdk/store.Adapter.GetInfo.
 func (a *DummyStore) GetInfo() (interface{}, error) {
 	return &Info{
 		Name:        Name,
@@ -79,12 +79,12 @@ func (a *DummyStore) GetInfo() (interface{}, error) {
 }
 
 // AddDidSaveChannel implements
-// github.com/stratumn/go/fossilizer.Store.AddDidSaveChannel.
+// github.com/stratumn/sdk/fossilizer.Store.AddDidSaveChannel.
 func (a *DummyStore) AddDidSaveChannel(saveChan chan *cs.Segment) {
 	a.didSaveChans = append(a.didSaveChans, saveChan)
 }
 
-// SaveSegment implements github.com/stratumn/go/store.Adapter.SaveSegment.
+// SaveSegment implements github.com/stratumn/sdk/store.Adapter.SaveSegment.
 func (a *DummyStore) SaveSegment(segment *cs.Segment) error {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
@@ -118,7 +118,7 @@ func (a *DummyStore) SaveSegment(segment *cs.Segment) error {
 	return nil
 }
 
-// GetSegment implements github.com/stratumn/go/store.Adapter.GetSegment.
+// GetSegment implements github.com/stratumn/sdk/store.Adapter.GetSegment.
 func (a *DummyStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
@@ -126,7 +126,7 @@ func (a *DummyStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	return a.segments[linkHash.String()], nil
 }
 
-// DeleteSegment implements github.com/stratumn/go/store.Adapter.DeleteSegment.
+// DeleteSegment implements github.com/stratumn/sdk/store.Adapter.DeleteSegment.
 func (a *DummyStore) DeleteSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
@@ -143,7 +143,7 @@ func (a *DummyStore) DeleteSegment(linkHash *types.Bytes32) (*cs.Segment, error)
 	return segment, nil
 }
 
-// FindSegments implements github.com/stratumn/go/store.Adapter.FindSegments.
+// FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
 func (a *DummyStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
@@ -168,7 +168,7 @@ func (a *DummyStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error)
 	return a.findHashesSegments(linkHashes, filter)
 }
 
-// GetMapIDs implements github.com/stratumn/go/store.Adapter.GetMapIDs.
+// GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
 func (a *DummyStore) GetMapIDs(pagination *store.Pagination) ([]string, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()

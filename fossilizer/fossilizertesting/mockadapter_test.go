@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stratumn/go/fossilizer"
+	"github.com/stratumn/sdk/fossilizer"
 )
 
 func TestMockAdapter_GetInfo(t *testing.T) {

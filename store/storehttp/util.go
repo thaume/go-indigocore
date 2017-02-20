@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/types"
 )
 
 func parseFilter(r *http.Request) (*store.Filter, error) {

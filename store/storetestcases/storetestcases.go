@@ -12,10 +12,10 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/cs/cstesting"
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/cs/cstesting"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/types"
 )
 
 // Factory wraps functions to allocate and free an adapter, and is used to run

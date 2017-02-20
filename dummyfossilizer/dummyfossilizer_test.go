@@ -9,7 +9,7 @@ package dummyfossilizer
 import (
 	"testing"
 
-	"github.com/stratumn/go/fossilizer"
+	"github.com/stratumn/sdk/fossilizer"
 )
 
 func TestGetInfo(t *testing.T) {

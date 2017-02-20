@@ -11,8 +11,8 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/testutil"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/testutil"
 )
 
 // CreateSegment creates a minimal segment.

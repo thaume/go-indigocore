@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stratumn/go/fossilizer"
-	"github.com/stratumn/go/jsonhttp"
-	"github.com/stratumn/go/testutil"
+	"github.com/stratumn/sdk/fossilizer"
+	"github.com/stratumn/sdk/jsonhttp"
+	"github.com/stratumn/sdk/testutil"
 )
 
 func TestRoot(t *testing.T) {

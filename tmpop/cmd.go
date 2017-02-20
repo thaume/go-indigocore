@@ -14,7 +14,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/stratumn/go/store"
+	"github.com/stratumn/sdk/store"
 	"github.com/tendermint/abci/server"
 )
 

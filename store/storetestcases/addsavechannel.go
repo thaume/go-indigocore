@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/cs/cstesting"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/cs/cstesting"
 )
 
 // TestAddDidSaveChannel tests that AddDidSaveChannel functions properly.

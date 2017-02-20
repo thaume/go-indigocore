@@ -13,7 +13,7 @@ import (
 
 	"reflect"
 
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/types"
 )
 
 // Segment contains a link and meta data about the link.

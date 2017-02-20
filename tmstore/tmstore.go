@@ -19,10 +19,10 @@ import (
 
 	"time"
 
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/tmpop"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/tmpop"
+	"github.com/stratumn/sdk/types"
 	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -42,7 +42,7 @@ const (
 	DefaultWsRetryInterval = 5 * time.Second
 )
 
-// TMStore is the type that implements github.com/stratumn/go/store.Adapter.
+// TMStore is the type that implements github.com/stratumn/sdk/store.Adapter.
 type TMStore struct {
 	config       *Config
 	didSaveChans []chan *cs.Segment
@@ -142,12 +142,12 @@ func (t *TMStore) notifyDidSaveChans(msg json.RawMessage) error {
 }
 
 // AddDidSaveChannel implements
-// github.com/stratumn/go/fossilizer.Store.AddDidSaveChannel.
+// github.com/stratumn/sdk/fossilizer.Store.AddDidSaveChannel.
 func (t *TMStore) AddDidSaveChannel(saveChan chan *cs.Segment) {
 	t.didSaveChans = append(t.didSaveChans, saveChan)
 }
 
-// GetInfo implements github.com/stratumn/go/store.Adapter.GetInfo.
+// GetInfo implements github.com/stratumn/sdk/store.Adapter.GetInfo.
 func (t *TMStore) GetInfo() (interface{}, error) {
 	info := &tmpop.Info{}
 	err := t.sendQuery("GetInfo", nil, info)
@@ -161,7 +161,7 @@ func (t *TMStore) GetInfo() (interface{}, error) {
 	}, err
 }
 
-// SaveSegment implements github.com/stratumn/go/store.Adapter.SaveSegment.
+// SaveSegment implements github.com/stratumn/sdk/store.Adapter.SaveSegment.
 func (t *TMStore) SaveSegment(segment *cs.Segment) error {
 	tx, err := json.Marshal(segment)
 	if err != nil {
@@ -175,7 +175,7 @@ func (t *TMStore) SaveSegment(segment *cs.Segment) error {
 	return nil
 }
 
-// GetSegment implements github.com/stratumn/go/store.Adapter.GetSegment.
+// GetSegment implements github.com/stratumn/sdk/store.Adapter.GetSegment.
 func (t *TMStore) GetSegment(linkHash *types.Bytes32) (segment *cs.Segment, err error) {
 	segment = &cs.Segment{}
 	err = t.sendQuery("GetSegment", linkHash, segment)
@@ -187,7 +187,7 @@ func (t *TMStore) GetSegment(linkHash *types.Bytes32) (segment *cs.Segment, err 
 	return
 }
 
-// DeleteSegment implements github.com/stratumn/go/store.Adapter.DeleteSegment.
+// DeleteSegment implements github.com/stratumn/sdk/store.Adapter.DeleteSegment.
 func (t *TMStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segment, err error) {
 	segment = &cs.Segment{}
 	err = t.sendQuery("DeleteSegment", linkHash, segment)
@@ -199,14 +199,14 @@ func (t *TMStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segment, e
 	return
 }
 
-// FindSegments implements github.com/stratumn/go/store.Adapter.FindSegments.
+// FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
 func (t *TMStore) FindSegments(filter *store.Filter) (segmentSlice cs.SegmentSlice, err error) {
 	segmentSlice = make(cs.SegmentSlice, 0)
 	err = t.sendQuery("FindSegments", filter, &segmentSlice)
 	return
 }
 
-// GetMapIDs implements github.com/stratumn/go/store.Adapter.GetMapIDs.
+// GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
 func (t *TMStore) GetMapIDs(pagination *store.Pagination) (ids []string, err error) {
 	ids = make([]string, 0)
 	err = t.sendQuery("GetMapIDs", pagination, &ids)

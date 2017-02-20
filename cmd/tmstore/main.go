@@ -12,11 +12,11 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/stratumn/go/jsonhttp"
-	"github.com/stratumn/go/jsonws"
-	"github.com/stratumn/go/store/storehttp"
-	"github.com/stratumn/go/tmstore"
-	"github.com/stratumn/go/utils"
+	"github.com/stratumn/sdk/jsonhttp"
+	"github.com/stratumn/sdk/jsonws"
+	"github.com/stratumn/sdk/store/storehttp"
+	"github.com/stratumn/sdk/tmstore"
+	"github.com/stratumn/sdk/utils"
 )
 
 var (

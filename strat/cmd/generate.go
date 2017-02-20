@@ -17,8 +17,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/stratumn/go/generator"
-	"github.com/stratumn/go/generator/repo"
+	"github.com/stratumn/sdk/generator"
+	"github.com/stratumn/sdk/generator/repo"
 )
 
 var (

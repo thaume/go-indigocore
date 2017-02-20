@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/stratumn/go/testutil"
+	"github.com/stratumn/sdk/testutil"
 )
 
 func TestGet(t *testing.T) {

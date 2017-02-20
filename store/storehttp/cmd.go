@@ -14,9 +14,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/stratumn/go/jsonhttp"
-	"github.com/stratumn/go/jsonws"
-	"github.com/stratumn/go/store"
+	"github.com/stratumn/sdk/jsonhttp"
+	"github.com/stratumn/sdk/jsonws"
+	"github.com/stratumn/sdk/store"
 )
 
 // Run launches a HTTP Store

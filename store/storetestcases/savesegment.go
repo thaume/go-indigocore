@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/cs/cstesting"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/cs/cstesting"
 )
 
 // TestSaveSegment tests what happens when you save a new segment.

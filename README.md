@@ -2,16 +2,16 @@
 
 Stratumn's SDK to create Indigo applications and networks.
 
-[![GoDoc](https://godoc.org/github.com/stratumn/go?status.svg)](https://godoc.org/github.com/stratumn/go)
-[![build status](https://travis-ci.org/stratumn/go.svg)](https://travis-ci.org/stratumn/go.svg)
-[![codecov](https://codecov.io/gh/stratumn/go/branch/master/graph/badge.svg)](https://codecov.io/gh/stratumn/go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/stratumn/go)](https://goreportcard.com/report/github.com/stratumn/go)
+[![GoDoc](https://godoc.org/github.com/stratumn/sdk?status.svg)](https://godoc.org/github.com/stratumn/sdk)
+[![build status](https://travis-ci.org/stratumn/sdk.svg)](https://travis-ci.org/stratumn/sdk.svg)
+[![codecov](https://codecov.io/gh/stratumn/sdk/branch/master/graph/badge.svg)](https://codecov.io/gh/stratumn/sdk)
+[![Go Report Card](https://goreportcard.com/badge/github.com/stratumn/sdk)](https://goreportcard.com/report/github.com/stratumn/sdk)
 
 --
 
 Download the latest prerelease:
 
-https://github.com/stratumn/go/releases/latest
+https://github.com/stratumn/sdk/releases/latest
 
 --
 

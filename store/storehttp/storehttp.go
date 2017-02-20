@@ -40,11 +40,11 @@ import (
 
 	"time"
 
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/jsonhttp"
-	"github.com/stratumn/go/jsonws"
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/jsonhttp"
+	"github.com/stratumn/sdk/jsonws"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/types"
 )
 
 const (

@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stratumn/go/jsonws/jsonwstesting"
+	"github.com/stratumn/sdk/jsonws/jsonwstesting"
 )
 
 func testUpgradeHandle(w http.ResponseWriter, r *http.Request, h http.Header) (PingableConn, error) {

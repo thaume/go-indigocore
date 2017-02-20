@@ -12,9 +12,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/cs/cstesting"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/cs/cstesting"
+	"github.com/stratumn/sdk/types"
 )
 
 func TestSegmentGetLinkHash(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stratumn/go/generator"
+	"github.com/stratumn/sdk/generator"
 )
 
 func TestUpdate(t *testing.T) {

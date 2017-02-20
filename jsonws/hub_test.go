@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stratumn/go/jsonws/jsonwstesting"
+	"github.com/stratumn/sdk/jsonws/jsonwstesting"
 )
 
 func TestHubBroadcast(t *testing.T) {

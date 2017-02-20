@@ -7,14 +7,14 @@
 package storetesting
 
 import (
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/types"
 )
 
 // MockAdapter is used to mock a store.
 //
-// It implements github.com/stratumn/go/store.Adapter.
+// It implements github.com/stratumn/sdk/store.Adapter.
 type MockAdapter struct {
 	// The mock for the GetInfo function.
 	MockGetInfo MockGetInfo
@@ -137,7 +137,7 @@ type MockGetMapIDs struct {
 	Fn func(*store.Pagination) ([]string, error)
 }
 
-// GetInfo implements github.com/stratumn/go/store.Adapter.GetInfo.
+// GetInfo implements github.com/stratumn/sdk/store.Adapter.GetInfo.
 func (a *MockAdapter) GetInfo() (interface{}, error) {
 	a.MockGetInfo.CalledCount++
 
@@ -149,7 +149,7 @@ func (a *MockAdapter) GetInfo() (interface{}, error) {
 }
 
 // AddDidSaveChannel implements
-// github.com/stratumn/go/store.Adapter.AddDidSaveChannel.
+// github.com/stratumn/sdk/store.Adapter.AddDidSaveChannel.
 func (a *MockAdapter) AddDidSaveChannel(saveChan chan *cs.Segment) {
 	a.MockAddDidSaveChannel.CalledCount++
 	a.MockAddDidSaveChannel.CalledWith = append(a.MockAddDidSaveChannel.CalledWith, saveChan)
@@ -160,7 +160,7 @@ func (a *MockAdapter) AddDidSaveChannel(saveChan chan *cs.Segment) {
 	}
 }
 
-// SaveSegment implements github.com/stratumn/go/store.Adapter.SaveSegment.
+// SaveSegment implements github.com/stratumn/sdk/store.Adapter.SaveSegment.
 func (a *MockAdapter) SaveSegment(segment *cs.Segment) error {
 	a.MockSaveSegment.CalledCount++
 	a.MockSaveSegment.CalledWith = append(a.MockSaveSegment.CalledWith, segment)
@@ -173,7 +173,7 @@ func (a *MockAdapter) SaveSegment(segment *cs.Segment) error {
 	return nil
 }
 
-// GetSegment implements github.com/stratumn/go/store.Adapter.GetSegment.
+// GetSegment implements github.com/stratumn/sdk/store.Adapter.GetSegment.
 func (a *MockAdapter) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	a.MockGetSegment.CalledCount++
 	a.MockGetSegment.CalledWith = append(a.MockGetSegment.CalledWith, linkHash)
@@ -186,7 +186,7 @@ func (a *MockAdapter) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	return nil, nil
 }
 
-// DeleteSegment implements github.com/stratumn/go/store.Adapter.DeleteSegment.
+// DeleteSegment implements github.com/stratumn/sdk/store.Adapter.DeleteSegment.
 func (a *MockAdapter) DeleteSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	a.MockDeleteSegment.CalledCount++
 	a.MockDeleteSegment.CalledWith = append(a.MockDeleteSegment.CalledWith, linkHash)
@@ -199,7 +199,7 @@ func (a *MockAdapter) DeleteSegment(linkHash *types.Bytes32) (*cs.Segment, error
 	return nil, nil
 }
 
-// FindSegments implements github.com/stratumn/go/store.Adapter.FindSegments.
+// FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
 func (a *MockAdapter) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) {
 	a.MockFindSegments.CalledCount++
 	a.MockFindSegments.CalledWith = append(a.MockFindSegments.CalledWith, filter)
@@ -212,7 +212,7 @@ func (a *MockAdapter) FindSegments(filter *store.Filter) (cs.SegmentSlice, error
 	return nil, nil
 }
 
-// GetMapIDs implements github.com/stratumn/go/store.Adapter.GetMapIDs.
+// GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
 func (a *MockAdapter) GetMapIDs(pagination *store.Pagination) ([]string, error) {
 	a.MockGetMapIDs.CalledCount++
 	a.MockGetMapIDs.CalledWith = append(a.MockGetMapIDs.CalledWith, pagination)

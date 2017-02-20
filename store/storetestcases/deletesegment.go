@@ -14,9 +14,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/stratumn/go/cs/cstesting"
-	"github.com/stratumn/go/testutil"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/cs/cstesting"
+	"github.com/stratumn/sdk/testutil"
+	"github.com/stratumn/sdk/types"
 )
 
 // TestDeleteSegment tests what happens when you delete an existing segments.

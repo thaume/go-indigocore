@@ -13,11 +13,11 @@ import (
 	"log"
 	"testing"
 
-	"github.com/stratumn/go/cs/cstesting"
-	"github.com/stratumn/go/filestore"
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/store/storetesting"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/cs/cstesting"
+	"github.com/stratumn/sdk/filestore"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/store/storetesting"
+	"github.com/stratumn/sdk/types"
 	tmtypes "github.com/tendermint/abci/types"
 
 	"strings"
@@ -26,7 +26,7 @@ import (
 
 	"fmt"
 
-	"github.com/stratumn/go/cs"
+	"github.com/stratumn/sdk/cs"
 )
 
 func createDefaultStore() store.Adapter {

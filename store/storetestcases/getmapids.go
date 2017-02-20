@@ -13,9 +13,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/stratumn/go/cs/cstesting"
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/testutil"
+	"github.com/stratumn/sdk/cs/cstesting"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/testutil"
 )
 
 // TestGetMapIDs tests what happens when you get map IDs with default

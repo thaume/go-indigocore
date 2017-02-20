@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/stratumn/go/fossilizer/fossilizertesting"
+	"github.com/stratumn/sdk/fossilizer/fossilizertesting"
 )
 
 // This example shows how to use a mock adapter.

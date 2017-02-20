@@ -11,9 +11,9 @@ import (
 
 	logger "github.com/tendermint/go-logger"
 
-	"github.com/stratumn/go/cs/cstesting"
-	"github.com/stratumn/go/dummystore"
-	"github.com/stratumn/go/tmpop"
+	"github.com/stratumn/sdk/cs/cstesting"
+	"github.com/stratumn/sdk/dummystore"
+	"github.com/stratumn/sdk/tmpop"
 	cfg "github.com/tendermint/go-config"
 	p2p "github.com/tendermint/go-p2p"
 	"github.com/tendermint/tendermint/config/tendermint_test"

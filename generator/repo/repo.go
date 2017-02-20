@@ -28,7 +28,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/google/go-github/github"
-	"github.com/stratumn/go/generator"
+	"github.com/stratumn/sdk/generator"
 )
 
 const (

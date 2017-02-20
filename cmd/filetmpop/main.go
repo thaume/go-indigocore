@@ -9,8 +9,8 @@ package main
 import (
 	"flag"
 
-	"github.com/stratumn/go/filestore"
-	"github.com/stratumn/go/tmpop"
+	"github.com/stratumn/sdk/filestore"
+	"github.com/stratumn/sdk/tmpop"
 )
 
 var (

@@ -9,9 +9,9 @@ package storehttp
 import (
 	"time"
 
-	"github.com/stratumn/go/jsonhttp"
-	"github.com/stratumn/go/jsonws"
-	"github.com/stratumn/go/store/storetesting"
+	"github.com/stratumn/sdk/jsonhttp"
+	"github.com/stratumn/sdk/jsonws"
+	"github.com/stratumn/sdk/store/storetesting"
 )
 
 func createServer() (*Server, *storetesting.MockAdapter) {

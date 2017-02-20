@@ -13,9 +13,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/stratumn/go/dummyfossilizer"
-	"github.com/stratumn/go/fossilizer/fossilizerhttp"
-	"github.com/stratumn/go/jsonhttp"
+	"github.com/stratumn/sdk/dummyfossilizer"
+	"github.com/stratumn/sdk/fossilizer/fossilizerhttp"
+	"github.com/stratumn/sdk/jsonhttp"
 )
 
 // This example shows how to create a server from a dummyfossilizer.

@@ -12,7 +12,7 @@ package dummyfossilizer
 import (
 	"time"
 
-	"github.com/stratumn/go/fossilizer"
+	"github.com/stratumn/sdk/fossilizer"
 )
 
 const (
@@ -41,7 +41,7 @@ type Info struct {
 }
 
 // DummyFossilizer is the type that implements
-// github.com/stratumn/go/fossilizer.Adapter.
+// github.com/stratumn/sdk/fossilizer.Adapter.
 type DummyFossilizer struct {
 	config      *Config
 	resultChans []chan *fossilizer.Result
@@ -52,7 +52,7 @@ func New(config *Config) *DummyFossilizer {
 	return &DummyFossilizer{config, nil}
 }
 
-// GetInfo implements github.com/stratumn/go/fossilizer.Adapter.GetInfo.
+// GetInfo implements github.com/stratumn/sdk/fossilizer.Adapter.GetInfo.
 func (a *DummyFossilizer) GetInfo() (interface{}, error) {
 	return &Info{
 		Name:        Name,
@@ -63,12 +63,12 @@ func (a *DummyFossilizer) GetInfo() (interface{}, error) {
 }
 
 // AddResultChan implements
-// github.com/stratumn/go/fossilizer.Adapter.AddResultChan.
+// github.com/stratumn/sdk/fossilizer.Adapter.AddResultChan.
 func (a *DummyFossilizer) AddResultChan(resultChan chan *fossilizer.Result) {
 	a.resultChans = append(a.resultChans, resultChan)
 }
 
-// Fossilize implements github.com/stratumn/go/fossilizer.Adapter.Fossilize.
+// Fossilize implements github.com/stratumn/sdk/fossilizer.Adapter.Fossilize.
 func (a *DummyFossilizer) Fossilize(data []byte, meta []byte) error {
 	r := &fossilizer.Result{
 		Evidence: map[string]interface{}{

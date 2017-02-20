@@ -9,8 +9,8 @@ package storehttp
 import (
 	"fmt"
 
-	"github.com/stratumn/go/jsonhttp"
-	"github.com/stratumn/go/store"
+	"github.com/stratumn/sdk/jsonhttp"
+	"github.com/stratumn/sdk/store"
 )
 
 func newErrOffset(msg string) jsonhttp.ErrHTTP {

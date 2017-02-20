@@ -13,9 +13,9 @@ import (
 	"fmt"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/types"
 	tmtypes "github.com/tendermint/abci/types"
 	godb "github.com/tendermint/go-db"
 	merkle "github.com/tendermint/go-merkle"

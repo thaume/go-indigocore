@@ -11,11 +11,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stratumn/go/cs"
-	"github.com/stratumn/go/cs/cstesting"
-	"github.com/stratumn/go/store"
-	"github.com/stratumn/go/testutil"
-	"github.com/stratumn/go/types"
+	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/cs/cstesting"
+	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/testutil"
+	"github.com/stratumn/sdk/types"
 )
 
 func TestMockAdapter_GetInfo(t *testing.T) {
