@@ -117,7 +117,7 @@ $ keybase follow stephan83
 $ keybase pgp verify -d BINARY.sig -i BINARY
 ```
 
-With OpenGPG (replace `BINARY` with the name of the binary):
+With OpenPGP (replace `BINARY` with the name of the binary):
 
 ```
 $ wget https://keybase.io/stephan83/key.asc
