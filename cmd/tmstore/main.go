@@ -9,14 +9,11 @@ package main
 import (
 	"flag"
 
-	"time"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/stratumn/sdk/jsonhttp"
 	"github.com/stratumn/sdk/jsonws"
 	"github.com/stratumn/sdk/store/storehttp"
 	"github.com/stratumn/sdk/tmstore"
-	"github.com/stratumn/sdk/utils"
 )
 
 var (
@@ -42,14 +39,7 @@ func main() {
 
 	a := tmstore.New(&tmstore.Config{Endpoint: *endpoint, Version: version, Commit: commit})
 
-	go utils.Retry(func(attempt int) (retry bool, err error) {
-		err = a.StartWebsocket()
-		if err != nil {
-			log.Infof("%v, retrying...", err)
-			time.Sleep(*tmWsRetryInterval)
-		}
-		return true, err
-	}, 0)
+	go a.RetryStartWebsocket(*tmWsRetryInterval)
 
 	httpConfig := &jsonhttp.Config{
 		Address:  *http,

@@ -23,6 +23,7 @@ import (
 	"github.com/stratumn/sdk/store"
 	"github.com/stratumn/sdk/tmpop"
 	"github.com/stratumn/sdk/types"
+	"github.com/stratumn/sdk/utils"
 	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -47,6 +48,7 @@ type TMStore struct {
 	config       *Config
 	didSaveChans []chan *cs.Segment
 	tmClient     *TMClient
+	stoppingWS   bool
 }
 
 // Config contains configuration options for the store.
@@ -74,11 +76,12 @@ type Info struct {
 func New(config *Config) *TMStore {
 	client := NewTMClient(config.Endpoint)
 
-	return &TMStore{config, nil, client}
+	return &TMStore{config, nil, client, false}
 }
 
 // StartWebsocket starts the websocket client and wait for New Block events
 func (t *TMStore) StartWebsocket() error {
+	t.stoppingWS = false
 	if err := t.tmClient.StartWebsocket(); err != nil {
 		return err
 	}
@@ -96,17 +99,40 @@ func (t *TMStore) StartWebsocket() error {
 		case err := <-e:
 			log.Error(err)
 		case <-q:
-			return nil
+			if t.stoppingWS {
+				return nil
+			}
+			log.Error("Unexpected quit signal... Retrying")
+			t.tmClient.StopWebsocket()
+			t.RetryStartWebsocket(DefaultWsRetryInterval)
 		}
 	}
 }
 
+// RetryStartWebsocket starts the websocket client and wait for New Block events, it retries on errors
+func (t *TMStore) RetryStartWebsocket(interval time.Duration) error {
+	return utils.Retry(func(attempt int) (retry bool, err error) {
+		err = t.StartWebsocket()
+		if err != nil {
+			log.Infof("%v, retrying...", err)
+			time.Sleep(interval)
+		}
+		return true, err
+	}, 0)
+}
+
 // StopWebsocket stops the websocket client
 func (t *TMStore) StopWebsocket() {
+	t.stoppingWS = true
 	t.tmClient.StopWebsocket()
 }
 
 func (t *TMStore) notifyDidSaveChans(msg json.RawMessage) error {
+	if msg == nil {
+		log.Debug("Received empty websocket message")
+		return nil
+	}
+
 	result, err := new(ctypes.TMResult), new(error)
 	wire.ReadJSONPtr(result, msg, err)
 	if *err != nil {
