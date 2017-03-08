@@ -265,22 +265,16 @@ func findRelease(client *github.Client) (*github.ReleaseAsset, *string, error) {
 }
 
 func dlRelease(client *github.Client, dst string, asset *github.ReleaseAsset) error {
-	rc, url, err := client.Repositories.DownloadReleaseAsset(Owner, Repo, *asset.ID)
+	release, _, err := client.Repositories.GetReleaseAsset(Owner, Repo, *asset.ID)
 	if err != nil {
 		return err
 	}
 
-	var r io.ReadCloser
-
-	if rc != nil {
-		r = rc
-	} else if url != "" {
-		res, err2 := http.Get(url)
-		if err2 != nil {
-			return err2
-		}
-		r = res.Body
+	res, err2 := http.Get(*release.BrowserDownloadURL)
+	if err2 != nil {
+		return err2
 	}
+	r := res.Body
 	defer r.Close()
 
 	f, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, 0644)
