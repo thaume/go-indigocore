@@ -27,7 +27,7 @@ const (
 	Owner = "stratumn"
 
 	// Repo is the name of the CLI's Github repository.
-	Repo = "go"
+	Repo = "sdk"
 
 	// AssetFormat is the format of the CLI GIthub asset.
 	AssetFormat = "strat-%s-%s.zip"
