@@ -36,7 +36,7 @@ func main() {
 	flag.Parse()
 
 	log.Infof("%s v%s@%s", dummyfossilizer.Description, version, commit[:7])
-	log.Info("Copyright (c) 2016 Stratumn SAS")
+	log.Info("Copyright (c) 2017 Stratumn SAS")
 	log.Info("Mozilla Public License 2.0")
 	log.Infof("Runtime %s %s %s", runtime.Version(), runtime.GOOS, runtime.GOARCH)
 
