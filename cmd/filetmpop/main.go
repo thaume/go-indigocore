@@ -12,6 +12,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/stratumn/sdk/filestore"
+	"github.com/stratumn/sdk/tendermint"
 	"github.com/stratumn/sdk/tmpop"
 	"github.com/stratumn/sdk/validator"
 )
@@ -23,6 +24,10 @@ var (
 	version           = "0.1.0"
 	commit            = "00000000000000000000000000000000"
 )
+
+func init() {
+	tendermint.RegisterFlags()
+}
 
 func main() {
 	flag.Parse()
