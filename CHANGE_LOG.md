@@ -1,5 +1,15 @@
 ## Change log
 
+### 0.1.0-dev
+* Changed license back to Apache 2.
+* Updated to Tendermint 10.0.2.
+* Switched to the [dep](https://github.com/golang/dep) package manager.
+* Added basic segment schema based validation at the node level.
+* Changed `strat update` so that it updates both the CLI and generators.
+* Fixed CI and tests.
+* Cleaned up command flags.
+* Made goroutines more predictable.
+
 ### 0.0.8-dev
 * Updated to Tendermint 0.9.0.
 * Improved Tendermint node stability.
