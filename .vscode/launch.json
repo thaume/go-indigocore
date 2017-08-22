@@ -1,17 +1,90 @@
 {
     "version": "0.2.0",
     "configurations": [
-      {
-        "name": "Launch test function",
-        "type": "go",
-        "request": "launch",
-        "mode": "test",
-        "program": "${workspaceRoot}/tmpop",
-        "args": [
-          "-test.run",
-          "TestQuery/Evidence"
-        ]
-      },
+
+        {
+            "name": "Launch dummyfossilizer test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/dummyfossilizer",
+            "args": []
+        },
+        {
+            "name": "Launch dummystore test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/dummystore",
+            "args": []
+        },
+        {
+            "name": "Launch filestore test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/filestore",
+            "args": []
+        },
+        {
+            "name": "Launch fossilizer test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/fossilizer",
+            "args": []
+        },
+        {
+            "name": "Launch generator test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/generator",
+            "args": []
+        },
+        {
+            "name": "Launch jsonhttp test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/jsonhttp",
+            "args": []
+        },
+        {
+            "name": "Launch jsonws test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/jsonws",
+            "args": []
+        },
+        {
+            "name": "Launch store test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/store",
+            "args": []
+        },
+        {
+            "name": "Launch tmstore test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/tmstore",
+            "args": []
+        },
+        {
+            "name": "Launch tmpop test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/tmpop",
+            "args": [
+                "-test.run",
+                "TestQuery/Evidence"
+            ]
+        },
         {
             "name": "dummyfossilizer debug",
             "type": "go",
