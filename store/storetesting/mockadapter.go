@@ -178,13 +178,13 @@ type MockFindSegments struct {
 	CalledCount int
 
 	// The filter that was passed to each call.
-	CalledWith []*store.Filter
+	CalledWith []*store.SegmentFilter
 
 	// The last filter that was passed.
-	LastCalledWith *store.Filter
+	LastCalledWith *store.SegmentFilter
 
 	// An optional implementation of the function.
-	Fn func(*store.Filter) (cs.SegmentSlice, error)
+	Fn func(*store.SegmentFilter) (cs.SegmentSlice, error)
 }
 
 // MockGetMapIDs mocks the GetMapIDs function.
@@ -193,13 +193,13 @@ type MockGetMapIDs struct {
 	CalledCount int
 
 	// The pagination that was passed to each call.
-	CalledWith []*store.Pagination
+	CalledWith []*store.MapIDFilter
 
 	// The last pagination that was passed.
-	LastCalledWith *store.Pagination
+	LastCalledWith *store.MapIDFilter
 
 	// An optional implementation of the function.
-	Fn func(*store.Pagination) ([]string, error)
+	Fn func(*store.MapIDFilter) ([]string, error)
 }
 
 // MockNewBatch mocks the NewBatch function.
@@ -314,7 +314,7 @@ func (a *MockAdapter) DeleteValue(key []byte) ([]byte, error) {
 }
 
 // FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
-func (a *MockAdapter) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) {
+func (a *MockAdapter) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, error) {
 	a.MockFindSegments.CalledCount++
 	a.MockFindSegments.CalledWith = append(a.MockFindSegments.CalledWith, filter)
 	a.MockFindSegments.LastCalledWith = filter
@@ -327,13 +327,13 @@ func (a *MockAdapter) FindSegments(filter *store.Filter) (cs.SegmentSlice, error
 }
 
 // GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
-func (a *MockAdapter) GetMapIDs(pagination *store.Pagination) ([]string, error) {
+func (a *MockAdapter) GetMapIDs(filter *store.MapIDFilter) ([]string, error) {
 	a.MockGetMapIDs.CalledCount++
-	a.MockGetMapIDs.CalledWith = append(a.MockGetMapIDs.CalledWith, pagination)
-	a.MockGetMapIDs.LastCalledWith = pagination
+	a.MockGetMapIDs.CalledWith = append(a.MockGetMapIDs.CalledWith, filter)
+	a.MockGetMapIDs.LastCalledWith = filter
 
 	if a.MockGetMapIDs.Fn != nil {
-		return a.MockGetMapIDs.Fn(pagination)
+		return a.MockGetMapIDs.Fn(filter)
 	}
 
 	return nil, nil

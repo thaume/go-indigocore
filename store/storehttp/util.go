@@ -23,7 +23,7 @@ import (
 	"github.com/stratumn/sdk/types"
 )
 
-func parseFilter(r *http.Request) (*store.Filter, error) {
+func parseSegmentFilter(r *http.Request) (*store.SegmentFilter, error) {
 	pagination, err := parsePagination(r)
 	if err != nil {
 		return nil, err
@@ -31,6 +31,7 @@ func parseFilter(r *http.Request) (*store.Filter, error) {
 
 	var (
 		mapID           = r.URL.Query().Get("mapId")
+		process         = r.URL.Query().Get("process")
 		prevLinkHashStr = r.URL.Query().Get("prevLinkHash")
 		tagsStr         = r.URL.Query().Get("tags")
 		prevLinkHash    *types.Bytes32
@@ -51,11 +52,26 @@ func parseFilter(r *http.Request) (*store.Filter, error) {
 		}
 	}
 
-	return &store.Filter{
+	return &store.SegmentFilter{
 		Pagination:   *pagination,
 		MapID:        mapID,
+		Process:      process,
 		PrevLinkHash: prevLinkHash,
 		Tags:         tags,
+	}, nil
+}
+
+func parseMapIDFilter(r *http.Request) (*store.MapIDFilter, error) {
+	pagination, err := parsePagination(r)
+	if err != nil {
+		return nil, err
+	}
+
+	var process = r.URL.Query().Get("process")
+
+	return &store.MapIDFilter{
+		Pagination: *pagination,
+		Process:    process,
 	}, nil
 }
 

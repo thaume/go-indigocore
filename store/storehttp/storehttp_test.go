@@ -326,7 +326,7 @@ func TestFindSegments(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		s1 = append(s1, cstesting.RandomSegment())
 	}
-	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return s1, nil }
+	a.MockFindSegments.Fn = func(*store.SegmentFilter) (cs.SegmentSlice, error) { return s1, nil }
 
 	var s2 cs.SegmentSlice
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&limit=2&mapId=123&prevLinkHash="+zeros+"&tags=one+two", nil, &s2)
@@ -370,7 +370,7 @@ func TestFindSegments_defaultLimit(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		s1 = append(s1, cstesting.RandomSegment())
 	}
-	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return s1, nil }
+	a.MockFindSegments.Fn = func(*store.SegmentFilter) (cs.SegmentSlice, error) { return s1, nil }
 
 	var s2 cs.SegmentSlice
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&&mapId=123&prevLinkHash="+zeros+"&tags=one+two", nil, &s2)
@@ -410,7 +410,7 @@ func TestFindSegments_defaultLimit(t *testing.T) {
 
 func TestFindSegments_err(t *testing.T) {
 	s, a := createServer()
-	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return nil, errors.New("test") }
+	a.MockFindSegments.Fn = func(*store.SegmentFilter) (cs.SegmentSlice, error) { return nil, errors.New("test") }
 
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments", nil, &body)
@@ -472,7 +472,7 @@ func TestFindSegments_invalidPrevLinkHash(t *testing.T) {
 func TestGetMapIDs(t *testing.T) {
 	s, a := createServer()
 	s1 := []string{"one", "two", "three"}
-	a.MockGetMapIDs.Fn = func(*store.Pagination) ([]string, error) { return s1, nil }
+	a.MockGetMapIDs.Fn = func(*store.MapIDFilter) ([]string, error) { return s1, nil }
 
 	var s2 []string
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/maps?offset=20&limit=10", nil, &s2)
@@ -501,7 +501,7 @@ func TestGetMapIDs(t *testing.T) {
 
 func TestGetMapIDs_err(t *testing.T) {
 	s, a := createServer()
-	a.MockGetMapIDs.Fn = func(*store.Pagination) ([]string, error) { return nil, errors.New("test") }
+	a.MockGetMapIDs.Fn = func(*store.MapIDFilter) ([]string, error) { return nil, errors.New("test") }
 
 	var body map[string]interface{}
 	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/maps", nil, &body)

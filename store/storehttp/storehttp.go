@@ -270,7 +270,7 @@ func (s *Server) deleteSegment(w http.ResponseWriter, r *http.Request, p httprou
 }
 
 func (s *Server) findSegments(w http.ResponseWriter, r *http.Request, _ httprouter.Params) (interface{}, error) {
-	filter, e := parseFilter(r)
+	filter, e := parseSegmentFilter(r)
 	if e != nil {
 		return nil, e
 	}
@@ -284,12 +284,12 @@ func (s *Server) findSegments(w http.ResponseWriter, r *http.Request, _ httprout
 }
 
 func (s *Server) getMapIDs(w http.ResponseWriter, r *http.Request, _ httprouter.Params) (interface{}, error) {
-	pagination, e := parsePagination(r)
+	filter, e := parseMapIDFilter(r)
 	if e != nil {
 		return nil, e
 	}
 
-	slice, err := s.adapter.GetMapIDs(pagination)
+	slice, err := s.adapter.GetMapIDs(filter)
 	if err != nil {
 		return nil, err
 	}

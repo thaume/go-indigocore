@@ -33,7 +33,7 @@ type Commit struct {
 }
 
 // FindSegments emulates github.com/stratumn/sdk/store.Adapter.FindSegments. with additional proofs.
-func (c *Commit) FindSegments(filter *store.Filter) ([]*cs.Segment, [][]byte, error) {
+func (c *Commit) FindSegments(filter *store.SegmentFilter) ([]*cs.Segment, [][]byte, error) {
 	segments, err := c.adapter.FindSegments(filter)
 	if err != nil {
 		return nil, nil, err
@@ -87,6 +87,6 @@ func (c *Commit) Proof(key []byte) ([]byte, []byte, bool) {
 
 // GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
 // It might be out of sync with the tree.
-func (c *Commit) GetMapIDs(pagination *store.Pagination) ([]string, error) {
-	return c.adapter.GetMapIDs(pagination)
+func (c *Commit) GetMapIDs(filter *store.MapIDFilter) ([]string, error) {
+	return c.adapter.GetMapIDs(filter)
 }

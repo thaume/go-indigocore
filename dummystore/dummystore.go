@@ -164,7 +164,7 @@ func (a *DummyStore) deleteSegment(linkHash *types.Bytes32) (*cs.Segment, error)
 }
 
 // FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
-func (a *DummyStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) {
+func (a *DummyStore) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 
@@ -189,19 +189,22 @@ func (a *DummyStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error)
 }
 
 // GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
-func (a *DummyStore) GetMapIDs(pagination *store.Pagination) ([]string, error) {
+func (a *DummyStore) GetMapIDs(filter *store.MapIDFilter) ([]string, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 
-	mapIDs := make([]string, len(a.maps))
-	i := 0
-	for mapID := range a.maps {
-		mapIDs[i] = mapID
-		i++
+	mapIDs := make([]string, 0, len(a.maps))
+	for mapID, linkHashes := range a.maps {
+		for linkHash := range linkHashes {
+			if segment, exist := a.segments[linkHash]; exist && (len(filter.Process) == 0 || filter.Process == segment.Link.GetProcess()) {
+				mapIDs = append(mapIDs, mapID)
+				break
+			}
+		}
 	}
 
 	sort.Strings(mapIDs)
-	return pagination.PaginateStrings(mapIDs), nil
+	return filter.Pagination.PaginateStrings(mapIDs), nil
 }
 
 // GetValue implements github.com/stratumn/sdk/store.Adapter.GetValue.
@@ -253,7 +256,7 @@ func (a *DummyStore) NewBatch() (store.Batch, error) {
 	return NewBatch(a), nil
 }
 
-func (a *DummyStore) findHashesSegments(linkHashes hashSet, filter *store.Filter) (cs.SegmentSlice, error) {
+func (a *DummyStore) findHashesSegments(linkHashes hashSet, filter *store.SegmentFilter) (cs.SegmentSlice, error) {
 	var segments cs.SegmentSlice
 
 HASH_LOOP:
@@ -265,6 +268,9 @@ HASH_LOOP:
 			if prevLinkHash == nil || *filter.PrevLinkHash != *prevLinkHash {
 				continue
 			}
+		} else if len(filter.Process) != 0 &&
+			filter.Process != segment.Link.GetProcess() {
+			continue
 		}
 
 		if len(filter.Tags) > 0 {

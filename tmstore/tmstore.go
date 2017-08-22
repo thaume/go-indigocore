@@ -244,7 +244,7 @@ func (t *TMStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segment, e
 }
 
 // FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
-func (t *TMStore) FindSegments(filter *store.Filter) (segmentSlice cs.SegmentSlice, err error) {
+func (t *TMStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs.SegmentSlice, err error) {
 	response, err := t.sendQuery(tmpop.FindSegments, filter)
 	if err != nil {
 		return
@@ -265,8 +265,8 @@ func (t *TMStore) FindSegments(filter *store.Filter) (segmentSlice cs.SegmentSli
 }
 
 // GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
-func (t *TMStore) GetMapIDs(pagination *store.Pagination) (ids []string, err error) {
-	response, err := t.sendQuery(tmpop.GetMapIDs, pagination)
+func (t *TMStore) GetMapIDs(filter *store.MapIDFilter) (ids []string, err error) {
+	response, err := t.sendQuery(tmpop.GetMapIDs, filter)
 	err = json.Unmarshal(response.Value, &ids)
 	if err != nil {
 		return

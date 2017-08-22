@@ -45,12 +45,12 @@ func newTestTMStore() (store.Adapter, error) {
 }
 
 func freeTestTMStore(s store.Adapter) {
-	mapIDs, err := tmstore.GetMapIDs(&store.Pagination{Limit: 100})
+	mapIDs, err := tmstore.GetMapIDs(&store.MapIDFilter{Pagination: store.Pagination{Limit: 100}})
 	if err != nil {
 		test.Fatal(err)
 	}
 	for _, m := range mapIDs {
-		segments, err := tmstore.FindSegments(&store.Filter{MapID: m, Pagination: store.Pagination{Limit: 100}})
+		segments, err := tmstore.FindSegments(&store.SegmentFilter{MapID: m, Pagination: store.Pagination{Limit: 100}})
 		if err != nil {
 			test.Fatal(err)
 		}
