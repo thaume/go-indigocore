@@ -209,7 +209,7 @@ func TestQuery(t *testing.T) {
 		segment, _ := makeSaveSegmentTx(t)
 		mapID := segment.Link.GetMapID()
 		limit := 1
-		a.MockGetMapIDs.Fn = func(filter *store.MapIDFilter) ([]string, error) {
+		a.MockGetMapIDs.Fn = func(filter *store.MapFilter) ([]string, error) {
 			if filter.Pagination.Limit != limit {
 				t.Errorf("Expected limit %v, got %v", limit, filter.Pagination.Limit)
 			}
@@ -218,7 +218,7 @@ func TestQuery(t *testing.T) {
 
 			return res, nil
 		}
-		args := &store.MapIDFilter{
+		args := &store.MapFilter{
 			Pagination: store.Pagination{
 				Limit: limit,
 			},

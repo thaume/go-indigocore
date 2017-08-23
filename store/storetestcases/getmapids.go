@@ -40,7 +40,7 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 		}
 	}
 
-	slice, err := a.GetMapIDs(&store.MapIDFilter{Pagination: store.Pagination{Limit: store.DefaultLimit * store.DefaultLimit}})
+	slice, err := a.GetMapIDs(&store.MapFilter{Pagination: store.Pagination{Limit: store.DefaultLimit * store.DefaultLimit}})
 	if err != nil {
 		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
@@ -71,7 +71,7 @@ func (f Factory) TestGetMapIDsPagination(t *testing.T) {
 		}
 	}
 
-	slice, err := a.GetMapIDs(&store.MapIDFilter{Pagination: store.Pagination{Offset: 3, Limit: 5}})
+	slice, err := a.GetMapIDs(&store.MapFilter{Pagination: store.Pagination{Offset: 3, Limit: 5}})
 	if err != nil {
 		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
@@ -86,7 +86,7 @@ func (f Factory) TestGetMapIDsEmpty(t *testing.T) {
 	a := f.initAdapter(t)
 	defer f.free(a)
 
-	slice, err := a.GetMapIDs(&store.MapIDFilter{Pagination: store.Pagination{Offset: 100000, Limit: 5}})
+	slice, err := a.GetMapIDs(&store.MapFilter{Pagination: store.Pagination{Offset: 100000, Limit: 5}})
 	if err != nil {
 		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
@@ -111,7 +111,7 @@ func (f Factory) TestGetMapIDsByProcess(t *testing.T) {
 		}
 	}
 
-	slice, err := a.GetMapIDs(&store.MapIDFilter{Pagination: store.Pagination{Limit: store.DefaultLimit * store.DefaultLimit}, Process: processNames[0]})
+	slice, err := a.GetMapIDs(&store.MapFilter{Pagination: store.Pagination{Limit: store.DefaultLimit * store.DefaultLimit}, Process: processNames[0]})
 	if err != nil {
 		t.Fatalf("a.GetMapIDsByProcess(): err: %s", err)
 	}
@@ -129,7 +129,7 @@ func (f Factory) TestGetMapIDsByProcess(t *testing.T) {
 }
 
 // BenchmarkGetMapIDs benchmarks getting map IDs.
-func (f Factory) BenchmarkGetMapIDs(b *testing.B, numSegments int, segmentFunc SegmentFunc, filterFunc MapIDFilterFunc) {
+func (f Factory) BenchmarkGetMapIDs(b *testing.B, numSegments int, segmentFunc SegmentFunc, filterFunc MapFilterFunc) {
 	a := f.initAdapterB(b)
 	defer f.free(a)
 
@@ -137,7 +137,7 @@ func (f Factory) BenchmarkGetMapIDs(b *testing.B, numSegments int, segmentFunc S
 		a.SaveSegment(segmentFunc(b, numSegments, i))
 	}
 
-	filters := make([]*store.MapIDFilter, b.N)
+	filters := make([]*store.MapFilter, b.N)
 	for i := 0; i < b.N; i++ {
 		filters[i] = filterFunc(b, numSegments, i)
 	}
@@ -170,7 +170,7 @@ func (f Factory) BenchmarkGetMapIDs10000(b *testing.B) {
 }
 
 // BenchmarkGetMapIDsParallel benchmarks getting map IDs in parallel.
-func (f Factory) BenchmarkGetMapIDsParallel(b *testing.B, numSegments int, segmentFunc SegmentFunc, filterFunc MapIDFilterFunc) {
+func (f Factory) BenchmarkGetMapIDsParallel(b *testing.B, numSegments int, segmentFunc SegmentFunc, filterFunc MapFilterFunc) {
 	a := f.initAdapterB(b)
 	defer f.free(a)
 
@@ -178,7 +178,7 @@ func (f Factory) BenchmarkGetMapIDsParallel(b *testing.B, numSegments int, segme
 		a.SaveSegment(segmentFunc(b, numSegments, i))
 	}
 
-	filters := make([]*store.MapIDFilter, b.N)
+	filters := make([]*store.MapFilter, b.N)
 	for i := 0; i < b.N; i++ {
 		filters[i] = filterFunc(b, numSegments, i)
 	}

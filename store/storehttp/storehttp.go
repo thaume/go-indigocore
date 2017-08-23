@@ -284,7 +284,7 @@ func (s *Server) findSegments(w http.ResponseWriter, r *http.Request, _ httprout
 }
 
 func (s *Server) getMapIDs(w http.ResponseWriter, r *http.Request, _ httprouter.Params) (interface{}, error) {
-	filter, e := parseMapIDFilter(r)
+	filter, e := parseMapFilter(r)
 	if e != nil {
 		return nil, e
 	}

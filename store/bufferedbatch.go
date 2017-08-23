@@ -134,7 +134,7 @@ func (b *BufferedBatch) FindSegments(filter *SegmentFilter) (cs.SegmentSlice, er
 }
 
 // GetMapIDs delegates the call to the store
-func (b *BufferedBatch) GetMapIDs(filter *MapIDFilter) ([]string, error) {
+func (b *BufferedBatch) GetMapIDs(filter *MapFilter) ([]string, error) {
 	return b.originalStore.GetMapIDs(filter)
 }
 

@@ -54,7 +54,7 @@ type Reader interface {
 	FindSegments(filter *SegmentFilter) (cs.SegmentSlice, error)
 
 	// Get all the existing map IDs.
-	GetMapIDs(filter *MapIDFilter) ([]string, error)
+	GetMapIDs(filter *MapFilter) ([]string, error)
 
 	// Gets a value at a key
 	GetValue(key []byte) ([]byte, error)
@@ -112,8 +112,8 @@ type SegmentFilter struct {
 	Tags []string `json:"tags"`
 }
 
-// MapIDFilter contains filtering options for segments.
-type MapIDFilter struct {
+// MapFilter contains filtering options for segments.
+type MapFilter struct {
 	Pagination `json:"pagination"`
 
 	// Process name is optionnal.

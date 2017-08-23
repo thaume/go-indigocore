@@ -265,7 +265,7 @@ func (t *TMStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs.Seg
 }
 
 // GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
-func (t *TMStore) GetMapIDs(filter *store.MapIDFilter) (ids []string, err error) {
+func (t *TMStore) GetMapIDs(filter *store.MapFilter) (ids []string, err error) {
 	response, err := t.sendQuery(tmpop.GetMapIDs, filter)
 	err = json.Unmarshal(response.Value, &ids)
 	if err != nil {

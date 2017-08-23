@@ -193,13 +193,13 @@ type MockGetMapIDs struct {
 	CalledCount int
 
 	// The pagination that was passed to each call.
-	CalledWith []*store.MapIDFilter
+	CalledWith []*store.MapFilter
 
 	// The last pagination that was passed.
-	LastCalledWith *store.MapIDFilter
+	LastCalledWith *store.MapFilter
 
 	// An optional implementation of the function.
-	Fn func(*store.MapIDFilter) ([]string, error)
+	Fn func(*store.MapFilter) ([]string, error)
 }
 
 // MockNewBatch mocks the NewBatch function.
@@ -327,7 +327,7 @@ func (a *MockAdapter) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice
 }
 
 // GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
-func (a *MockAdapter) GetMapIDs(filter *store.MapIDFilter) ([]string, error) {
+func (a *MockAdapter) GetMapIDs(filter *store.MapFilter) ([]string, error) {
 	a.MockGetMapIDs.CalledCount++
 	a.MockGetMapIDs.CalledWith = append(a.MockGetMapIDs.CalledWith, filter)
 	a.MockGetMapIDs.LastCalledWith = filter

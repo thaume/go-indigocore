@@ -145,7 +145,7 @@ type MockBatchGetMapIDs struct {
 	CalledCount int
 
 	// An optional implementation of the function.
-	Fn func(filter *store.MapIDFilter) ([]string, error)
+	Fn func(filter *store.MapFilter) ([]string, error)
 }
 
 // MockBatchGetValue mocks the GetValue function.
@@ -241,7 +241,7 @@ func (a *MockBatch) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, 
 }
 
 // GetMapIDs delegates the call to a underlying store
-func (a *MockBatch) GetMapIDs(filter *store.MapIDFilter) ([]string, error) {
+func (a *MockBatch) GetMapIDs(filter *store.MapFilter) ([]string, error) {
 	a.MockGetMapIDs.CalledCount++
 
 	if a.MockGetMapIDs.Fn != nil {

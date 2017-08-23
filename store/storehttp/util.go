@@ -61,7 +61,7 @@ func parseSegmentFilter(r *http.Request) (*store.SegmentFilter, error) {
 	}, nil
 }
 
-func parseMapIDFilter(r *http.Request) (*store.MapIDFilter, error) {
+func parseMapFilter(r *http.Request) (*store.MapFilter, error) {
 	pagination, err := parsePagination(r)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func parseMapIDFilter(r *http.Request) (*store.MapIDFilter, error) {
 
 	var process = r.URL.Query().Get("process")
 
-	return &store.MapIDFilter{
+	return &store.MapFilter{
 		Pagination: *pagination,
 		Process:    process,
 	}, nil

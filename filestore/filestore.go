@@ -202,7 +202,7 @@ func (a *FileStore) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, 
 }
 
 // GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
-func (a *FileStore) GetMapIDs(filter *store.MapIDFilter) ([]string, error) {
+func (a *FileStore) GetMapIDs(filter *store.MapFilter) ([]string, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 

@@ -189,7 +189,7 @@ func (a *DummyStore) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice,
 }
 
 // GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
-func (a *DummyStore) GetMapIDs(filter *store.MapIDFilter) ([]string, error) {
+func (a *DummyStore) GetMapIDs(filter *store.MapFilter) ([]string, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 

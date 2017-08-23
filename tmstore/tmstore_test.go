@@ -45,7 +45,7 @@ func newTestTMStore() (store.Adapter, error) {
 }
 
 func freeTestTMStore(s store.Adapter) {
-	mapIDs, err := tmstore.GetMapIDs(&store.MapIDFilter{Pagination: store.Pagination{Limit: 100}})
+	mapIDs, err := tmstore.GetMapIDs(&store.MapFilter{Pagination: store.Pagination{Limit: 100}})
 	if err != nil {
 		test.Fatal(err)
 	}

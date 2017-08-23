@@ -87,6 +87,6 @@ func (c *Commit) Proof(key []byte) ([]byte, []byte, bool) {
 
 // GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
 // It might be out of sync with the tree.
-func (c *Commit) GetMapIDs(filter *store.MapIDFilter) ([]string, error) {
+func (c *Commit) GetMapIDs(filter *store.MapFilter) ([]string, error) {
 	return c.adapter.GetMapIDs(filter)
 }

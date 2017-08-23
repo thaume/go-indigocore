@@ -201,9 +201,9 @@ func TestMockAdapter_GetMapIDs(t *testing.T) {
 		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
 
-	a.MockGetMapIDs.Fn = func(*store.MapIDFilter) ([]string, error) { return []string{"one", "two"}, nil }
+	a.MockGetMapIDs.Fn = func(*store.MapFilter) ([]string, error) { return []string{"one", "two"}, nil }
 	// FIXME test with process
-	filter := store.MapIDFilter{
+	filter := store.MapFilter{
 		Pagination: store.Pagination{Offset: 10},
 	}
 	s, err := a.GetMapIDs(&filter)
@@ -217,7 +217,7 @@ func TestMockAdapter_GetMapIDs(t *testing.T) {
 	if got, want := a.MockGetMapIDs.CalledCount, 2; got != want {
 		t.Errorf(`a.MockGetMapIDs.CalledCount = %d want %d`, got, want)
 	}
-	if got, want := a.MockGetMapIDs.CalledWith, []*store.MapIDFilter{nil, &filter}; !reflect.DeepEqual(got, want) {
+	if got, want := a.MockGetMapIDs.CalledWith, []*store.MapFilter{nil, &filter}; !reflect.DeepEqual(got, want) {
 		t.Errorf("a.MockGetMapIDs.CalledWith = %q\n want %q", got, want)
 	}
 	if got, want := a.MockGetMapIDs.LastCalledWith, &filter; got != want {

@@ -281,7 +281,7 @@ func (t *TMPop) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) 
 		resQuery.Proof = proofsByte
 
 	case GetMapIDs:
-		filter := &store.MapIDFilter{}
+		filter := &store.MapFilter{}
 		if err := json.Unmarshal(reqQuery.Data, filter); err != nil {
 			break
 		}

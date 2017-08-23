@@ -206,13 +206,13 @@ func RandomSegmentPrevLinkHashTags(b *testing.B, numSegments, i int) *cs.Segment
 	return s
 }
 
-// MapIDFilterFunc is a type for a function that creates a mapId filter for
+// MapFilterFunc is a type for a function that creates a mapId filter for
 // benchmarks.
-type MapIDFilterFunc func(b *testing.B, numSegments, i int) *store.MapIDFilter
+type MapFilterFunc func(b *testing.B, numSegments, i int) *store.MapFilter
 
 // RandomPaginationOffset is a a PaginationFunc that create a pagination with a random offset.
-func RandomPaginationOffset(b *testing.B, numSegments, i int) *store.MapIDFilter {
-	return &store.MapIDFilter{
+func RandomPaginationOffset(b *testing.B, numSegments, i int) *store.MapFilter {
+	return &store.MapFilter{
 		Pagination: store.Pagination{
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,
