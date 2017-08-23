@@ -164,7 +164,7 @@ func (a *FileStore) deleteSegment(linkHash *types.Bytes32) (*cs.Segment, error) 
 }
 
 // FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
-func (a *FileStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) {
+func (a *FileStore) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 
@@ -177,6 +177,8 @@ func (a *FileStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) 
 				return nil
 			}
 		} else if filter.MapID != "" && filter.MapID != segment.Link.GetMapID() {
+			return nil
+		} else if filter.Process != "" && filter.Process != segment.Link.GetProcess() {
 			return nil
 		}
 
@@ -200,13 +202,15 @@ func (a *FileStore) FindSegments(filter *store.Filter) (cs.SegmentSlice, error) 
 }
 
 // GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
-func (a *FileStore) GetMapIDs(pagination *store.Pagination) ([]string, error) {
+func (a *FileStore) GetMapIDs(filter *store.MapFilter) ([]string, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 
 	set := map[string]struct{}{}
 	a.forEach(func(segment *cs.Segment) error {
-		set[segment.Link.GetMapID()] = struct{}{}
+		if len(filter.Process) == 0 || segment.Link.GetProcess() == filter.Process {
+			set[segment.Link.GetMapID()] = struct{}{}
+		}
 		return nil
 	})
 
@@ -216,7 +220,7 @@ func (a *FileStore) GetMapIDs(pagination *store.Pagination) ([]string, error) {
 	}
 
 	sort.Strings(mapIDs)
-	return pagination.PaginateStrings(mapIDs), nil
+	return filter.Pagination.PaginateStrings(mapIDs), nil
 }
 
 // NewBatch implements github.com/stratumn/sdk/store.Adapter.NewBatch.

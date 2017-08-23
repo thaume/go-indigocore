@@ -40,7 +40,7 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 		}
 	}
 
-	slice, err := a.GetMapIDs(&store.Pagination{Limit: store.DefaultLimit * store.DefaultLimit})
+	slice, err := a.GetMapIDs(&store.MapFilter{Pagination: store.Pagination{Limit: store.DefaultLimit * store.DefaultLimit}})
 	if err != nil {
 		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
@@ -71,7 +71,7 @@ func (f Factory) TestGetMapIDsPagination(t *testing.T) {
 		}
 	}
 
-	slice, err := a.GetMapIDs(&store.Pagination{Offset: 3, Limit: 5})
+	slice, err := a.GetMapIDs(&store.MapFilter{Pagination: store.Pagination{Offset: 3, Limit: 5}})
 	if err != nil {
 		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
@@ -86,7 +86,7 @@ func (f Factory) TestGetMapIDsEmpty(t *testing.T) {
 	a := f.initAdapter(t)
 	defer f.free(a)
 
-	slice, err := a.GetMapIDs(&store.Pagination{Offset: 100000, Limit: 5})
+	slice, err := a.GetMapIDs(&store.MapFilter{Pagination: store.Pagination{Offset: 100000, Limit: 5}})
 	if err != nil {
 		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
@@ -96,8 +96,40 @@ func (f Factory) TestGetMapIDsEmpty(t *testing.T) {
 	}
 }
 
+// TestGetMapIDsByProcess tests what happens when you get map IDs filtered by process name.
+func (f Factory) TestGetMapIDsByProcess(t *testing.T) {
+	var processNames = [2]string{"Foo", "Bar"}
+	a := f.initAdapter(t)
+	defer f.free(a)
+
+	for i := 0; i < store.DefaultLimit; i++ {
+		for j := 0; j < store.DefaultLimit; j++ {
+			s := cstesting.RandomSegment()
+			s.Link.Meta["mapId"] = fmt.Sprintf("map%d", i)
+			s.Link.Meta["process"] = processNames[i%2]
+			a.SaveSegment(s)
+		}
+	}
+
+	slice, err := a.GetMapIDs(&store.MapFilter{Pagination: store.Pagination{Limit: store.DefaultLimit * store.DefaultLimit}, Process: processNames[0]})
+	if err != nil {
+		t.Fatalf("a.GetMapIDsByProcess(): err: %s", err)
+	}
+
+	if got, want := len(slice), store.DefaultLimit/2; got != want {
+		t.Errorf("len(slice) = %d want %d", got, want)
+	}
+
+	for i := 0; i < store.DefaultLimit; i += 2 {
+		mapID := fmt.Sprintf("map%d", i)
+		if !testutil.ContainsString(slice, mapID) {
+			t.Errorf("slice does not contain %q", mapID)
+		}
+	}
+}
+
 // BenchmarkGetMapIDs benchmarks getting map IDs.
-func (f Factory) BenchmarkGetMapIDs(b *testing.B, numSegments int, segmentFunc SegmentFunc, paginationFunc PaginationFunc) {
+func (f Factory) BenchmarkGetMapIDs(b *testing.B, numSegments int, segmentFunc SegmentFunc, filterFunc MapFilterFunc) {
 	a := f.initAdapterB(b)
 	defer f.free(a)
 
@@ -105,16 +137,16 @@ func (f Factory) BenchmarkGetMapIDs(b *testing.B, numSegments int, segmentFunc S
 		a.SaveSegment(segmentFunc(b, numSegments, i))
 	}
 
-	paginations := make([]*store.Pagination, b.N)
+	filters := make([]*store.MapFilter, b.N)
 	for i := 0; i < b.N; i++ {
-		paginations[i] = paginationFunc(b, numSegments, i)
+		filters[i] = filterFunc(b, numSegments, i)
 	}
 
 	b.ResetTimer()
 	log.SetOutput(ioutil.Discard)
 
 	for i := 0; i < b.N; i++ {
-		if s, err := a.GetMapIDs(paginations[i]); err != nil {
+		if s, err := a.GetMapIDs(filters[i]); err != nil {
 			b.Fatal(err)
 		} else if s == nil {
 			b.Error("s = nil want []string")
@@ -138,7 +170,7 @@ func (f Factory) BenchmarkGetMapIDs10000(b *testing.B) {
 }
 
 // BenchmarkGetMapIDsParallel benchmarks getting map IDs in parallel.
-func (f Factory) BenchmarkGetMapIDsParallel(b *testing.B, numSegments int, segmentFunc SegmentFunc, paginationFunc PaginationFunc) {
+func (f Factory) BenchmarkGetMapIDsParallel(b *testing.B, numSegments int, segmentFunc SegmentFunc, filterFunc MapFilterFunc) {
 	a := f.initAdapterB(b)
 	defer f.free(a)
 
@@ -146,9 +178,9 @@ func (f Factory) BenchmarkGetMapIDsParallel(b *testing.B, numSegments int, segme
 		a.SaveSegment(segmentFunc(b, numSegments, i))
 	}
 
-	paginations := make([]*store.Pagination, b.N)
+	filters := make([]*store.MapFilter, b.N)
 	for i := 0; i < b.N; i++ {
-		paginations[i] = paginationFunc(b, numSegments, i)
+		filters[i] = filterFunc(b, numSegments, i)
 	}
 
 	var counter uint64
@@ -159,7 +191,7 @@ func (f Factory) BenchmarkGetMapIDsParallel(b *testing.B, numSegments int, segme
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			i := int(atomic.AddUint64(&counter, 1) - 1)
-			if s, err := a.GetMapIDs(paginations[i]); err != nil {
+			if s, err := a.GetMapIDs(filters[i]); err != nil {
 				b.Error(err)
 			} else if s == nil {
 				b.Error("s = nil want []string")

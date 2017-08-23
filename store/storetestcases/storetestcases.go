@@ -63,10 +63,13 @@ func (f Factory) RunTests(t *testing.T) {
 	t.Run("FindSegmentsPrevLinkHashTags", f.TestFindSegmentsPrevLinkHashTags)
 	t.Run("FindSegmentsPrevLinkHashMapID", f.TestFindSegmentsPrevLinkHashMapID)
 	t.Run("FindSegmentsPrevLinkHashNotFound", f.TestFindSegmentsPrevLinkHashNotFound)
+	t.Run("TestFindSegmentWithGoodProcess", f.TestFindSegmentWithGoodProcess)
+	t.Run("TestFindSegmentWithBadProcess", f.TestFindSegmentWithBadProcess)
 	t.Run("GetInfo", f.TestGetInfo)
 	t.Run("GetMapIDs", f.TestGetMapIDs)
 	t.Run("GetMapIDsPagination", f.TestGetMapIDsPagination)
 	t.Run("GetMapIDs_empty", f.TestGetMapIDsEmpty)
+	t.Run("GetMapIDsByProcess", f.TestGetMapIDsByProcess)
 	t.Run("GetSegment", f.TestGetSegment)
 	t.Run("GetSegmentUpdatedState", f.TestGetSegmentUpdatedState)
 	t.Run("GetSegmentUpdatedMapID", f.TestGetSegmentUpdatedMapID)
@@ -203,25 +206,27 @@ func RandomSegmentPrevLinkHashTags(b *testing.B, numSegments, i int) *cs.Segment
 	return s
 }
 
-// PaginationFunc is a type for a function that creates a pagination for
+// MapFilterFunc is a type for a function that creates a mapId filter for
 // benchmarks.
-type PaginationFunc func(b *testing.B, numSegments, i int) *store.Pagination
+type MapFilterFunc func(b *testing.B, numSegments, i int) *store.MapFilter
 
 // RandomPaginationOffset is a a PaginationFunc that create a pagination with a random offset.
-func RandomPaginationOffset(b *testing.B, numSegments, i int) *store.Pagination {
-	return &store.Pagination{
-		Offset: rand.Int() % numSegments,
-		Limit:  store.DefaultLimit,
+func RandomPaginationOffset(b *testing.B, numSegments, i int) *store.MapFilter {
+	return &store.MapFilter{
+		Pagination: store.Pagination{
+			Offset: rand.Int() % numSegments,
+			Limit:  store.DefaultLimit,
+		},
 	}
 }
 
 // FilterFunc is a type for a function that creates a filter for benchmarks.
-type FilterFunc func(b *testing.B, numSegments, i int) *store.Filter
+type FilterFunc func(b *testing.B, numSegments, i int) *store.SegmentFilter
 
 // RandomFilterOffset is a a FilterFunc that create a filter with a random
 // offset.
-func RandomFilterOffset(b *testing.B, numSegments, i int) *store.Filter {
-	return &store.Filter{
+func RandomFilterOffset(b *testing.B, numSegments, i int) *store.SegmentFilter {
+	return &store.SegmentFilter{
 		Pagination: store.Pagination{
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,
@@ -232,8 +237,8 @@ func RandomFilterOffset(b *testing.B, numSegments, i int) *store.Filter {
 // RandomFilterOffsetMapID is a a FilterFunc that create a filter with a random
 // offset and map ID.
 // The map ID will be one of ten possible values.
-func RandomFilterOffsetMapID(b *testing.B, numSegments, i int) *store.Filter {
-	return &store.Filter{
+func RandomFilterOffsetMapID(b *testing.B, numSegments, i int) *store.SegmentFilter {
+	return &store.SegmentFilter{
 		Pagination: store.Pagination{
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,
@@ -245,9 +250,9 @@ func RandomFilterOffsetMapID(b *testing.B, numSegments, i int) *store.Filter {
 // RandomFilterOffsetPrevLinkHash is a a FilterFunc that create a filter with a
 // random offset and previous link hash.
 // The previous link hash will be one of ten possible values.
-func RandomFilterOffsetPrevLinkHash(b *testing.B, numSegments, i int) *store.Filter {
+func RandomFilterOffsetPrevLinkHash(b *testing.B, numSegments, i int) *store.SegmentFilter {
 	prevLinkHash, _ := types.NewBytes32FromString(fmt.Sprintf("00000000000000000000000000000000000000000000000000000000000000%2d", i%10))
-	return &store.Filter{
+	return &store.SegmentFilter{
 		Pagination: store.Pagination{
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,
@@ -259,8 +264,8 @@ func RandomFilterOffsetPrevLinkHash(b *testing.B, numSegments, i int) *store.Fil
 // RandomFilterOffsetTags is a a FilterFunc that create a filter with a random
 // offset and map ID.
 // The tags will be one of fifty possible combinations.
-func RandomFilterOffsetTags(b *testing.B, numSegments, i int) *store.Filter {
-	return &store.Filter{
+func RandomFilterOffsetTags(b *testing.B, numSegments, i int) *store.SegmentFilter {
+	return &store.SegmentFilter{
 		Pagination: store.Pagination{
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,
@@ -273,8 +278,8 @@ func RandomFilterOffsetTags(b *testing.B, numSegments, i int) *store.Filter {
 // random offset and map ID and tags.
 // The map ID will be one of ten possible values.
 // The tags will be one of fifty possible combinations.
-func RandomFilterOffsetMapIDTags(b *testing.B, numSegments, i int) *store.Filter {
-	return &store.Filter{
+func RandomFilterOffsetMapIDTags(b *testing.B, numSegments, i int) *store.SegmentFilter {
+	return &store.SegmentFilter{
 		Pagination: store.Pagination{
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,
@@ -288,9 +293,9 @@ func RandomFilterOffsetMapIDTags(b *testing.B, numSegments, i int) *store.Filter
 // with a random offset and previous link hash and tags.
 // The previous link hash will be one of ten possible values.
 // The tags will be one of fifty possible combinations.
-func RandomFilterOffsetPrevLinkHashTags(b *testing.B, numSegments, i int) *store.Filter {
+func RandomFilterOffsetPrevLinkHashTags(b *testing.B, numSegments, i int) *store.SegmentFilter {
 	prevLinkHash, _ := types.NewBytes32FromString(fmt.Sprintf("00000000000000000000000000000000000000000000000000000000000000%2d", i%10))
-	return &store.Filter{
+	return &store.SegmentFilter{
 		Pagination: store.Pagination{
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,

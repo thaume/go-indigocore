@@ -170,8 +170,8 @@ func TestMockAdapter_FindSegments(t *testing.T) {
 	}
 
 	s := cstesting.RandomSegment()
-	a.MockFindSegments.Fn = func(*store.Filter) (cs.SegmentSlice, error) { return cs.SegmentSlice{s}, nil }
-	f := store.Filter{PrevLinkHash: testutil.RandomHash()}
+	a.MockFindSegments.Fn = func(*store.SegmentFilter) (cs.SegmentSlice, error) { return cs.SegmentSlice{s}, nil }
+	f := store.SegmentFilter{PrevLinkHash: testutil.RandomHash()}
 	s1, err := a.FindSegments(&f)
 	if err != nil {
 		t.Fatalf("a.FindSegments(): err: %s", err)
@@ -185,7 +185,7 @@ func TestMockAdapter_FindSegments(t *testing.T) {
 	if got, want := a.MockFindSegments.CalledCount, 2; got != want {
 		t.Errorf(`a.MockFindSegments.CalledCount = %d want %d`, got, want)
 	}
-	if got, want := a.MockFindSegments.CalledWith, []*store.Filter{nil, &f}; !reflect.DeepEqual(got, want) {
+	if got, want := a.MockFindSegments.CalledWith, []*store.SegmentFilter{nil, &f}; !reflect.DeepEqual(got, want) {
 		t.Errorf("a.MockFindSegments.CalledWith = %q\n want %q", got, want)
 	}
 	if got, want := a.MockFindSegments.LastCalledWith, &f; got != want {
@@ -201,9 +201,12 @@ func TestMockAdapter_GetMapIDs(t *testing.T) {
 		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
 
-	a.MockGetMapIDs.Fn = func(*store.Pagination) ([]string, error) { return []string{"one", "two"}, nil }
-	p := store.Pagination{Offset: 10}
-	s, err := a.GetMapIDs(&p)
+	a.MockGetMapIDs.Fn = func(*store.MapFilter) ([]string, error) { return []string{"one", "two"}, nil }
+	// FIXME test with process
+	filter := store.MapFilter{
+		Pagination: store.Pagination{Offset: 10},
+	}
+	s, err := a.GetMapIDs(&filter)
 	if err != nil {
 		t.Fatalf("a.GetMapIDs(): err: %s", err)
 	}
@@ -214,10 +217,10 @@ func TestMockAdapter_GetMapIDs(t *testing.T) {
 	if got, want := a.MockGetMapIDs.CalledCount, 2; got != want {
 		t.Errorf(`a.MockGetMapIDs.CalledCount = %d want %d`, got, want)
 	}
-	if got, want := a.MockGetMapIDs.CalledWith, []*store.Pagination{nil, &p}; !reflect.DeepEqual(got, want) {
+	if got, want := a.MockGetMapIDs.CalledWith, []*store.MapFilter{nil, &filter}; !reflect.DeepEqual(got, want) {
 		t.Errorf("a.MockGetMapIDs.CalledWith = %q\n want %q", got, want)
 	}
-	if got, want := a.MockGetMapIDs.LastCalledWith, &p; got != want {
+	if got, want := a.MockGetMapIDs.LastCalledWith, &filter; got != want {
 		t.Errorf("a.MockGetMapIDs.LastCalledWith = %q\n want %q", got, want)
 	}
 }

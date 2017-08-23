@@ -253,7 +253,7 @@ func (t *TMPop) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) 
 		resQuery.Proof = proof
 
 	case FindSegments:
-		filter := &store.Filter{}
+		filter := &store.SegmentFilter{}
 		if err := json.Unmarshal(reqQuery.Data, filter); err != nil {
 			break
 		}
@@ -281,11 +281,12 @@ func (t *TMPop) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) 
 		resQuery.Proof = proofsByte
 
 	case GetMapIDs:
-		pagination := &store.Pagination{}
-		if err := json.Unmarshal(reqQuery.Data, pagination); err != nil {
+		filter := &store.MapFilter{}
+		if err := json.Unmarshal(reqQuery.Data, filter); err != nil {
 			break
 		}
-		result, err = commit.GetMapIDs(pagination)
+		result, err = commit.GetMapIDs(filter)
+
 	case GetValue:
 		var key []byte
 		if err := json.Unmarshal(reqQuery.Data, &key); err != nil {

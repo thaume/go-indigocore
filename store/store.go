@@ -51,10 +51,10 @@ type Reader interface {
 	GetSegment(linkHash *types.Bytes32) (*cs.Segment, error)
 
 	// Find segments. Returns an empty slice if there are no results.
-	FindSegments(filter *Filter) (cs.SegmentSlice, error)
+	FindSegments(filter *SegmentFilter) (cs.SegmentSlice, error)
 
 	// Get all the existing map IDs.
-	GetMapIDs(pagination *Pagination) ([]string, error)
+	GetMapIDs(filter *MapFilter) ([]string, error)
 
 	// Gets a value at a key
 	GetValue(key []byte) ([]byte, error)
@@ -93,20 +93,31 @@ type Pagination struct {
 	Limit int `json:"limit"`
 }
 
-// Filter contains filtering options for segments.
+// SegmentFilter contains filtering options for segments.
 // If PrevLinkHash is not nil, MapID is ignored because a previous link hash
 // implies the map ID of the previous segment.
-type Filter struct {
+type SegmentFilter struct {
 	Pagination `json:"pagination"`
 
 	// A map ID the segments must have.
 	MapID string `json:"mapId"`
+
+	// Process name is optionnal.
+	Process string `json:"process"`
 
 	// A previous link hash the segments must have.
 	PrevLinkHash *types.Bytes32 `json:"prevLinkHash"`
 
 	// A slice of tags the segments must all contain.
 	Tags []string `json:"tags"`
+}
+
+// MapFilter contains filtering options for segments.
+type MapFilter struct {
+	Pagination `json:"pagination"`
+
+	// Process name is optionnal.
+	Process string `json:"process"`
 }
 
 // PaginateStrings paginates a list of strings

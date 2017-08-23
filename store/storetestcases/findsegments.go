@@ -36,7 +36,7 @@ func (f Factory) TestFindSegments(t *testing.T) {
 		a.SaveSegment(cstesting.RandomSegment())
 	}
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Limit: store.DefaultLimit,
 		},
@@ -70,7 +70,7 @@ func (f Factory) TestFindSegmentsPagination(t *testing.T) {
 	}
 
 	limit := 10 + rand.Intn(10)
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Offset: rand.Intn(40),
 			Limit:  limit,
@@ -103,7 +103,7 @@ func (f Factory) TestFindSegmentEmpty(t *testing.T) {
 		a.SaveSegment(cstesting.RandomSegment())
 	}
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Tags: []string{"blablabla"},
 	})
 	if err != nil {
@@ -141,7 +141,7 @@ func (f Factory) TestFindSegmentsSingleTag(t *testing.T) {
 		a.SaveSegment(s)
 	}
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Limit: store.DefaultLimit * 3,
 		},
@@ -182,7 +182,7 @@ func (f Factory) TestFindSegmentsMultipleTags(t *testing.T) {
 		a.SaveSegment(s)
 	}
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Limit: store.DefaultLimit * 3,
 		},
@@ -211,7 +211,7 @@ func (f Factory) TestFindSegmentsMapID(t *testing.T) {
 		}
 	}
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Limit: store.DefaultLimit * 2,
 		},
@@ -258,7 +258,7 @@ func (f Factory) TestFindSegmentsMapIDTags(t *testing.T) {
 		a.SaveSegment(s)
 	}
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Limit: store.DefaultLimit * 3,
 		},
@@ -283,7 +283,7 @@ func (f Factory) TestFindSegmentsMapIDNotFound(t *testing.T) {
 	a := f.initAdapter(t)
 	defer f.free(a)
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Limit: store.DefaultLimit,
 		},
@@ -311,7 +311,7 @@ func (f Factory) TestFindSegmentsPrevLinkHash(t *testing.T) {
 		a.SaveSegment(cstesting.RandomBranch(s))
 	}
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Limit: store.DefaultLimit * 2,
 		},
@@ -357,7 +357,7 @@ func (f Factory) TestFindSegmentsPrevLinkHashTags(t *testing.T) {
 		a.SaveSegment(s2)
 	}
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Limit: store.DefaultLimit * 3,
 		},
@@ -395,7 +395,7 @@ func (f Factory) TestFindSegmentsPrevLinkHashMapID(t *testing.T) {
 		a.SaveSegment(s2)
 	}
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Limit: store.DefaultLimit * 2,
 		},
@@ -420,11 +420,67 @@ func (f Factory) TestFindSegmentsPrevLinkHashNotFound(t *testing.T) {
 	a := f.initAdapter(t)
 	defer f.free(a)
 
-	slice, err := a.FindSegments(&store.Filter{
+	slice, err := a.FindSegments(&store.SegmentFilter{
 		Pagination: store.Pagination{
 			Limit: store.DefaultLimit,
 		},
 		PrevLinkHash: testutil.RandomHash(),
+	})
+	if err != nil {
+		t.Fatalf("a.FindSegments(): err: %s", err)
+	}
+
+	if got, want := len(slice), 0; got != want {
+		t.Errorf("len(slice) = %d want %d", got, want)
+	}
+}
+
+// TestFindSegmentWithGoodProcess tests what happens when you search with a process name filter.
+func (f Factory) TestFindSegmentWithGoodProcess(t *testing.T) {
+	var processNames = [4]string{"Foo", "Bar", "Yin", "Yang"}
+
+	a := f.initAdapter(t)
+	defer f.free(a)
+
+	for i := 0; i < store.DefaultLimit; i++ {
+		s := cstesting.RandomSegment()
+		s.Link.Meta["process"] = processNames[i%len(processNames)]
+		a.SaveSegment(s)
+	}
+
+	slice, err := a.FindSegments(&store.SegmentFilter{
+		Pagination: store.Pagination{
+			Limit: store.DefaultLimit,
+		},
+		Process: processNames[0],
+	})
+	if err != nil {
+		t.Fatalf("a.FindSegments(): err: %s", err)
+	}
+
+	if got, want := len(slice), store.DefaultLimit/len(processNames); got != want {
+		t.Errorf("len(slice) = %d want %d", got, want)
+	}
+}
+
+// TestFindSegmentWithBadProcess tests what happens when you search with an unexisting process name.
+func (f Factory) TestFindSegmentWithBadProcess(t *testing.T) {
+	var processNames = [2]string{"Foo", "Bar"}
+
+	a := f.initAdapter(t)
+	defer f.free(a)
+
+	for i := 0; i < store.DefaultLimit*2; i++ {
+		s := cstesting.RandomSegment()
+		s.Link.Meta["process"] = processNames[i%2]
+		a.SaveSegment(s)
+	}
+
+	slice, err := a.FindSegments(&store.SegmentFilter{
+		Pagination: store.Pagination{
+			Limit: store.DefaultLimit,
+		},
+		Process: "Baz",
 	})
 	if err != nil {
 		t.Fatalf("a.FindSegments(): err: %s", err)
@@ -444,7 +500,7 @@ func (f Factory) BenchmarkFindSegments(b *testing.B, numSegments int, segmentFun
 		a.SaveSegment(segmentFunc(b, numSegments, i))
 	}
 
-	filters := make([]*store.Filter, b.N)
+	filters := make([]*store.SegmentFilter, b.N)
 	for i := 0; i < b.N; i++ {
 		filters[i] = filterFunc(b, numSegments, i)
 	}
@@ -575,7 +631,7 @@ func (f Factory) BenchmarkFindSegmentsParallel(b *testing.B, numSegments int, se
 		a.SaveSegment(segmentFunc(b, numSegments, i))
 	}
 
-	filters := make([]*store.Filter, b.N)
+	filters := make([]*store.SegmentFilter, b.N)
 	for i := 0; i < b.N; i++ {
 		filters[i] = filterFunc(b, numSegments, i)
 	}

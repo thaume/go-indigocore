@@ -129,13 +129,13 @@ func (b *BufferedBatch) GetSegment(linkHash *types.Bytes32) (segment *cs.Segment
 }
 
 // FindSegments delegates the call to the store
-func (b *BufferedBatch) FindSegments(filter *Filter) (cs.SegmentSlice, error) {
+func (b *BufferedBatch) FindSegments(filter *SegmentFilter) (cs.SegmentSlice, error) {
 	return b.originalStore.FindSegments(filter)
 }
 
 // GetMapIDs delegates the call to the store
-func (b *BufferedBatch) GetMapIDs(pagination *Pagination) ([]string, error) {
-	return b.originalStore.GetMapIDs(pagination)
+func (b *BufferedBatch) GetMapIDs(filter *MapFilter) ([]string, error) {
+	return b.originalStore.GetMapIDs(filter)
 }
 
 // GetValue returns a segment from the cache or delegates the call to the store

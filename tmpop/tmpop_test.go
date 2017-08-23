@@ -178,7 +178,7 @@ func TestQuery(t *testing.T) {
 	t.Run("FindSegments()", func(t *testing.T) {
 		want := commitMockTx(t, h)
 
-		args := &store.Filter{
+		args := &store.SegmentFilter{
 			Pagination: store.Pagination{
 				Limit: store.DefaultLimit,
 			},
@@ -209,17 +209,19 @@ func TestQuery(t *testing.T) {
 		segment, _ := makeSaveSegmentTx(t)
 		mapID := segment.Link.GetMapID()
 		limit := 1
-		a.MockGetMapIDs.Fn = func(pagination *store.Pagination) ([]string, error) {
-			if pagination.Limit != limit {
-				t.Errorf("Expected limit %v, got %v", limit, pagination.Limit)
+		a.MockGetMapIDs.Fn = func(filter *store.MapFilter) ([]string, error) {
+			if filter.Pagination.Limit != limit {
+				t.Errorf("Expected limit %v, got %v", limit, filter.Pagination.Limit)
 			}
 
 			res := []string{mapID}
 
 			return res, nil
 		}
-		args := &store.Pagination{
-			Limit: limit,
+		args := &store.MapFilter{
+			Pagination: store.Pagination{
+				Limit: limit,
+			},
 		}
 
 		var got []string
