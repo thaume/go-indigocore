@@ -15,8 +15,10 @@
 package storetestcases
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 	"sync/atomic"
 	"testing"
 
@@ -72,23 +74,34 @@ func (f Factory) TestDeleteValueNotFound(t *testing.T) {
 	}
 }
 
+func searchNewKey(values map[string][]byte) ([]byte, string) {
+	for {
+		k := testutil.RandomKey()
+		strkey := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(k)), ""), "[]")
+		if _, present := values[strkey]; !present {
+			return k, strkey
+		}
+	}
+}
+
 // BenchmarkDeleteValue benchmarks deleting existing segments.
 func (f Factory) BenchmarkDeleteValue(b *testing.B) {
 	a := f.initAdapterB(b)
 	defer f.free(a)
 
-	values := make([][]byte, b.N)
+	values := make(map[string][]byte, b.N)
 	for i := 0; i < b.N; i++ {
-		v := testutil.RandomKey()
-		a.SaveValue(v, v)
-		values[i] = v
+		k, strkey := searchNewKey(values)
+		v := testutil.RandomValue()
+		a.SaveValue(k, v)
+		values[strkey] = k
 	}
 
 	b.ResetTimer()
 	log.SetOutput(ioutil.Discard)
 
-	for i := 0; i < b.N; i++ {
-		if s, err := a.DeleteValue(values[i]); err != nil {
+	for _, k := range values {
+		if s, err := a.DeleteValue(k); err != nil {
 			b.Error(err)
 		} else if s == nil {
 			b.Error("s = nil want []byte")
@@ -102,11 +115,16 @@ func (f Factory) BenchmarkDeleteValueParallel(b *testing.B) {
 	a := f.initAdapterB(b)
 	defer f.free(a)
 
-	values := make([][]byte, b.N)
+	mapvalues := make(map[string][]byte, b.N)
 	for i := 0; i < b.N; i++ {
-		v := testutil.RandomKey()
-		a.SaveValue(v, v)
-		values[i] = v
+		k, strkey := searchNewKey(mapvalues)
+		v := testutil.RandomValue()
+		a.SaveValue(k, v)
+		mapvalues[strkey] = k
+	}
+	values := make([][]byte, 0, b.N)
+	for _, v := range mapvalues {
+		values = append(values, v)
 	}
 
 	var counter uint64

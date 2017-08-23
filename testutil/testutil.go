@@ -91,7 +91,7 @@ func RandomValue() []byte {
 
 // RandomKey returns a random byte array (with max 64 bytes)
 func RandomKey() []byte {
-	c := rand.Intn(64)
+	c := rand.Intn(63) + 1
 	b := make([]byte, c)
 	rand.Read(b)
 	return b
