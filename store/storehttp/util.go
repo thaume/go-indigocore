@@ -23,6 +23,18 @@ import (
 	"github.com/stratumn/sdk/types"
 )
 
+func splitArrayOfStrings(input string) []string {
+	if input == "" {
+		return nil
+	}
+	var ret []string
+	spaceTags := strings.Split(input, " ")
+	for _, t := range spaceTags {
+		ret = append(ret, strings.Split(t, "+")...)
+	}
+	return ret
+}
+
 func parseSegmentFilter(r *http.Request) (*store.SegmentFilter, error) {
 	pagination, err := parsePagination(r)
 	if err != nil {
@@ -30,12 +42,13 @@ func parseSegmentFilter(r *http.Request) (*store.SegmentFilter, error) {
 	}
 
 	var (
-		mapID           = r.URL.Query().Get("mapId")
+		mapIDsStr       = r.URL.Query().Get("mapIds")
 		process         = r.URL.Query().Get("process")
 		prevLinkHashStr = r.URL.Query().Get("prevLinkHash")
 		tagsStr         = r.URL.Query().Get("tags")
 		prevLinkHash    *types.Bytes32
-		tags            []string
+		mapIDs          = splitArrayOfStrings(mapIDsStr)
+		tags            = splitArrayOfStrings(tagsStr)
 	)
 
 	if prevLinkHashStr != "" {
@@ -45,16 +58,9 @@ func parseSegmentFilter(r *http.Request) (*store.SegmentFilter, error) {
 		}
 	}
 
-	if tagsStr != "" {
-		spaceTags := strings.Split(tagsStr, " ")
-		for _, t := range spaceTags {
-			tags = append(tags, strings.Split(t, "+")...)
-		}
-	}
-
 	return &store.SegmentFilter{
 		Pagination:   *pagination,
-		MapID:        mapID,
+		MapIDs:       mapIDs,
 		Process:      process,
 		PrevLinkHash: prevLinkHash,
 		Tags:         tags,

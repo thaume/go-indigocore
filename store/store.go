@@ -99,8 +99,8 @@ type Pagination struct {
 type SegmentFilter struct {
 	Pagination `json:"pagination"`
 
-	// A map ID the segments must have.
-	MapID string `json:"mapId"`
+	// Map IDs the segments must have.
+	MapIDs []string `json:"mapIds"`
 
 	// Process name is optionnal.
 	Process string `json:"process"`

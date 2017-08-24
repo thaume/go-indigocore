@@ -57,6 +57,7 @@ func (f Factory) RunTests(t *testing.T) {
 	t.Run("FindSegmentsSingleTag", f.TestFindSegmentsSingleTag)
 	t.Run("FindSegmentsMultipleTags", f.TestFindSegmentsMultipleTags)
 	t.Run("FindSegmentsMapID", f.TestFindSegmentsMapID)
+	t.Run("FindSegmentsMapIDs", f.TestFindSegmentsMapIDs)
 	t.Run("FindSegmentsMapIDTags", f.TestFindSegmentsMapIDTags)
 	t.Run("FindSegmentsMapIDNotFound", f.TestFindSegmentsMapIDNotFound)
 	t.Run("FindSegmentsPrevLinkHash", f.TestFindSegmentsPrevLinkHash)
@@ -95,6 +96,9 @@ func (f Factory) RunBenchmarks(b *testing.B) {
 	b.Run("FindSegmentsMapID100", f.BenchmarkFindSegmentsMapID100)
 	b.Run("FindSegmentsMapID1000", f.BenchmarkFindSegmentsMapID1000)
 	b.Run("FindSegmentsMapID10000", f.BenchmarkFindSegmentsMapID10000)
+	b.Run("FindSegmentsMapIDs100", f.BenchmarkFindSegmentsMapIDs100)
+	b.Run("FindSegmentsMapIDs1000", f.BenchmarkFindSegmentsMapIDs1000)
+	b.Run("FindSegmentsMapIDs10000", f.BenchmarkFindSegmentsMapIDs10000)
 	b.Run("FindSegmentsPrevLinkHash100", f.BenchmarkFindSegmentsPrevLinkHash100)
 	b.Run("FindSegmentsPrevLinkHash1000", f.BenchmarkFindSegmentsPrevLinkHash1000)
 	b.Run("FindSegmentsPrevLinkHash10000", f.BenchmarkFindSegmentsPrevLinkHash10000)
@@ -113,6 +117,9 @@ func (f Factory) RunBenchmarks(b *testing.B) {
 	b.Run("FindSegmentsMapID100Parallel", f.BenchmarkFindSegmentsMapID100Parallel)
 	b.Run("FindSegmentsMapID1000Parallel", f.BenchmarkFindSegmentsMapID1000Parallel)
 	b.Run("FindSegmentsMapID10000Parallel", f.BenchmarkFindSegmentsMapID10000Parallel)
+	b.Run("FindSegmentsMapIDs100Parallel", f.BenchmarkFindSegmentsMapIDs100Parallel)
+	b.Run("FindSegmentsMapIDs1000Parallel", f.BenchmarkFindSegmentsMapIDs1000Parallel)
+	b.Run("FindSegmentsMapIDs10000Parallel", f.BenchmarkFindSegmentsMapIDs10000Parallel)
 	b.Run("FindSegmentsPrevLinkHash100Parallel", f.BenchmarkFindSegmentsPrevLinkHash100Parallel)
 	b.Run("FindSegmentsPrevLinkHash1000Parallel", f.BenchmarkFindSegmentsPrevLinkHash1000Parallel)
 	b.Run("FindSegmentsPrevLinkHash10000Parallel", f.BenchmarkFindSegmentsPrevLinkHash10000Parallel)
@@ -243,7 +250,20 @@ func RandomFilterOffsetMapID(b *testing.B, numSegments, i int) *store.SegmentFil
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,
 		},
-		MapID: fmt.Sprintf("%d", i%10),
+		MapIDs: []string{fmt.Sprintf("%d", i%10)},
+	}
+}
+
+// RandomFilterOffsetMapIDs is a a FilterFunc that create a filter with a random
+// offset and 2 map IDs.
+// The map ID will be one of ten possible values.
+func RandomFilterOffsetMapIDs(b *testing.B, numSegments, i int) *store.SegmentFilter {
+	return &store.SegmentFilter{
+		Pagination: store.Pagination{
+			Offset: rand.Int() % numSegments,
+			Limit:  store.DefaultLimit,
+		},
+		MapIDs: []string{fmt.Sprintf("%d", i%10), fmt.Sprintf("%d", (i+1)%10)},
 	}
 }
 
@@ -284,8 +304,8 @@ func RandomFilterOffsetMapIDTags(b *testing.B, numSegments, i int) *store.Segmen
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,
 		},
-		MapID: fmt.Sprintf("%d", i%10),
-		Tags:  []string{fmt.Sprintf("%d", i%5), fmt.Sprintf("%d", i%10)},
+		MapIDs: []string{fmt.Sprintf("%d", i%10)},
+		Tags:   []string{fmt.Sprintf("%d", i%5), fmt.Sprintf("%d", i%10)},
 	}
 }
 

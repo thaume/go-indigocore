@@ -171,15 +171,26 @@ func (a *FileStore) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, 
 	var segments cs.SegmentSlice
 
 	a.forEach(func(segment *cs.Segment) error {
+		var checkMapID = true
 		if filter.PrevLinkHash != nil {
+			checkMapID = false
 			prevLinkHash := segment.Link.GetPrevLinkHash()
 			if prevLinkHash == nil || *filter.PrevLinkHash != *prevLinkHash {
 				return nil
 			}
-		} else if filter.MapID != "" && filter.MapID != segment.Link.GetMapID() {
-			return nil
 		} else if filter.Process != "" && filter.Process != segment.Link.GetProcess() {
 			return nil
+		}
+
+		if checkMapID && len(filter.MapIDs) > 0 {
+			var match = false
+			mapID := segment.Link.GetMapID()
+			for _, filterMapIDs := range filter.MapIDs {
+				match = match || filterMapIDs == mapID
+			}
+			if !match {
+				return nil
+			}
 		}
 
 		if len(filter.Tags) > 0 {
