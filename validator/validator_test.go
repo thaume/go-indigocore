@@ -195,6 +195,74 @@ func TestSchemaValidate(t *testing.T) {
 	}
 }
 
+func TestSignatureValidate(t *testing.T) {
+	// Test data
+	// Private key (hex): 38DD65FFC4108A39735FF486E8B570E4927349D667ED13506ED8F68A51725FF9E346390C0B8C3C435F3B62552971080D356CEC40239BE8F0C145E562DCD12DBA
+	// Public key (hex): E346390C0B8C3C435F3B62552971080D356CEC40239BE8F0C145E562DCD12DBA
+	// Message (hex): 7B226269645072696365223A31302C226275796572223A22416C696365227D
+	// Message (plaintext): {"bidPrice":10,"buyer":"Alice"}
+
+	bidNoSignatureSegment := makeSegment("bid")
+	bidNoSignatureSegment.Link.State["buyer"] = "Alice"
+	bidNoSignatureSegment.Link.State["bidPrice"] = 10
+
+	bidValidSignatureSegment := makeSegment("bid")
+	bidValidSignatureSegment.Link.State["buyer"] = "Alice"
+	bidValidSignatureSegment.Link.State["bidPrice"] = 10
+	bidValidSignatureSegment.Link.Meta["signatures"] = []signatureJSON{
+		signatureJSON{
+			Type:      "EdDSA",
+			PublicKey: "E346390C0B8C3C435F3B62552971080D356CEC40239BE8F0C145E562DCD12DBA",
+			Signature: "1070F82F99EB4E23BD1EF2466A250FEDD800DEE599FFFA6FABB3B74316B773D1E4395CC7CCDD183B51787FDEA5DFCAFC47E06240BDA9B8DC80CA3674CADE7C05",
+		},
+	}
+
+	bidInvalidSignatureSegment := makeSegment("bid")
+	bidInvalidSignatureSegment.Link.State["buyer"] = "Alice"
+	bidInvalidSignatureSegment.Link.State["bidPrice"] = 10
+	bidInvalidSignatureSegment.Link.Meta["signatures"] = []signatureJSON{
+		signatureJSON{
+			Type:      "EdDSA",
+			PublicKey: "E346390C0B8C3C435F3B62552971080D356CEC40239BE8F0C145E562DCD12DBA",
+			Signature: "AAAAF82F99EB4E23BD1EF2466A250FEDD800DEE599FFFA6FABB3B74316B773D1E4395CC7CCDD183B51787FDEA5DFCAFC47E06240BDA9B8DC80CA3674CADE7C05",
+		},
+	}
+
+	bidInvalidSignatureTypeSegment := makeSegment("bid")
+	bidInvalidSignatureTypeSegment.Link.State["buyer"] = "Alice"
+	bidInvalidSignatureTypeSegment.Link.State["bidPrice"] = 10
+	bidInvalidSignatureTypeSegment.Link.Meta["signatures"] = []signatureJSON{
+		signatureJSON{
+			Type:      "XXX",
+			PublicKey: "E346390C0B8C3C435F3B62552971080D356CEC40239BE8F0C145E562DCD12DBA",
+			Signature: "1070F82F99EB4E23BD1EF2466A250FEDD800DEE599FFFA6FABB3B74316B773D1E4395CC7CCDD183B51787FDEA5DFCAFC47E06240BDA9B8DC80CA3674CADE7C05",
+		},
+	}
+
+	defaultSchema, _ := gojsonschema.NewSchema(gojsonschema.NewBytesLoader([]byte(bidValidator)))
+	options := map[string]interface{}{}
+	options["checkSignatures"] = true
+
+	svBid := schemaValidator{Type: "bid", Schema: defaultSchema, Options: options}
+
+	if err := svBid.Validate(&storetesting.MockBatch{}, bidNoSignatureSegment); err == nil {
+		t.Errorf("error validating segment with no signature")
+	}
+
+	if err := svBid.Validate(&storetesting.MockBatch{}, bidValidSignatureSegment); err != nil {
+		t.Errorf("error not validating segment with valid signature: %s", err)
+	}
+
+	if err := svBid.Validate(&storetesting.MockBatch{}, bidInvalidSignatureSegment); err == nil {
+		t.Errorf("error validating segment with invalid signature")
+	}
+
+	if err := svBid.Validate(&storetesting.MockBatch{}, bidInvalidSignatureTypeSegment); err == nil {
+		t.Errorf("error validating segment with invalid signature type")
+	}
+
+}
+
 func TestNewRootValidator(t *testing.T) {
 	tmpfile, err := ioutil.TempFile("", "go-test")
 	if err != nil {
