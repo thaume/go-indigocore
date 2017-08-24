@@ -67,6 +67,22 @@
             "args": []
         },
         {
+            "name": "Launch storehttp test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/store/storehttp",
+            "args": []
+        },
+        {
+            "name": "Launch storetesting test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/store/storetesting",
+            "args": []
+        },
+        {
             "name": "Launch tmstore test function",
             "type": "go",
             "request": "launch",
