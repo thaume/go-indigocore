@@ -329,7 +329,7 @@ func TestFindSegments(t *testing.T) {
 	a.MockFindSegments.Fn = func(*store.SegmentFilter) (cs.SegmentSlice, error) { return s1, nil }
 
 	var s2 cs.SegmentSlice
-	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&limit=2&mapId=123&prevLinkHash="+zeros+"&tags=one+two", nil, &s2)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&limit=2&mapIds=123&prevLinkHash="+zeros+"&tags=one+two", nil, &s2)
 	if err != nil {
 		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
@@ -353,8 +353,58 @@ func TestFindSegments(t *testing.T) {
 	if got, want := f.Limit, 2; got != want {
 		t.Errorf("a.MockFindSegments.LastCalledWith.Limit = %d want %d", got, want)
 	}
-	if got, want := f.MapID, "123"; got != want {
-		t.Errorf("a.MockFindSegments.LastCalledWith.MapID = %q want %q", got, want)
+	if got, want := len(f.MapIDs), 1; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.MapIDs = %q want %q", got, want)
+	} else if got, want := f.MapIDs[0], "123"; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.MapIDs = %q want %q", got, want)
+	}
+	if got, want := f.PrevLinkHash.String(), zeros; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.PrevLinkHash = %q want %q", got, want)
+	}
+	if got, want := f.Tags, []string{"one", "two"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("a.MockFindSegments.LastCalledWith.Tags = %v want %v", got, want)
+	}
+}
+
+func TestFindSegments_multipleMapIDs(t *testing.T) {
+	s, a := createServer()
+	var s1 cs.SegmentSlice
+	for i := 0; i < 10; i++ {
+		s1 = append(s1, cstesting.RandomSegment())
+	}
+	a.MockFindSegments.Fn = func(*store.SegmentFilter) (cs.SegmentSlice, error) { return s1, nil }
+
+	var s2 cs.SegmentSlice
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&limit=2&mapIds=123+456&prevLinkHash="+zeros+"&tags=one+two", nil, &s2)
+	if err != nil {
+		t.Fatalf("testutil.RequestJSON(): err: %s", err)
+	}
+
+	if got, want := w.Code, http.StatusOK; got != want {
+		t.Errorf("w.Code = %d want %d", got, want)
+	}
+	if !reflect.DeepEqual(s2, s1) {
+		got, _ := json.MarshalIndent(s2, "", "  ")
+		want, _ := json.MarshalIndent(s1, "", "  ")
+		t.Errorf("s2 = %s\nwant %s", got, want)
+	}
+	if got, want := a.MockFindSegments.CalledCount, 1; got != want {
+		t.Errorf("a.MockFindSegments.CalledCount = %d want %d", got, want)
+	}
+
+	f := a.MockFindSegments.LastCalledWith
+	if got, want := f.Offset, 1; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.Offset = %d want %d", got, want)
+	}
+	if got, want := f.Limit, 2; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.Limit = %d want %d", got, want)
+	}
+	if got, want := len(f.MapIDs), 2; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.MapIDs = %q want %q", got, want)
+	} else if got, want := f.MapIDs[0], "123"; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.MapIDs = %q want %q", got, want)
+	} else if got, want := f.MapIDs[1], "456"; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.MapIDs = %q want %q", got, want)
 	}
 	if got, want := f.PrevLinkHash.String(), zeros; got != want {
 		t.Errorf("a.MockFindSegments.LastCalledWith.PrevLinkHash = %q want %q", got, want)
@@ -373,7 +423,7 @@ func TestFindSegments_defaultLimit(t *testing.T) {
 	a.MockFindSegments.Fn = func(*store.SegmentFilter) (cs.SegmentSlice, error) { return s1, nil }
 
 	var s2 cs.SegmentSlice
-	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&&mapId=123&prevLinkHash="+zeros+"&tags=one+two", nil, &s2)
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&&mapIds=123&prevLinkHash="+zeros+"&tags=one+two", nil, &s2)
 	if err != nil {
 		t.Fatalf("testutil.RequestJSON(): err: %s", err)
 	}
@@ -397,8 +447,10 @@ func TestFindSegments_defaultLimit(t *testing.T) {
 	if got, want := f.Limit, store.DefaultLimit; got != want {
 		t.Errorf("a.MockFindSegments.LastCalledWith.Limit = %d want %d", got, want)
 	}
-	if got, want := f.MapID, "123"; got != want {
-		t.Errorf("a.MockFindSegments.LastCalledWith.MapID = %q want %q", got, want)
+	if got, want := len(f.MapIDs), 1; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.MapIDs = %q want %q", got, want)
+	} else if got, want := f.MapIDs[0], "123"; got != want {
+		t.Errorf("a.MockFindSegments.LastCalledWith.MapIDs = %q want %q", got, want)
 	}
 	if got, want := f.PrevLinkHash.String(), zeros; got != want {
 		t.Errorf("a.MockFindSegments.LastCalledWith.PrevLinkHash = %q want %q", got, want)

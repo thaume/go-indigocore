@@ -182,7 +182,7 @@ func TestQuery(t *testing.T) {
 			Pagination: store.Pagination{
 				Limit: store.DefaultLimit,
 			},
-			MapID:        want.Link.GetMapID(),
+			MapIDs:       []string{want.Link.GetMapID()},
 			PrevLinkHash: want.Link.GetPrevLinkHash(),
 			Tags:         want.Link.GetTags(),
 		}

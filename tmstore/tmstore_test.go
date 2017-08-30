@@ -49,14 +49,12 @@ func freeTestTMStore(s store.Adapter) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	for _, m := range mapIDs {
-		segments, err := tmstore.FindSegments(&store.SegmentFilter{MapID: m, Pagination: store.Pagination{Limit: 100}})
-		if err != nil {
-			test.Fatal(err)
-		}
-		for _, s := range segments {
-			tmstore.DeleteSegment(s.GetLinkHash())
-		}
+	segments, err := tmstore.FindSegments(&store.SegmentFilter{MapIDs: mapIDs, Pagination: store.Pagination{Limit: 100}})
+	if err != nil {
+		test.Fatal(err)
+	}
+	for _, s := range segments {
+		tmstore.DeleteSegment(s.GetLinkHash())
 	}
 }
 

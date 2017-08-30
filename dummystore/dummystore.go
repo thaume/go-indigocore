@@ -169,20 +169,28 @@ func (a *DummyStore) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice,
 	defer a.mutex.RUnlock()
 
 	var (
-		linkHashes hashSet
-		exists     bool
+		linkHashes = hashSet{}
+		exists     = true
 	)
 
-	if filter.MapID == "" || filter.PrevLinkHash != nil {
-		linkHashes = hashSet{}
+	if len(filter.MapIDs) == 0 || filter.PrevLinkHash != nil {
 		for linkHash := range a.segments {
 			linkHashes[linkHash] = struct{}{}
 		}
 	} else {
-		linkHashes, exists = a.maps[filter.MapID]
-		if !exists {
-			return cs.SegmentSlice{}, nil
+		for _, mapID := range filter.MapIDs {
+			l, e := a.maps[mapID]
+			exists = exists && e
+			if e {
+				for k, v := range l {
+					linkHashes[k] = v
+				}
+			}
 		}
+	}
+
+	if !exists {
+		return cs.SegmentSlice{}, nil
 	}
 
 	return a.findHashesSegments(linkHashes, filter)
