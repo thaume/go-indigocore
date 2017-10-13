@@ -62,6 +62,7 @@ func (f Factory) RunTests(t *testing.T) {
 	t.Run("FindSegmentsMapIDs", f.TestFindSegmentsMapIDs)
 	t.Run("FindSegmentsMapIDTags", f.TestFindSegmentsMapIDTags)
 	t.Run("FindSegmentsMapIDNotFound", f.TestFindSegmentsMapIDNotFound)
+	t.Run("TestFindSegmentsEmptyPrevLinkHash", f.TestFindSegmentsEmptyPrevLinkHash)
 	t.Run("FindSegmentsPrevLinkHash", f.TestFindSegmentsPrevLinkHash)
 	t.Run("FindSegmentsPrevLinkHashTags", f.TestFindSegmentsPrevLinkHashTags)
 	t.Run("FindSegmentsPrevLinkHashGoodMapID", f.TestFindSegmentsPrevLinkHashGoodMapID)
@@ -275,12 +276,13 @@ func RandomFilterOffsetMapIDs(b *testing.B, numSegments, i int) *store.SegmentFi
 // The previous link hash will be one of ten possible values.
 func RandomFilterOffsetPrevLinkHash(b *testing.B, numSegments, i int) *store.SegmentFilter {
 	prevLinkHash, _ := types.NewBytes32FromString(fmt.Sprintf("00000000000000000000000000000000000000000000000000000000000000%2d", i%10))
+	prevLinkHashStr := prevLinkHash.String()
 	return &store.SegmentFilter{
 		Pagination: store.Pagination{
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,
 		},
-		PrevLinkHash: prevLinkHash,
+		PrevLinkHash: &prevLinkHashStr,
 	}
 }
 
@@ -318,12 +320,13 @@ func RandomFilterOffsetMapIDTags(b *testing.B, numSegments, i int) *store.Segmen
 // The tags will be one of fifty possible combinations.
 func RandomFilterOffsetPrevLinkHashTags(b *testing.B, numSegments, i int) *store.SegmentFilter {
 	prevLinkHash, _ := types.NewBytes32FromString(fmt.Sprintf("00000000000000000000000000000000000000000000000000000000000000%2d", i%10))
+	prevLinkHashStr := prevLinkHash.String()
 	return &store.SegmentFilter{
 		Pagination: store.Pagination{
 			Offset: rand.Int() % numSegments,
 			Limit:  store.DefaultLimit,
 		},
-		PrevLinkHash: prevLinkHash,
+		PrevLinkHash: &prevLinkHashStr,
 		Tags:         []string{fmt.Sprintf("%d", i%5), fmt.Sprintf("%d", i%10)},
 	}
 }

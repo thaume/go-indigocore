@@ -22,7 +22,6 @@ import (
 
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/testutil"
-	"github.com/stratumn/sdk/types"
 )
 
 const (
@@ -30,18 +29,19 @@ const (
 )
 
 var (
-	prevLinkHashTestingValue *types.Bytes32
-	linkHashTestingValue     *types.Bytes32
-	badLinkHashTestingValue  *types.Bytes32
+	prevLinkHashTestingValue      string
+	linkHashTestingValue          string
+	badLinkHashTestingValue       string
+	emptyPrevLinkHashTestingValue = ""
 
 	segmentSlice cs.SegmentSlice
 	stringSlice  []string
 )
 
 func init() {
-	prevLinkHashTestingValue = testutil.RandomHash()
-	linkHashTestingValue = testutil.RandomHash()
-	badLinkHashTestingValue = testutil.RandomHash()
+	prevLinkHashTestingValue = testutil.RandomHash().String()
+	linkHashTestingValue = testutil.RandomHash().String()
+	badLinkHashTestingValue = testutil.RandomHash().String()
 
 	segmentSlice = make(cs.SegmentSlice, sliceSize)
 	stringSlice = make([]string, sliceSize)
@@ -55,7 +55,7 @@ func defaultTestingSegment() *cs.Segment {
 	return &cs.Segment{
 		Link: cs.Link{
 			Meta: map[string]interface{}{
-				"prevLinkHash": prevLinkHashTestingValue.String(),
+				"prevLinkHash": prevLinkHashTestingValue,
 				"process":      "TheProcess",
 				"mapId":        "TheMapId",
 				"tags":         []interface{}{"Foo", "Bar"},
@@ -63,9 +63,15 @@ func defaultTestingSegment() *cs.Segment {
 			},
 		},
 		Meta: map[string]interface{}{
-			"linkHash": linkHashTestingValue.String(),
+			"linkHash": linkHashTestingValue,
 		},
 	}
+}
+
+func emptyPrevLinkHashTestingSegment() *cs.Segment {
+	seg := defaultTestingSegment()
+	delete(seg.Link.Meta, "prevLinkHash")
+	return seg
 }
 
 func TestSegmentFilter_Match(t *testing.T) {
@@ -73,7 +79,7 @@ func TestSegmentFilter_Match(t *testing.T) {
 		Pagination   Pagination
 		MapIDs       []string
 		Process      string
-		PrevLinkHash *types.Bytes32
+		PrevLinkHash *string
 		Tags         []string
 	}
 	type args struct {
@@ -128,14 +134,26 @@ func TestSegmentFilter_Match(t *testing.T) {
 			want:   false,
 		},
 		{
+			name:   "Empty prevLinkHash ko",
+			fields: fields{PrevLinkHash: &emptyPrevLinkHashTestingValue},
+			args:   args{defaultTestingSegment()},
+			want:   false,
+		},
+		{
+			name:   "Empty prevLinkHash ok",
+			fields: fields{PrevLinkHash: &emptyPrevLinkHashTestingValue},
+			args:   args{emptyPrevLinkHashTestingSegment()},
+			want:   true,
+		},
+		{
 			name:   "Good prevLinkHash",
-			fields: fields{PrevLinkHash: prevLinkHashTestingValue},
+			fields: fields{PrevLinkHash: &prevLinkHashTestingValue},
 			args:   args{defaultTestingSegment()},
 			want:   true,
 		},
 		{
 			name:   "Bad prevLinkHash",
-			fields: fields{PrevLinkHash: badLinkHashTestingValue},
+			fields: fields{PrevLinkHash: &badLinkHashTestingValue},
 			args:   args{defaultTestingSegment()},
 			want:   false,
 		},
