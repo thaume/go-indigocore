@@ -79,7 +79,7 @@ release: test lint clean build git_tag github_draft github_upload github_publish
 test: $(TEST_LIST)
 
 $(TEST_LIST): test_%:
-	@$(GO_TEST) $*
+	@$(GO_TEST) -race $*
 
 # == coverage =================================================================
 coverage: $(COVERAGE_FILE)
