@@ -19,7 +19,6 @@ client:
 
   credentialStore:
     path: /tmp/.hfc-key-store
-    # path: $GOPATH/src/github.com/stratumn/sdk/fabricstore/integration/creds
 
   BCCSP:
     security:

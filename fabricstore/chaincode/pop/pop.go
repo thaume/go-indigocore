@@ -42,6 +42,18 @@ const (
 	ObjectTypeValue   = "value"
 )
 
+// Smart contract functions
+const (
+	GetSegment    = "GetSegment"
+	FindSegments  = "FindSegments"
+	GetMapIDs     = "GetMapIDs"
+	SaveSegment   = "SaveSegment"
+	DeleteSegment = "DeleteSegment"
+	SaveValue     = "SaveValue"
+	GetValue      = "GetValue"
+	DeleteValue   = "DeleteValue"
+)
+
 // MapDoc is used to store maps in CouchDB
 type MapDoc struct {
 	ObjectType string `json:"docType"`
@@ -174,29 +186,29 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 	function, args := APIstub.GetFunctionAndParameters()
 
 	switch function {
-	case "GetSegment":
+	case GetSegment:
 		return s.GetSegment(APIstub, args)
-	case "FindSegments":
+	case FindSegments:
 		return s.FindSegments(APIstub, args)
-	case "GetMapIDs":
+	case GetMapIDs:
 		return s.GetMapIDs(APIstub, args)
-	case "SaveSegment":
+	case SaveSegment:
 		return s.SaveSegment(APIstub, args)
-	case "DeleteSegment":
+	case DeleteSegment:
 		return s.DeleteSegment(APIstub, args)
-	case "SaveValue":
+	case SaveValue:
 		return s.SaveValue(APIstub, args)
-	case "GetValue":
+	case GetValue:
 		return s.GetValue(APIstub, args)
-	case "DeleteValue":
+	case DeleteValue:
 		return s.DeleteValue(APIstub, args)
 	default:
 		return shim.Error("Invalid Smart Contract function name: " + function)
 	}
 }
 
-// SaveMap saves map into CouchDB using map document
-func (s *SmartContract) SaveMap(stub shim.ChaincodeStubInterface, segment *cs.Segment) error {
+// saveMap saves map into CouchDB using map document
+func (s *SmartContract) saveMap(stub shim.ChaincodeStubInterface, segment *cs.Segment) error {
 	mapDoc := MapDoc{
 		ObjectTypeMap,
 		segment.Link.GetMapID(),
@@ -234,7 +246,7 @@ func (s *SmartContract) SaveSegment(stub shim.ChaincodeStubInterface, args []str
 	prevLinkHash := segment.Link.GetPrevLinkHashString()
 	if prevLinkHash == "" {
 		// Create map
-		if err := s.SaveMap(stub, segment); err != nil {
+		if err := s.saveMap(stub, segment); err != nil {
 			return shim.Error(err.Error())
 		}
 	}

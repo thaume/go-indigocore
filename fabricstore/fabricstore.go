@@ -35,7 +35,7 @@ const (
 	Description = "Stratumn Fabric Store"
 )
 
-// Config contains configuration optios for the store
+// Config contains configuration options for the store
 type Config struct {
 	// ChannelID used to send transactions
 	ChannelID string
@@ -43,7 +43,7 @@ type Config struct {
 	// ChaincodeID used for transactions
 	ChaincodeID string
 
-	// ConfigFile path to netork configuration file (yaml)
+	// ConfigFile path to network configuration file (yaml)
 	ConfigFile string
 
 	// A version string that will be set in the store's information.

@@ -18,7 +18,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	log "github.com/Sirupsen/logrus"
@@ -50,8 +49,8 @@ func main() {
 		Commit:      commit,
 	})
 	if err != nil {
-		fmt.Println("Could not start fabric client", err.Error())
-	} else {
-		storehttp.RunWithFlags(a)
+		log.Fatalf("Could not start fabric client: %v", err)
 	}
+
+	storehttp.RunWithFlags(a)
 }
