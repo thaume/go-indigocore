@@ -1,5 +1,8 @@
 ## Change log
 
+### 0.1.1
+* Updated to Tendermint 0.11.1
+
 ### 0.1.0 - BREAKING CHANGES
 * Updated to Tendermint 0.11.0
 * Added basic segment schema based validation at the node level.
