@@ -129,9 +129,6 @@ type MapFilter struct {
 // PaginateStrings paginates a list of strings
 func (p *Pagination) PaginateStrings(a []string) []string {
 	l := len(a)
-	if p.Limit == 0 {
-		p.Limit = DefaultLimit
-	}
 	if p.Offset >= l {
 		return []string{}
 	}
@@ -143,9 +140,6 @@ func (p *Pagination) PaginateStrings(a []string) []string {
 // PaginateSegments paginate a list of segments
 func (p *Pagination) PaginateSegments(a cs.SegmentSlice) cs.SegmentSlice {
 	l := len(a)
-	if p.Limit == 0 {
-		p.Limit = DefaultLimit
-	}
 	if p.Offset >= l {
 		return cs.SegmentSlice{}
 	}

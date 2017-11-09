@@ -321,7 +321,7 @@ func TestPagination_PaginateSegments(t *testing.T) {
 				Limit:  0,
 			},
 			args: args{segmentSlice},
-			want: segmentSlice[:DefaultLimit],
+			want: cs.SegmentSlice{},
 		},
 		{
 			name: "Paginate outer offset",
@@ -394,7 +394,7 @@ func TestPagination_PaginateStrings(t *testing.T) {
 				Limit:  0,
 			},
 			args: args{stringSlice},
-			want: stringSlice[:DefaultLimit],
+			want: []string{},
 		},
 		{
 			name: "Paginate outer offset",
