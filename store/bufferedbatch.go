@@ -16,6 +16,7 @@ package store
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/types"
@@ -150,4 +151,41 @@ func (b *BufferedBatch) GetValue(key []byte) (value []byte, err error) {
 	}
 
 	return b.originalStore.GetValue(key)
+}
+
+// Write implements github.com/stratumn/sdk/store.Batch.Write
+func (b *BufferedBatch) Write() (err error) {
+	for _, op := range b.ValueOps {
+		switch op.OpType {
+		case OpTypeSet:
+			err = b.originalStore.SaveValue(op.Key, op.Value)
+		case OpTypeDelete:
+			_, err = b.originalStore.DeleteValue(op.Key)
+		default:
+			err = fmt.Errorf("Invalid Batch operation type: %v", op.OpType)
+		}
+		if err != nil {
+			break
+		}
+	}
+
+	if err != nil {
+		return
+	}
+
+	for _, op := range b.SegmentOps {
+		switch op.OpType {
+		case OpTypeSet:
+			err = b.originalStore.SaveSegment(op.Segment)
+		case OpTypeDelete:
+			_, err = b.originalStore.DeleteSegment(op.LinkHash)
+		default:
+			err = fmt.Errorf("Invalid Batch operation type: %v", op.OpType)
+		}
+		if err != nil {
+			break
+		}
+	}
+
+	return
 }

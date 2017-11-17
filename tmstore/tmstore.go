@@ -278,7 +278,7 @@ func (t *TMStore) GetMapIDs(filter *store.MapFilter) (ids []string, err error) {
 
 // NewBatch implements github.com/stratumn/sdk/store.Adapter.NewBatch.
 func (t *TMStore) NewBatch() (store.Batch, error) {
-	return NewBatch(t), nil
+	return store.NewBufferedBatch(t), nil
 }
 
 // SaveValue implements github.com/stratumn/sdk/store.Adapter.SaveValue.
