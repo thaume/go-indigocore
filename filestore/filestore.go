@@ -53,6 +53,7 @@ const (
 type FileStore struct {
 	config       *Config
 	didSaveChans []chan *cs.Segment
+	eventChans   []chan *store.Event
 	mutex        sync.RWMutex // simple global mutex
 	kvDB         db.DB
 }
@@ -84,8 +85,10 @@ func New(config *Config) (*FileStore, error) {
 		return nil, err
 	}
 
-	return &FileStore{config, nil, sync.RWMutex{}, db}, nil
+	return &FileStore{config, nil, nil, sync.RWMutex{}, db}, nil
 }
+
+/********** Store adapter implementation **********/
 
 // GetInfo implements github.com/stratumn/sdk/store.Adapter.GetInfo.
 func (a *FileStore) GetInfo() (interface{}, error) {
@@ -97,10 +100,102 @@ func (a *FileStore) GetInfo() (interface{}, error) {
 	}, nil
 }
 
-// AddDidSaveChannel implements
-// github.com/stratumn/sdk/fossilizer.Store.AddDidSaveChannel.
+// AddDidSaveChannel implements github.com/stratumn/sdk/store.Adapter.AddDidSaveChannel.
 func (a *FileStore) AddDidSaveChannel(saveChan chan *cs.Segment) {
 	a.didSaveChans = append(a.didSaveChans, saveChan)
+}
+
+// AddStoreEventChannel implements github.com/stratumn/sdk/store.AdapterV2.AddStoreEventChannel
+func (a *FileStore) AddStoreEventChannel(eventChan chan *store.Event) {
+	a.eventChans = append(a.eventChans, eventChan)
+}
+
+// NewBatch implements github.com/stratumn/sdk/store.Adapter.NewBatch.
+func (a *FileStore) NewBatch() (store.Batch, error) {
+	return NewBatch(a), nil
+}
+
+/********** Store writer implementation **********/
+
+// CreateLink implements github.com/stratumn/sdk/store.LinkWriter.CreateLink.
+func (a *FileStore) CreateLink(link *cs.Link) (*types.Bytes32, error) {
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
+
+	return a.createLink(link)
+}
+
+func (a *FileStore) createLink(link *cs.Link) (*types.Bytes32, error) {
+	linkHash, err := link.Hash()
+	if err != nil {
+		return nil, err
+	}
+
+	if err = a.initDir(); err != nil {
+		return nil, err
+	}
+
+	js, err := json.MarshalIndent(link, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	linkPath := a.getLinkPath(linkHash)
+
+	if err := ioutil.WriteFile(linkPath, js, 0644); err != nil {
+		return nil, err
+	}
+
+	for _, c := range a.eventChans {
+		c <- &store.Event{
+			EventType: store.SavedLink,
+			Details:   link,
+		}
+	}
+
+	return linkHash, nil
+}
+
+// AddEvidence implements github.com/stratumn/sdk/store.EvidenceWriter.AddEvidence.
+func (a *FileStore) AddEvidence(linkHash *types.Bytes32, evidence *cs.Evidence) error {
+	currentEvidences, err := a.GetEvidences(linkHash)
+	if err != nil {
+		return err
+	}
+
+	// If we already have an evidence for that provider, it means
+	// we're in the case where we go from a PENDING evidence to a
+	// COMPLETE one. This won't be necessary after the store interface
+	// update, but meanwhile we need to correctly update the existing
+	// evidence.
+	previousEvidence := currentEvidences.GetEvidence(evidence.Provider)
+	if previousEvidence != nil {
+		if previousEvidence.State == cs.PendingEvidence {
+			previousEvidence.State = evidence.State
+			previousEvidence.Proof = evidence.Proof
+		}
+	} else if err = currentEvidences.AddEvidence(*evidence); err != nil {
+		return err
+	}
+
+	key := getEvidenceKey(linkHash)
+	value, err := json.Marshal(currentEvidences)
+	if err != nil {
+		return err
+	}
+
+	if err = a.SetValue(key, value); err != nil {
+		return err
+	}
+
+	for _, c := range a.eventChans {
+		c <- &store.Event{
+			EventType: store.SavedEvidence,
+			Details:   evidence,
+		}
+	}
+
+	return nil
 }
 
 // SaveSegment implements github.com/stratumn/sdk/store.Adapter.SaveSegment.
@@ -111,30 +206,16 @@ func (a *FileStore) SaveSegment(segment *cs.Segment) error {
 	return a.saveSegment(segment)
 }
 
-func (a *FileStore) saveSegment(segment *cs.Segment) (err error) {
-	if err = a.initDir(); err != nil {
-		return err
-	}
-
-	curr, err := a.getSegment(segment.GetLinkHash())
+func (a *FileStore) saveSegment(segment *cs.Segment) error {
+	linkHash, err := a.createLink(&segment.Link)
 	if err != nil {
 		return err
 	}
-	if curr != nil {
-		if segment, err = curr.MergeMeta(segment); err != nil {
+
+	for _, evidence := range segment.Meta.Evidences {
+		if err := a.AddEvidence(linkHash, evidence); err != nil {
 			return err
 		}
-	}
-
-	js, err := json.MarshalIndent(segment, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	segmentPath := a.getSegmentPath(segment.GetLinkHashString())
-
-	if err := ioutil.WriteFile(segmentPath, js, 0644); err != nil {
-		return err
 	}
 
 	for _, c := range a.didSaveChans {
@@ -142,14 +223,6 @@ func (a *FileStore) saveSegment(segment *cs.Segment) (err error) {
 	}
 
 	return nil
-}
-
-// GetSegment implements github.com/stratumn/sdk/store.Adapter.GetSegment.
-func (a *FileStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
-	a.mutex.RLock()
-	defer a.mutex.RUnlock()
-
-	return a.getSegment(linkHash)
 }
 
 // DeleteSegment implements github.com/stratumn/sdk/store.Adapter.DeleteSegment.
@@ -166,18 +239,47 @@ func (a *FileStore) deleteSegment(linkHash *types.Bytes32) (*cs.Segment, error) 
 		return segment, err
 	}
 
-	if err = os.Remove(a.getSegmentPath(linkHash.String())); err != nil {
+	if err = os.Remove(a.getLinkPath(linkHash)); err != nil {
 		return nil, err
 	}
 
 	return segment, err
 }
 
-// FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
-func (a *FileStore) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, error) {
+/********** Store reader implementation **********/
+
+// GetSegment implements github.com/stratumn/sdk/store.Adapter.GetSegment
+// and github.com/stratumn/sdk/store.SegmentReader.GetSegment.
+func (a *FileStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 
+	return a.getSegment(linkHash)
+}
+
+func (a *FileStore) getSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
+	link, err := a.getLink(linkHash)
+	if err != nil || link == nil {
+		return nil, err
+	}
+
+	evidences, err := a.GetEvidences(linkHash)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cs.Segment{
+		Link: *link,
+		Meta: cs.SegmentMeta{
+			Evidences: *evidences,
+			LinkHash:  linkHash.String(),
+		},
+	}, nil
+}
+
+// FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments
+// and github.com/stratumn/sdk/store.SegmentReader.FindSegments.
+func (a *FileStore) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, error) {
 	var segments cs.SegmentSlice
 
 	a.forEach(func(segment *cs.Segment) error {
@@ -192,11 +294,9 @@ func (a *FileStore) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, 
 	return filter.Pagination.PaginateSegments(segments), nil
 }
 
-// GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
+// GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs
+// and github.com/stratumn/sdk/store.SegmentReader.GetMapIDs.
 func (a *FileStore) GetMapIDs(filter *store.MapFilter) ([]string, error) {
-	a.mutex.RLock()
-	defer a.mutex.RUnlock()
-
 	set := map[string]struct{}{}
 	a.forEach(func(segment *cs.Segment) error {
 		if filter.Match(segment) {
@@ -214,36 +314,30 @@ func (a *FileStore) GetMapIDs(filter *store.MapFilter) ([]string, error) {
 	return filter.Pagination.PaginateStrings(mapIDs), nil
 }
 
-// NewBatch implements github.com/stratumn/sdk/store.Adapter.NewBatch.
-func (a *FileStore) NewBatch() (store.Batch, error) {
-	return NewBatch(a), nil
-}
-
-// SaveValue implements github.com/stratumn/sdk/store.Adapter.SaveValue.
-func (a *FileStore) SaveValue(key []byte, value []byte) error {
-	a.kvDB.Set(key, value)
-
-	return nil
-}
-
-// GetValue implements github.com/stratumn/sdk/store.Adapter.GetValue.
-func (a *FileStore) GetValue(key []byte) ([]byte, error) {
-	return a.kvDB.Get(key), nil
-}
-
-// DeleteValue implements github.com/stratumn/sdk/store.Adapter.DeleteValue.
-func (a *FileStore) DeleteValue(key []byte) ([]byte, error) {
-	v := a.kvDB.Get(key)
-
-	if v != nil {
-		a.kvDB.Delete(key)
-		return v, nil
+// GetEvidences implements github.com/stratumn/sdk/store.EvidenceReader.GetEvidences.
+func (a *FileStore) GetEvidences(linkHash *types.Bytes32) (*cs.Evidences, error) {
+	key := getEvidenceKey(linkHash)
+	evidencesData, err := a.GetValue(key)
+	if err != nil {
+		return nil, err
 	}
-	return nil, nil
+
+	evidences := cs.Evidences{}
+	if evidencesData != nil && len(evidencesData) > 0 {
+		if err := json.Unmarshal(evidencesData, &evidences); err != nil {
+			return nil, err
+		}
+	}
+
+	return &evidences, nil
 }
 
-func (a *FileStore) getSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
-	file, err := os.Open(a.getSegmentPath(linkHash.String()))
+func getEvidenceKey(linkHash *types.Bytes32) []byte {
+	return []byte("evidences:" + linkHash.String())
+}
+
+func (a *FileStore) getLink(linkHash *types.Bytes32) (*cs.Link, error) {
+	file, err := os.Open(a.getLinkPath(linkHash))
 	if os.IsNotExist(err) {
 		return nil, nil
 	}
@@ -253,13 +347,47 @@ func (a *FileStore) getSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 
 	defer file.Close()
 
-	var segment cs.Segment
-	if err = json.NewDecoder(file).Decode(&segment); err != nil {
+	var link cs.Link
+	if err = json.NewDecoder(file).Decode(&link); err != nil {
 		return nil, err
 	}
 
-	return &segment, nil
+	return &link, nil
 }
+
+/********** github.com/stratumn/sdk/store.KeyValueStore implementation **********/
+
+// SaveValue implements github.com/stratumn/sdk/store.Adapter.SaveValue.
+func (a *FileStore) SaveValue(key []byte, value []byte) error {
+	return a.SetValue(key, value)
+}
+
+// SetValue implements github.com/stratumn/sdk/store.KeyValueStore.SetValue.
+func (a *FileStore) SetValue(key []byte, value []byte) error {
+	a.kvDB.Set(key, value)
+	return nil
+}
+
+// GetValue implements github.com/stratumn/sdk/store.Adapter.GetValue
+// and github.com/stratumn/sdk/store.KeyValueStore.GetValue.
+func (a *FileStore) GetValue(key []byte) ([]byte, error) {
+	return a.kvDB.Get(key), nil
+}
+
+// DeleteValue implements github.com/stratumn/sdk/store.Adapter.DeleteValue
+// and github.com/stratumn/sdk/store.KeyValueStore.DeleteValue.
+func (a *FileStore) DeleteValue(key []byte) ([]byte, error) {
+	v := a.kvDB.Get(key)
+
+	if v != nil {
+		a.kvDB.Delete(key)
+		return v, nil
+	}
+
+	return nil, nil
+}
+
+/********** Utilities **********/
 
 func (a *FileStore) initDir() error {
 	if err := os.MkdirAll(a.config.Path, 0755); err != nil {
@@ -270,13 +398,16 @@ func (a *FileStore) initDir() error {
 	return nil
 }
 
-func (a *FileStore) getSegmentPath(linkHash string) string {
-	return path.Join(a.config.Path, linkHash+".json")
+func (a *FileStore) getLinkPath(linkHash *types.Bytes32) string {
+	return path.Join(a.config.Path, linkHash.String()+".json")
 }
 
-var segmentFileRegepx = regexp.MustCompile("(.*)\\.json$")
+var linkFileRegex = regexp.MustCompile("(.*)\\.json$")
 
 func (a *FileStore) forEach(fn func(*cs.Segment) error) error {
+	a.mutex.RLock()
+	defer a.mutex.RUnlock()
+
 	files, err := ioutil.ReadDir(a.config.Path)
 	if os.IsNotExist(err) {
 		return nil
@@ -287,7 +418,7 @@ func (a *FileStore) forEach(fn func(*cs.Segment) error) error {
 
 	for _, file := range files {
 		name := file.Name()
-		if segmentFileRegepx.MatchString(name) {
+		if linkFileRegex.MatchString(name) {
 			linkHashStr := name[:len(name)-5]
 			linkHash, err := types.NewBytes32FromString(linkHashStr)
 			if err != nil {

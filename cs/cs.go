@@ -17,7 +17,6 @@ package cs
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -52,12 +51,7 @@ func (s *Segment) GetLinkHashString() string {
 
 // HashLink hashes the segment link and stores it into the Meta
 func (s *Segment) HashLink() (string, error) {
-	jsonLink, err := cj.Marshal(s.Link)
-	if err != nil {
-		return "", err
-	}
-	byteLinkHash := sha256.Sum256(jsonLink)
-	return hex.EncodeToString(byteLinkHash[:sha256.Size]), nil
+	return s.Link.HashString()
 }
 
 // SetLinkHash overwrites the segment LinkHash using HashLink()
@@ -243,6 +237,27 @@ type Link struct {
 	Meta  map[string]interface{} `json:"meta"`
 }
 
+// Hash hashes the link
+func (l *Link) Hash() (*types.Bytes32, error) {
+	jsonLink, err := cj.Marshal(l)
+	if err != nil {
+		return nil, err
+	}
+	byteLinkHash := sha256.Sum256(jsonLink)
+	linkHash := types.Bytes32(byteLinkHash)
+	return &linkHash, nil
+}
+
+// HashString hashes the link and returns a string
+func (l *Link) HashString() (string, error) {
+	hash, err := l.Hash()
+	if err != nil {
+		return "", err
+	}
+
+	return hash.String(), nil
+}
+
 // GetPriority returns the priority as a float64
 // It assumes the link is valid.
 // If priority is nil, it will return -Infinity.
@@ -261,7 +276,7 @@ func (l *Link) GetMapID() string {
 
 // GetPrevLinkHash returns the previous link hash as a bytes.
 // It assumes the link is valid.
-// It will return nilif the previous link hash is null.
+// It will return nil if the previous link hash is null.
 func (l *Link) GetPrevLinkHash() *types.Bytes32 {
 	if str, ok := l.Meta["prevLinkHash"].(string); ok {
 		b, _ := types.NewBytes32FromString(str)
