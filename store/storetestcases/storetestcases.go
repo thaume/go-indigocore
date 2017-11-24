@@ -32,8 +32,14 @@ type Factory struct {
 	// New creates an adapter.
 	New func() (store.Adapter, error)
 
+	// NewV2 creates an adapter.
+	NewV2 func() (store.AdapterV2, error)
+
 	// Free is an optional function to free an adapter.
 	Free func(adapter store.Adapter)
+
+	// FreeV2 is an optional function to free an adapter.
+	FreeV2 func(adapter store.AdapterV2)
 }
 
 // RunTests runs all the tests.
@@ -92,6 +98,56 @@ func (f Factory) RunTests(t *testing.T) {
 	t.Run("SaveSegmentUpdatedMapID", f.TestSaveSegmentUpdatedMapID)
 	t.Run("SaveSegmentWithEvidences", f.TestSaveSegmentWithEvidences)
 	t.Run("SaveSegmentBranch", f.TestSaveSegmentBranch)
+}
+
+// RunTestsV2 runs all the tests for the new store interface.
+func (f Factory) RunTestsV2(t *testing.T) {
+	// Notifications
+	t.Run("TestLinkSavedChannel", f.TestLinkSavedChannel)
+	t.Run("TestEvidenceAddedChannel", f.TestEvidenceAddedChannel)
+	// Store info
+	t.Run("GetInfo", f.TestGetInfoV2)
+	// Find segments
+	t.Run("TestFindSegmentsV2", f.TestFindSegmentsV2)
+	t.Run("TestFindSegmentsPaginationV2", f.TestFindSegmentsPaginationV2)
+	t.Run("TestFindSegmentEmptyV2", f.TestFindSegmentEmptyV2)
+	t.Run("TestFindSegmentsSingleTagV2", f.TestFindSegmentsSingleTagV2)
+	t.Run("TestFindSegmentsMultipleTagsV2", f.TestFindSegmentsMultipleTagsV2)
+	t.Run("TestFindSegmentsMapIDV2", f.TestFindSegmentsMapIDV2)
+	t.Run("TestFindSegmentsMapIDsV2", f.TestFindSegmentsMapIDsV2)
+	t.Run("TestFindSegmentsMapIDTagsV2", f.TestFindSegmentsMapIDTagsV2)
+	t.Run("TestFindSegmentsMapIDNotFoundV2", f.TestFindSegmentsMapIDNotFoundV2)
+	t.Run("TestFindSegmentsLinkHashesMultiMatchV2", f.TestFindSegmentsLinkHashesMultiMatchV2)
+	t.Run("TestFindSegmentsLinkHashesWithProcessV2", f.TestFindSegmentsLinkHashesWithProcessV2)
+	t.Run("TestFindSegmentsLinkHashesNoMatchV2", f.TestFindSegmentsLinkHashesNoMatchV2)
+	t.Run("TestFindSegmentsEmptyPrevLinkHashV2", f.TestFindSegmentsEmptyPrevLinkHashV2)
+	t.Run("TestFindSegmentsPrevLinkHashV2", f.TestFindSegmentsPrevLinkHashV2)
+	t.Run("TestFindSegmentsPrevLinkHashTagsV2", f.TestFindSegmentsPrevLinkHashTagsV2)
+	t.Run("TestFindSegmentsPrevLinkHashGoodMapIDV2", f.TestFindSegmentsPrevLinkHashGoodMapIDV2)
+	t.Run("TestFindSegmentsPrevLinkHashBadMapIDV2", f.TestFindSegmentsPrevLinkHashBadMapIDV2)
+	t.Run("TestFindSegmentsPrevLinkHashNotFoundV2", f.TestFindSegmentsPrevLinkHashNotFoundV2)
+	t.Run("TestFindSegmentWithGoodProcessV2", f.TestFindSegmentWithGoodProcessV2)
+	t.Run("TestFindSegmentWithBadProcessV2", f.TestFindSegmentWithBadProcessV2)
+	// Map ids
+	t.Run("TestGetMapIDsV2", f.TestGetMapIDsV2)
+	t.Run("TestGetMapIDsPaginationV2", f.TestGetMapIDsPaginationV2)
+	t.Run("TestGetMapIDsEmptyV2", f.TestGetMapIDsEmptyV2)
+	t.Run("TestGetMapIDsByProcessV2", f.TestGetMapIDsByProcessV2)
+	// Get segment
+	t.Run("TestGetSegmentV2", f.TestGetSegmentV2)
+	t.Run("TestGetSegmentUpdatedStateV2", f.TestGetSegmentUpdatedStateV2)
+	t.Run("TestGetSegmentUpdatedMapIDV2", f.TestGetSegmentUpdatedMapIDV2)
+	t.Run("TestGetSegmentWithEvidencesV2", f.TestGetSegmentWithEvidencesV2)
+	t.Run("TestGetSegmentNotFoundV2", f.TestGetSegmentNotFoundV2)
+	// Create link
+	t.Run("TestCreateLink", f.TestCreateLink)
+	t.Run("TestCreateLinkNoPriority", f.TestCreateLinkNoPriority)
+	t.Run("TestCreateLinkUpdatedState", f.TestCreateLinkUpdatedState)
+	t.Run("TestCreateLinkUpdatedMapID", f.TestCreateLinkUpdatedMapID)
+	t.Run("TestCreateLinkBranch", f.TestCreateLinkBranch)
+	// Add evidence
+	t.Run("TestAddEvidences", f.TestAddEvidences)
+	t.Run("TestAddDuplicateEvidences", f.TestAddDuplicateEvidences)
 }
 
 // RunBenchmarks runs all the benchmarks.
@@ -165,6 +221,12 @@ func (f Factory) RunBenchmarks(b *testing.B) {
 func (f Factory) free(adapter store.Adapter) {
 	if f.Free != nil {
 		f.Free(adapter)
+	}
+}
+
+func (f Factory) freeV2(adapter store.AdapterV2) {
+	if f.FreeV2 != nil {
+		f.FreeV2(adapter)
 	}
 }
 
@@ -348,6 +410,17 @@ func (f Factory) initAdapter(t *testing.T) store.Adapter {
 	return a
 }
 
+func (f Factory) initAdapterV2(t *testing.T) store.AdapterV2 {
+	a, err := f.NewV2()
+	if err != nil {
+		t.Fatalf("f.New(): err: %s", err)
+	}
+	if a == nil {
+		t.Fatal("a = nil want store.AdapterV2")
+	}
+	return a
+}
+
 func (f Factory) initAdapterB(b *testing.B) store.Adapter {
 	a, err := f.New()
 	if err != nil {
@@ -355,6 +428,17 @@ func (f Factory) initAdapterB(b *testing.B) store.Adapter {
 	}
 	if a == nil {
 		b.Fatal("a = nil want store.Adapter")
+	}
+	return a
+}
+
+func (f Factory) initAdapterV2B(b *testing.B) store.AdapterV2 {
+	a, err := f.NewV2()
+	if err != nil {
+		b.Fatalf("f.New(): err: %s", err)
+	}
+	if a == nil {
+		b.Fatal("a = nil want store.AdapterV2")
 	}
 	return a
 }

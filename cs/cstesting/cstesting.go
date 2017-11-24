@@ -23,8 +23,8 @@ import (
 	"github.com/stratumn/sdk/testutil"
 )
 
-// CreateSegment creates a minimal segment.
-func CreateSegment(process, mapID, prevLinkHash string, tags []interface{}, priority float64) *cs.Segment {
+// CreateLink creates a minimal link.
+func CreateLink(process, mapID, prevLinkHash string, tags []interface{}, priority float64) *cs.Link {
 	linkMeta := map[string]interface{}{
 		"process":  process,
 		"mapId":    mapID,
@@ -40,18 +40,33 @@ func CreateSegment(process, mapID, prevLinkHash string, tags []interface{}, prio
 		linkMeta["tags"] = tags
 	}
 
-	segment := &cs.Segment{
-		Link: cs.Link{
-			State: map[string]interface{}{
-				"random": testutil.RandomString(12),
-			},
-			Meta: linkMeta,
+	link := &cs.Link{
+		State: map[string]interface{}{
+			"random": testutil.RandomString(12),
 		},
+		Meta: linkMeta,
+	}
+
+	return link
+}
+
+// CreateSegment creates a minimal segment.
+func CreateSegment(process, mapID, prevLinkHash string, tags []interface{}, priority float64) *cs.Segment {
+	link := CreateLink(process, mapID, prevLinkHash, tags, priority)
+	segment := &cs.Segment{
+		Link: *link,
 		Meta: cs.SegmentMeta{},
 	}
+
 	segment.SetLinkHash()
 
 	return segment
+}
+
+// RandomLink creates a random link.
+func RandomLink() *cs.Link {
+	return CreateLink(testutil.RandomString(24), testutil.RandomString(24),
+		testutil.RandomHash().String(), RandomTags(), rand.Float64())
 }
 
 // RandomSegment creates a random segment.
@@ -60,11 +75,27 @@ func RandomSegment() *cs.Segment {
 		testutil.RandomHash().String(), RandomTags(), rand.Float64())
 }
 
+// RandomEvidence creates a random evidence.
+func RandomEvidence() *cs.Evidence {
+	return &cs.Evidence{
+		State:    cs.CompleteEvidence,
+		Provider: testutil.RandomString(12),
+		Backend:  "test",
+	}
+}
+
 // ChangeSegmentState clones a segment and randomly changes its state.
 func ChangeSegmentState(s *cs.Segment) *cs.Segment {
 	clone := CloneSegment(s)
 	clone.Link.State["random"] = testutil.RandomString(12)
 	clone.SetLinkHash()
+	return clone
+}
+
+// ChangeLinkState clones a link and randomly changes its state.
+func ChangeLinkState(l *cs.Link) *cs.Link {
+	clone := CloneLink(l)
+	clone.State["random"] = testutil.RandomString(12)
 	return clone
 }
 
@@ -76,12 +107,28 @@ func ChangeSegmentMapID(s *cs.Segment) *cs.Segment {
 	return clone
 }
 
+// ChangeLinkMapID clones a link and randomly changes its map ID.
+func ChangeLinkMapID(l *cs.Link) *cs.Link {
+	clone := CloneLink(l)
+	clone.Meta["mapId"] = testutil.RandomString(24)
+	return clone
+}
+
 // RandomBranch appends a random segment to a segment.
 func RandomBranch(s *cs.Segment) *cs.Segment {
 	branch := CreateSegment(testutil.RandomString(24), testutil.RandomString(24),
 		s.Meta.LinkHash, RandomTags(), rand.Float64())
 	branch.Link.Meta["mapId"] = s.Link.Meta["mapId"]
 	branch.SetLinkHash()
+	return branch
+}
+
+// RandomLinkBranch appends a random link to a link.
+func RandomLinkBranch(parent *cs.Link) *cs.Link {
+	linkHash, _ := parent.HashString()
+	branch := CreateLink(testutil.RandomString(24), testutil.RandomString(24),
+		linkHash, RandomTags(), rand.Float64())
+	branch.Meta["mapId"] = parent.Meta["mapId"]
 	return branch
 }
 
@@ -99,6 +146,22 @@ func CloneSegment(s *cs.Segment) *cs.Segment {
 	var clone cs.Segment
 
 	js, err := json.Marshal(s)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := json.Unmarshal(js, &clone); err != nil {
+		panic(err)
+	}
+
+	return &clone
+}
+
+// CloneLink clones a link.
+func CloneLink(l *cs.Link) *cs.Link {
+	var clone cs.Link
+
+	js, err := json.Marshal(l)
 	if err != nil {
 		panic(err)
 	}
