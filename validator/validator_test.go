@@ -229,6 +229,9 @@ func TestNewRootValidator(t *testing.T) {
 	if len(defaultRootValidator.(*rootValidator).ValidatorsByProcess) != 2 {
 		t.Errorf("fail to load root validator")
 	}
+	if validatorHash := defaultRootValidator.Hash(); validatorHash == nil {
+		t.Errorf("validator hash is empty")
+	}
 
 	if err := tmpfile.Close(); err != nil {
 		t.Error(err)
@@ -238,6 +241,9 @@ func TestNewRootValidator(t *testing.T) {
 
 	if len(fileNotFoundRootValidator.(*rootValidator).ValidatorsByProcess) != 0 {
 		t.Errorf("fail to create root validator: file not found")
+	}
+	if validatorHash := fileNotFoundRootValidator.Hash(); validatorHash != nil {
+		t.Errorf("validator hash should be empty: got %v", validatorHash)
 	}
 }
 

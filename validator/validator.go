@@ -3,6 +3,7 @@ package validator
 import (
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/types"
 )
 
 const (
@@ -10,7 +11,13 @@ const (
 	DefaultFilename = "/data/validation/rules.json"
 )
 
-// Validator defines the interface with single Validate() method
-type Validator interface {
+// validator defines the interface with single Validate() method
+type validator interface {
 	Validate(store.Reader, *cs.Segment) error
+}
+
+// Validator defines a validator that can be identified by a hash
+type Validator interface {
+	validator
+	Hash() *types.Bytes32
 }
