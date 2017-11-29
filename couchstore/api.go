@@ -24,6 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/types"
 	"github.com/stratumn/sdk/utils"
 )
 
@@ -33,12 +34,13 @@ const (
 	statusDocumentMissing = 404
 	statusDBMissing       = 404
 
-	dbSegment = "pop"
-	dbMap     = "pop"
-	dbValue   = "kv"
+	dbLink      = "pop_link"
+	dbEvidences = "pop_evidences"
+	dbValue     = "kv"
 
-	objectTypeSegment = "segment"
-	objectTypeMap     = "map"
+	objectTypeLink      = "link"
+	objectTypeEvidences = "evidences"
+	objectTypeMap       = "map"
 )
 
 // CouchResponseStatus contains couch specific response when querying the API.
@@ -59,8 +61,11 @@ type Document struct {
 	Revision   string `json:"_rev,omitempty"`
 	ObjectType string `json:"docType,omitempty"`
 
-	// The following fields are used when querying couchdb for segment documents.
-	Segment *cs.Segment `json:"segment,omitempty"`
+	// The following fields are used when querying couchdb for link documents.
+	Link *cs.Link `json:"link,omitempty"`
+
+	// The following fields are used when querying couchdb for evidences documents.
+	Evidences *cs.Evidences `json:"evidences,omitempty"`
 
 	// The following fields are used when querying couchdb for map documents
 	Process string `json:"process,omitempty"`
@@ -126,45 +131,92 @@ func (c *CouchStore) deleteDatabase(name string) error {
 	return nil
 }
 
-func (c *CouchStore) saveSegment(segment *cs.Segment) error {
-	segmentDoc := &Document{
-		ObjectType: objectTypeSegment,
-		Segment:    segment,
-		ID:         segment.GetLinkHashString(),
+func (c *CouchStore) createLink(link *cs.Link) (*types.Bytes32, error) {
+	linkHash, err := link.Hash()
+	if err != nil {
+		return nil, err
+	}
+	linkHashStr := linkHash.String()
+
+	linkDoc := &Document{
+		ObjectType: objectTypeLink,
+		Link:       link,
+		ID:         linkHashStr,
 	}
 
-	currentSegmentDoc, err := c.getDocument(dbSegment, segment.GetLinkHashString())
+	// <<<<<
+	currentLinkDoc, err := c.getDocument(dbLink, linkHashStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if currentSegmentDoc != nil {
-		if segment, err = currentSegmentDoc.Segment.MergeMeta(segment); err != nil {
-			return err
-		}
-		segmentDoc = currentSegmentDoc
+	if currentLinkDoc != nil {
+		linkDoc = currentLinkDoc
 	}
+	// =====
+	// After interface update, this behaviour is better. Link is
+	// immutable so it should not be present in database
+	// tmpoptestcases have to be changed
+	// if currentLinkDoc, err := c.getDocument(dbLink, linkHashStr); currentLinkDoc != nil {
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	return nil, errors.Errorf("Link is immutable, %s already exists", linkHashStr)
+	// }
+	// >>>>>
 
 	docs := []*Document{
-		segmentDoc,
-		&Document{
+		linkDoc,
+		{
 			ObjectType: objectTypeMap,
-			ID:         segmentDoc.Segment.Link.GetMapID(),
-			Process:    segmentDoc.Segment.Link.GetProcess(),
+			ID:         linkDoc.Link.GetMapID(),
+			Process:    linkDoc.Link.GetProcess(),
 		},
 	}
-	bulkDocuments := BulkDocuments{
-		Documents: docs,
-	}
 
-	path := fmt.Sprintf("/%v/_bulk_docs", dbSegment)
+	return linkHash, c.saveDocuments(dbLink, docs)
+}
 
-	docsBytes, err := json.Marshal(bulkDocuments)
+func (c *CouchStore) addEvidence(linkHash string, evidence *cs.Evidence) error {
+
+	currentDoc, err := c.getDocument(dbEvidences, linkHash)
 	if err != nil {
 		return err
 	}
+	if currentDoc == nil {
+		currentDoc = &Document{
+			ID: linkHash,
+		}
+	}
+	if currentDoc.Evidences == nil {
+		currentDoc.Evidences = &cs.Evidences{}
+	}
 
-	_, _, err = c.post(path, docsBytes)
-	return err
+	// If we already have an evidence for that provider, it means
+	// we're in the case where we go from a PENDING evidence to a
+	// COMPLETE one. This won't be necessary after the store interface
+	// update, but meanwhile we need to correctly update the existing
+	// evidence.
+	previousEvidence := currentDoc.Evidences.GetEvidence(evidence.Provider)
+	if previousEvidence != nil {
+		if previousEvidence.State == cs.PendingEvidence {
+			previousEvidence.State = evidence.State
+			previousEvidence.Proof = evidence.Proof
+		}
+	} else if err := currentDoc.Evidences.AddEvidence(*evidence); err != nil {
+		return err
+	}
+
+	return c.saveDocument(dbEvidences, linkHash, *currentDoc)
+}
+
+func (c *CouchStore) segmentify(link *cs.Link) *cs.Segment {
+
+	segment := link.Segmentify()
+
+	if evidences, err := c.GetEvidences(segment.Meta.GetLinkHash()); evidences != nil && err == nil {
+		segment.Meta.Evidences = *evidences
+	}
+	return segment
 }
 
 func (c *CouchStore) saveDocument(dbName string, key string, doc Document) error {
@@ -183,6 +235,22 @@ func (c *CouchStore) saveDocument(dbName string, key string, doc Document) error
 	}
 
 	return nil
+}
+
+func (c *CouchStore) saveDocuments(dbName string, docs []*Document) error {
+	bulkDocuments := BulkDocuments{
+		Documents: docs,
+	}
+
+	path := fmt.Sprintf("/%v/_bulk_docs", dbName)
+
+	docsBytes, err := json.Marshal(bulkDocuments)
+	if err != nil {
+		return err
+	}
+
+	_, _, err = c.post(path, docsBytes)
+	return err
 }
 
 func (c *CouchStore) getDocument(dbName string, key string) (*Document, error) {
