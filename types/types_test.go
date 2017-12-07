@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/stratumn/sdk/types"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewBytes20FromString(t *testing.T) {
@@ -315,6 +316,31 @@ func TestNewBytes32FromBytes_bigSlice(t *testing.T) {
 			t.Error("Invalid byte")
 		}
 	}
+}
+
+func TestBytes32Compare(t *testing.T) {
+	var nilBytes32 *types.Bytes32
+	nonZero, _ := types.NewBytes32FromString("1234567890123456789012345678901234567890123456789012345678901234")
+
+	t.Run("Nil slice is equal to zero", func(t *testing.T) {
+		assert.True(t, types.Bytes32Zero.EqualsBytes(nil))
+	})
+
+	t.Run("Empty slice is equal to zero", func(t *testing.T) {
+		assert.True(t, types.Bytes32Zero.EqualsBytes([]byte{}))
+	})
+
+	t.Run("Nil bytes32 is zero", func(t *testing.T) {
+		assert.True(t, nilBytes32.Zero())
+	})
+
+	t.Run("Nil bytes32 comparison to zero", func(t *testing.T) {
+		assert.Equal(t, 0, nilBytes32.Compare(types.Bytes32Zero))
+	})
+
+	t.Run("Nil bytes32 comparison", func(t *testing.T) {
+		assert.NotEqual(t, 0, nilBytes32.Compare(nonZero))
+	})
 }
 
 func TestBytes32String(t *testing.T) {
