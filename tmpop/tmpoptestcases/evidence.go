@@ -15,160 +15,119 @@
 package tmpoptestcases
 
 import (
-	"bytes"
-	"encoding/json"
-	"strings"
 	"testing"
 
 	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/sdk/cs/cstesting"
+	"github.com/stratumn/sdk/cs/evidences"
+	"github.com/stratumn/sdk/merkle"
+	"github.com/stratumn/sdk/store"
 	"github.com/stratumn/sdk/tmpop"
+	"github.com/stratumn/sdk/tmpop/tmpoptestcases/mocks"
+	"github.com/stratumn/sdk/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	abci "github.com/tendermint/abci/types"
 )
 
-// TestEvidence tests if the evidence is correctly inserted and updated on segments
-func (f Factory) TestEvidence(t *testing.T) {
-	h := f.initTMPop(t, nil)
-	defer f.free()
-	s1 := commitMockTx(t, h)
-
-	got := &cs.Segment{}
-	err := makeQuery(h, tmpop.GetSegment, s1.GetLinkHash(), got)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	evidence := got.Meta.GetEvidence(h.GetHeader().GetChainId())
-
-	proof := evidence.Proof.(*tmpop.TendermintFullProof)
-
-	if proof == nil {
-		t.Fatalf("h.Commit(): expected original proof not to be nil")
-	}
-	if proof.Original.BlockHeight != height {
-		t.Errorf("h.Commit(): Expected originalEvidence.BlockHeight to contain %v, got %v", height, proof.Original.BlockHeight)
-	}
-
-	gotState, wantState := evidence.State, cs.PendingEvidence
-	if strings.Compare(gotState, wantState) != 0 {
-		t.Errorf("h.Commit(): Expected state to be %s since the next block has not been commited, got %s", wantState, gotState)
-	}
-
-	// Create a new Block that confirms the AppHash
-	commitMockTx(t, h)
-
-	err = makeQuery(h, tmpop.GetSegment, s1.GetLinkHash(), got)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	evidence = got.Meta.GetEvidence(h.GetHeader().GetChainId())
-
-	gotState, wantState = evidence.State, cs.CompleteEvidence
-	if strings.Compare(gotState, wantState) != 0 {
-		t.Errorf("h.Commit(): Expected state to be %s since the next block has been commited, got %s", wantState, gotState)
-
-	}
-	if !evidence.Proof.Verify(s1.GetLinkHash()) {
-		t.Errorf("TendermintProof.Verify(): Expected proof %v to be valid", evidence.Proof.FullProof())
-
-	}
-}
-
-// TestTendermintProof tests the format and the validity of a tendermint proof
-func (f Factory) TestTendermintProof(t *testing.T) {
-	h := f.initTMPop(t, nil)
+// TestTendermintEvidence tests that evidence is correctly added.
+func (f Factory) TestTendermintEvidence(t *testing.T) {
+	h, req := f.newTMPop(t, nil)
 	defer f.free()
 
-	t.Run("TestTime()", func(t *testing.T) {
-		s := commitMockTx(t, h)
+	tmClientMock := new(tmpoptestcasesmocks.MockedTendermintClient)
+	tmClientMock.On("FireEvent", mock.Anything, mock.Anything)
 
-		queried := &cs.Segment{}
-		err := makeQuery(h, tmpop.GetSegment, s.GetLinkHash(), queried)
-		if err != nil {
-			t.Fatal(err)
-		}
+	h.ConnectTendermint(tmClientMock)
 
-		e := queried.Meta.GetEvidence(h.GetHeader().GetChainId())
-		got := e.Proof.Time()
-		if got != 0 {
-			t.Errorf("TendermintProof.Time(): Expected timestamp to be %d, got %d", 0, got)
-		}
-
-		commitMockTx(t, h)
-		err = makeQuery(h, tmpop.GetSegment, s.GetLinkHash(), queried)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		e = queried.Meta.GetEvidence(h.GetHeader().GetChainId())
-		want := h.GetHeader().GetTime()
-		got = e.Proof.Time()
-		if got != want {
-			t.Errorf("TendermintProof.Time(): Expected timestamp to be %d, got %d", want, got)
-		}
-
+	// First block contains an invalid link
+	invalidLink := cstesting.RandomLink()
+	invalidLink.Meta["mapId"] = nil
+	invalidLinkHash, _ := invalidLink.Hash()
+	req = commitLink(t, h, invalidLink, req)
+	previousAppHash := req.Header.AppHash
+	tmClientMock.On("Block", 1).Return(&tmpop.Block{
+		Header: &abci.Header{Height: uint64(1)},
 	})
 
-	t.Run("TestFullProof()", func(t *testing.T) {
-		s := commitMockTx(t, h)
+	// Second block contains two valid links
+	link1 := cstesting.RandomLink()
+	linkHash1, _ := link1.Hash()
 
-		queried := &cs.Segment{}
-		err := makeQuery(h, tmpop.GetSegment, s.GetLinkHash(), queried)
-		if err != nil {
-			t.Fatal(err)
-		}
+	link2 := cstesting.RandomLink()
+	linkHash2, _ := link2.Hash()
 
-		e := queried.Meta.GetEvidence(h.GetHeader().GetChainId())
-		got := e.Proof.FullProof()
-		if got == nil {
-			t.Errorf("TendermintProof.FullProof(): Expected proof to be a json-formatted bytes array, got %v", got)
-		}
+	req = commitTxs(t, h, req, [][]byte{makeCreateLinkTx(t, link1), makeCreateLinkTx(t, link2)})
+	appHash := req.Header.AppHash
 
-		commitMockTx(t, h)
-		err = makeQuery(h, tmpop.GetSegment, s.GetLinkHash(), queried)
-		if err != nil {
-			t.Fatal(err)
-		}
+	expectedTx1 := &tmpop.Tx{TxType: tmpop.CreateLink, Link: link1}
+	expectedTx2 := &tmpop.Tx{TxType: tmpop.CreateLink, Link: link2}
+	expectedBlock := &tmpop.Block{
+		Header: &abci.Header{
+			Height:  uint64(2),
+			AppHash: previousAppHash,
+		},
+		Txs: []*tmpop.Tx{expectedTx1, expectedTx2},
+	}
+	tmClientMock.On("Block", 2).Return(expectedBlock)
 
-		e = queried.Meta.GetEvidence(h.GetHeader().GetChainId())
-		wantDifferent := got
-		got = e.Proof.FullProof()
-		if got == nil {
-			t.Errorf("TendermintProof.FullProof(): Expected proof to be a json-formatted bytes array, got %v", got)
-		}
-		if bytes.Compare(got, wantDifferent) == 0 {
-			t.Errorf("TendermintProof.FullProof(): Expected proof after appHash validation to be complete, got %s", string(got))
-		}
-		if err := json.Unmarshal(got, &tmpop.TendermintProof{}); err != nil {
-			t.Errorf("TendermintProof.FullProof(): Could not unmarshal bytes proof, err = %+v", err)
-		}
+	// Third block contains one valid link
+	link3, req := commitRandomLink(t, h, req)
+	linkHash3, _ := link3.Hash()
 
+	t.Run("Adds evidence when block is signed", func(t *testing.T) {
+		got := &cs.Segment{}
+		err := makeQuery(h, tmpop.GetSegment, linkHash1, got)
+		assert.NoError(t, err)
+
+		evidence := got.Meta.GetEvidence(h.GetCurrentHeader().GetChainId())
+		assert.NotNil(t, evidence, "Evidence is missing")
+
+		proof := evidence.Proof.(*evidences.TendermintProof)
+		assert.NotNil(t, proof, "h.Commit(): expected proof not to be nil")
+		assert.Equal(t, uint64(2), proof.BlockHeight, "Invalid block height in proof")
+
+		tree, _ := merkle.NewStaticTree([]types.Bytes32{*linkHash1, *linkHash2})
+		assert.EqualValues(t, tree.Root(), proof.Root, "Invalid proof merkle root")
+		assert.EqualValues(t, tree.Path(0), proof.Path, "Invalid proof merkle path")
+
+		expectedAppHash, _ := tmpop.ComputeAppHash(
+			types.NewBytes32FromBytes(previousAppHash),
+			types.NewBytes32FromBytes(nil),
+			tree.Root())
+		assert.EqualValues(t, expectedAppHash[:], appHash, "Invalid app hash generated")
+
+		evidenceEventFired := false
+		for _, tmClientCall := range tmClientMock.Calls {
+			if tmClientCall.Method != "FireEvent" {
+				continue
+			}
+
+			storeEvents := tmClientCall.Arguments.Get(1).(tmpop.StoreEventsData).StoreEvents
+			if storeEvents[0].EventType == store.SavedEvidence {
+				assert.Equal(t, 2, len(storeEvents), "Two evidences should have been notified")
+				evidenceEventFired = true
+			}
+		}
+		assert.True(t, evidenceEventFired, "Missing evidence event")
 	})
 
-	t.Run("TestVerify()", func(t *testing.T) {
-		s := commitMockTx(t, h)
+	t.Run("Does not add evidence right after commit", func(t *testing.T) {
+		got := &cs.Segment{}
+		err := makeQuery(h, tmpop.GetSegment, linkHash3, got)
+		assert.NoError(t, err)
+		assert.Zero(t, len(got.Meta.Evidences),
+			"Link should not have evidence before the next block signs the committed state")
+	})
 
-		queried := &cs.Segment{}
-		err := makeQuery(h, tmpop.GetSegment, s.GetLinkHash(), queried)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		e := queried.Meta.GetEvidence(h.GetHeader().GetChainId())
-		got := e.Proof.Verify(s.GetLinkHash())
-		if got == true {
-			t.Errorf("TendermintProof.Verify(): Expected incomplete original proof to be false, got %v", got)
-		}
-
-		commitMockTx(t, h)
-		if err = makeQuery(h, tmpop.GetSegment, s.GetLinkHash(), queried); err != nil {
-			t.Fatal(err)
-		}
-
-		e = queried.Meta.GetEvidence(h.GetHeader().GetChainId())
-
-		if got = e.Proof.Verify(s.GetLinkHash()); got != true {
-			t.Errorf("TendermintProof.Verify(): Expected original proof to be true, got %v", got)
-		}
-
+	// Test that if an invalid link was added to a block (which can happen
+	// if validations change between the checkTx and deliverTx messages),
+	// we don't generate evidence for it.
+	t.Run("Does not add evidence to invalid links", func(t *testing.T) {
+		got := &cs.Segment{}
+		err := makeQuery(h, tmpop.GetSegment, invalidLinkHash, got)
+		assert.NoError(t, err)
+		assert.Zero(t, got.Link, "Link should not be found")
+		assert.Zero(t, len(got.Meta.Evidences), "Evidence should not be added to invalid link")
 	})
 }

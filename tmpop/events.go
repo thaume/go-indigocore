@@ -12,37 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dummystore
+package tmpop
 
 import (
-	"testing"
-
 	"github.com/stratumn/sdk/store"
-	"github.com/stratumn/sdk/store/storetestcases"
-	"github.com/stratumn/sdk/tmpop/tmpoptestcases"
+	events "github.com/tendermint/tmlibs/events"
 )
 
-func TestDummystore(t *testing.T) {
-	storetestcases.Factory{
-		New: func() (store.Adapter, error) {
-			return New(&Config{}), nil
-		},
-	}.RunTests(t)
-}
+// Event types.
+const (
+	StoreEvents = "StoreEvents"
+)
 
-func TestDummystoreV2(t *testing.T) {
-	storetestcases.Factory{
-		NewV2: func() (store.AdapterV2, error) {
-			return New(&Config{}), nil
-		},
-	}.RunTestsV2(t)
-}
-
-func TestDummyTMPop(t *testing.T) {
-	tmpoptestcases.Factory{
-		New: func() (store.AdapterV2, store.KeyValueStore, error) {
-			dummyStore := New(&Config{})
-			return dummyStore, dummyStore, nil
-		},
-	}.RunTests(t)
+// StoreEventsData is the type that contains data sent by TMPoP to listeners
+type StoreEventsData struct {
+	events.EventData
+	StoreEvents []*store.Event
 }

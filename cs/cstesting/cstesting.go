@@ -69,6 +69,19 @@ func RandomLink() *cs.Link {
 		testutil.RandomHash().String(), RandomTags(), rand.Float64())
 }
 
+// RandomLinkWithProcess creates a random link in a specific process.
+func RandomLinkWithProcess(process string) *cs.Link {
+	return CreateLink(process, testutil.RandomString(24),
+		testutil.RandomHash().String(), RandomTags(), rand.Float64())
+}
+
+// InvalidLinkWithProcess creates a random invalid link.
+func InvalidLinkWithProcess(process string) *cs.Link {
+	// A link with no MapId is invalid
+	return CreateLink(process, "",
+		testutil.RandomHash().String(), RandomTags(), rand.Float64())
+}
+
 // RandomSegment creates a random segment.
 func RandomSegment() *cs.Segment {
 	return CreateSegment(testutil.RandomString(24), testutil.RandomString(24),
@@ -80,7 +93,7 @@ func RandomEvidence() *cs.Evidence {
 	return &cs.Evidence{
 		State:    cs.CompleteEvidence,
 		Provider: testutil.RandomString(12),
-		Backend:  "test",
+		Backend:  "generic",
 	}
 }
 

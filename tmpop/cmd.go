@@ -18,19 +18,20 @@ import (
 	"runtime"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/stratumn/sdk/store"
 	"github.com/stratumn/sdk/tendermint"
 )
 
 // Run launches a TMPop Tendermint App
-func Run(a store.Adapter, config *Config) {
+func Run(a store.AdapterV2, kv store.KeyValueStore, config *Config) {
 	adapterInfo, err := a.GetInfo()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	tmpop, err := New(a, config)
+	tmpop, err := New(a, kv, config)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,5 +42,8 @@ func Run(a store.Adapter, config *Config) {
 	log.Info("Apache License 2.0")
 	log.Infof("Runtime %s %s %s", runtime.Version(), runtime.GOOS, runtime.GOARCH)
 
-	tendermint.RunNodeForever(tendermint.GetConfig(), tmpop)
+	tendermintNode := tendermint.NewNode(tendermint.GetConfig(), tmpop)
+	tendermintClient := NewTendermintClient(client.NewLocal(tendermintNode))
+	tmpop.ConnectTendermint(tendermintClient)
+	tendermintNode.RunForever()
 }

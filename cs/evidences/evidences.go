@@ -17,14 +17,18 @@
 package evidences
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 
 	"github.com/stratumn/sdk/cs"
 	// This package imports every package defining its own implementation of the cs.Proof interface
 	// The init() function of each package gets called hence providing a way for cs.Evidence.UnmarshalJSON to deserialize any kind of proof
 	_ "github.com/stratumn/sdk/dummyfossilizer"
-	_ "github.com/stratumn/sdk/tmpop"
 	"github.com/stratumn/sdk/types"
+
+	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/go-crypto"
 )
 
 var (
@@ -32,6 +36,8 @@ var (
 	BatchFossilizerName = "batch"
 	//BcBatchFossilizerName is the name used as the BcBatchProof backend
 	BcBatchFossilizerName = "bcbatch"
+	// TMPopName is the name used as the Tendermint PoP backend
+	TMPopName = "TMPop"
 )
 
 // BatchProof implements the Proof interface
@@ -93,6 +99,100 @@ func (p *BcBatchProof) Verify(linkHash interface{}) bool {
 	return true
 }
 
+// TendermintSignature is a signature by one of the Tendermint nodes
+type TendermintSignature struct {
+	PubKey    crypto.PubKey    `json:"pub_key"`
+	Signature crypto.Signature `json:"signature"`
+}
+
+// TendermintProof implements the Proof interface
+type TendermintProof struct {
+	BlockHeight uint64 `json:"blockHeight"`
+
+	Root            *types.Bytes32 `json:"merkleRoot"`
+	Path            types.Path     `json:"merklePath"`
+	ValidationsHash *types.Bytes32 `json:"validationsHash"`
+
+	// The header and its signatures are needed to validate
+	// the previous app hash and metadata such as the height and time
+	Header     abci.Header            `json:"header"`
+	Signatures []*TendermintSignature `json:"signatures"`
+
+	// The next header and its signatures are needed to validate
+	// the app hash representing the validations and merkle path
+	NextHeader     abci.Header            `json:"nextHeader"`
+	NextSignatures []*TendermintSignature `json:"nextSignatures"`
+}
+
+// Time returns the timestamp from the block header
+func (p *TendermintProof) Time() uint64 {
+	return p.Header.GetTime()
+}
+
+// FullProof returns a JSON formatted proof
+func (p *TendermintProof) FullProof() []byte {
+	bytes, err := json.MarshalIndent(p, "", "   ")
+	if err != nil {
+		return nil
+	}
+	return bytes
+}
+
+// Verify returns true if the proof of a given linkHash is correct
+func (p *TendermintProof) Verify(linkHash interface{}) bool {
+	lh, ok := linkHash.(*types.Bytes32)
+	if ok != true {
+		return false
+	}
+
+	// We first verify that the app hash is correct
+
+	hash := sha256.New()
+	if _, err := hash.Write(types.NewBytes32FromBytes(p.Header.AppHash)[:]); err != nil {
+		return false
+	}
+
+	validationsHash := p.ValidationsHash
+	if validationsHash == nil {
+		validationsHash = &types.Bytes32{}
+	}
+
+	if _, err := hash.Write(validationsHash[:]); err != nil {
+		return false
+	}
+	if _, err := hash.Write(p.Root[:]); err != nil {
+		return false
+	}
+
+	expectedAppHash := hash.Sum(nil)
+	if bytes.Compare(expectedAppHash, p.NextHeader.AppHash) != 0 {
+		return false
+	}
+
+	// Then we validate the merkle path
+
+	if len(p.Path) == 0 {
+		// If the tree contains a single element, it's valid if it's the root
+		if lh.Compare(p.Root) == 0 {
+			return true
+		}
+
+		return false
+	}
+
+	if err := p.Path.Validate(); err != nil {
+		return false
+	}
+
+	// And that the merkle path starts at the given link hash
+
+	if lh.Compare(&p.Path[0].Left) != 0 && lh.Compare(&p.Path[0].Right) != 0 {
+		return false
+	}
+
+	return true
+}
+
 func init() {
 	cs.DeserializeMethods[BatchFossilizerName] = func(rawProof json.RawMessage) (cs.Proof, error) {
 		p := BatchProof{}
@@ -103,6 +203,13 @@ func init() {
 	}
 	cs.DeserializeMethods[BcBatchFossilizerName] = func(rawProof json.RawMessage) (cs.Proof, error) {
 		p := BcBatchProof{}
+		if err := json.Unmarshal(rawProof, &p); err != nil {
+			return nil, err
+		}
+		return &p, nil
+	}
+	cs.DeserializeMethods[TMPopName] = func(rawProof json.RawMessage) (cs.Proof, error) {
+		p := TendermintProof{}
 		if err := json.Unmarshal(rawProof, &p); err != nil {
 			return nil, err
 		}

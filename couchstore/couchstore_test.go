@@ -114,8 +114,8 @@ func TestCouchStoreV2(t *testing.T) {
 func TestCouchTMPop(t *testing.T) {
 	if *integration {
 		tmpoptestcases.Factory{
-			New:  newTestCouchStore,
-			Free: freeTestCouchStore,
+			New:  newTestCouchStoreTMPop,
+			Free: freeTestCouchStoreTMPop,
 		}.RunTests(t)
 	}
 }
@@ -143,6 +143,12 @@ func newTestCouchStoreV2() (store.AdapterV2, error) {
 	return New(config)
 }
 
+func newTestCouchStoreTMPop() (store.AdapterV2, store.KeyValueStore, error) {
+	a, err := newTestCouchStoreV2()
+	kv := a.(*CouchStore)
+	return a, kv, err
+}
+
 func freeTestCouchStoreV2(a store.AdapterV2) {
 	if err := a.(*CouchStore).deleteDatabase(dbLink); err != nil {
 		test.Fatal(err)
@@ -150,4 +156,8 @@ func freeTestCouchStoreV2(a store.AdapterV2) {
 	if err := a.(*CouchStore).deleteDatabase(dbEvidences); err != nil {
 		test.Fatal(err)
 	}
+}
+
+func freeTestCouchStoreTMPop(a store.AdapterV2, _ store.KeyValueStore) {
+	freeTestCouchStoreV2(a)
 }
