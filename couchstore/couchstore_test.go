@@ -94,20 +94,15 @@ func TestMain(m *testing.M) {
 func TestCouchStore(t *testing.T) {
 	test = t
 	if *integration {
-		storetestcases.Factory{
-			New:  newTestCouchStore,
-			Free: freeTestCouchStore,
-		}.RunTests(t)
-	}
-}
+		factory := storetestcases.Factory{
+			New:               newTestCouchStoreAdapter,
+			NewKeyValueStore:  newTestCouchStoreKeyValue,
+			Free:              freeTestCouchStoreAdapter,
+			FreeKeyValueStore: freeTestCouchStoreKeyValue,
+		}
 
-func TestCouchStoreV2(t *testing.T) {
-	test = t
-	if *integration {
-		storetestcases.Factory{
-			NewV2:  newTestCouchStoreV2,
-			FreeV2: freeTestCouchStoreV2,
-		}.RunTestsV2(t)
+		factory.RunStoreTests(t)
+		factory.RunKeyValueStoreTests(t)
 	}
 }
 
@@ -120,44 +115,43 @@ func TestCouchTMPop(t *testing.T) {
 	}
 }
 
-func newTestCouchStore() (store.Adapter, error) {
+func newTestCouchStore() (*CouchStore, error) {
 	config := &Config{
 		Address: fmt.Sprintf("http://%s:%s", domain, port),
 	}
 	return New(config)
 }
 
-func freeTestCouchStore(a store.Adapter) {
-	if err := a.(*CouchStore).deleteDatabase(dbLink); err != nil {
-		test.Fatal(err)
-	}
-	if err := a.(*CouchStore).deleteDatabase(dbEvidences); err != nil {
-		test.Fatal(err)
-	}
+func newTestCouchStoreAdapter() (store.Adapter, error) {
+	return newTestCouchStore()
 }
 
-func newTestCouchStoreV2() (store.AdapterV2, error) {
-	config := &Config{
-		Address: fmt.Sprintf("http://%s:%s", domain, port),
-	}
-	return New(config)
+func newTestCouchStoreKeyValue() (store.KeyValueStore, error) {
+	return newTestCouchStore()
 }
 
-func newTestCouchStoreTMPop() (store.AdapterV2, store.KeyValueStore, error) {
-	a, err := newTestCouchStoreV2()
-	kv := a.(*CouchStore)
-	return a, kv, err
+func newTestCouchStoreTMPop() (store.Adapter, store.KeyValueStore, error) {
+	a, err := newTestCouchStore()
+	return a, a, err
 }
 
-func freeTestCouchStoreV2(a store.AdapterV2) {
-	if err := a.(*CouchStore).deleteDatabase(dbLink); err != nil {
+func freeTestCouchStore(a *CouchStore) {
+	if err := a.deleteDatabase(dbLink); err != nil {
 		test.Fatal(err)
 	}
-	if err := a.(*CouchStore).deleteDatabase(dbEvidences); err != nil {
+	if err := a.deleteDatabase(dbEvidences); err != nil {
 		test.Fatal(err)
 	}
 }
 
-func freeTestCouchStoreTMPop(a store.AdapterV2, _ store.KeyValueStore) {
-	freeTestCouchStoreV2(a)
+func freeTestCouchStoreAdapter(a store.Adapter) {
+	freeTestCouchStore(a.(*CouchStore))
+}
+
+func freeTestCouchStoreKeyValue(a store.KeyValueStore) {
+	freeTestCouchStore(a.(*CouchStore))
+}
+
+func freeTestCouchStoreTMPop(a store.Adapter, _ store.KeyValueStore) {
+	freeTestCouchStoreAdapter(a)
 }
