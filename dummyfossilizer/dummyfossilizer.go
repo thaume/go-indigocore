@@ -53,8 +53,8 @@ type Info struct {
 // DummyFossilizer is the type that implements
 // github.com/stratumn/sdk/fossilizer.Adapter.
 type DummyFossilizer struct {
-	config      *Config
-	resultChans []chan *fossilizer.Result
+	config               *Config
+	fossilizerEventChans []chan *fossilizer.Event
 }
 
 // DummyProof implements the cs.Proof interface
@@ -107,14 +107,15 @@ func (a *DummyFossilizer) GetInfo() (interface{}, error) {
 	}, nil
 }
 
-// AddResultChan implements
-// github.com/stratumn/sdk/fossilizer.Adapter.AddResultChan.
-func (a *DummyFossilizer) AddResultChan(resultChan chan *fossilizer.Result) {
-	a.resultChans = append(a.resultChans, resultChan)
+// AddFossilizerEventChan implements
+// github.com/stratumn/sdk/fossilizer.Adapter.AddFossilizerEventChan.
+func (a *DummyFossilizer) AddFossilizerEventChan(fossilizerEventChan chan *fossilizer.Event) {
+	a.fossilizerEventChans = append(a.fossilizerEventChans, fossilizerEventChan)
 }
 
 // Fossilize implements github.com/stratumn/sdk/fossilizer.Adapter.Fossilize.
 func (a *DummyFossilizer) Fossilize(data []byte, meta []byte) error {
+
 	r := &fossilizer.Result{
 		Evidence: cs.Evidence{
 			Backend:  Name,
@@ -126,9 +127,13 @@ func (a *DummyFossilizer) Fossilize(data []byte, meta []byte) error {
 		Data: data,
 		Meta: meta,
 	}
+	event := &fossilizer.Event{
+		EventType: fossilizer.DidFossilizeLink,
+		Data:      r,
+	}
 
-	for _, c := range a.resultChans {
-		c <- r
+	for _, c := range a.fossilizerEventChans {
+		c <- event
 	}
 
 	return nil

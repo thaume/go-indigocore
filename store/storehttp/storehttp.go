@@ -47,8 +47,6 @@ import (
 	"net/http"
 	"sync"
 
-	"time"
-
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/stratumn/sdk/cs"
@@ -64,34 +62,6 @@ const (
 
 	// DefaultAddress is the default address of the server.
 	DefaultAddress = ":5000"
-
-	// DefaultWebSocketReadBufferSize is the default size of the web socket
-	// read buffer in bytes.
-	DefaultWebSocketReadBufferSize = 1024
-
-	// DefaultWebSocketWriteBufferSize is the default size of the web socket
-	// write buffer in bytes.
-	DefaultWebSocketWriteBufferSize = 1024
-
-	// DefaultWebSocketWriteChanSize is the default size of a web socket
-	// buffered connection channel.
-	DefaultWebSocketWriteChanSize = 256
-
-	// DefaultWebSocketWriteTimeout is the default timeout of a web socket
-	// write.
-	DefaultWebSocketWriteTimeout = 10 * time.Second
-
-	// DefaultWebSocketPongTimeout is the default timeout of a web socket
-	// expected pong.
-	DefaultWebSocketPongTimeout = time.Minute
-
-	// DefaultWebSocketPingInterval is the default interval between web
-	// socket pings.
-	DefaultWebSocketPingInterval = (DefaultWebSocketPongTimeout * 9) / 10
-
-	// DefaultWebSocketMaxMsgSize is the default maximum size of a web
-	// socke received message in in bytes.
-	DefaultWebSocketMaxMsgSize = 32 * 1024
 )
 
 // Server is an HTTP server for stores.
@@ -111,12 +81,6 @@ type Config struct {
 // Info is the info returned by the root route.
 type Info struct {
 	Adapter interface{} `json:"adapter"`
-}
-
-// msg is a web socket message.
-type msg struct {
-	Type string      `json:"type"`
-	Data interface{} `json:"data"`
 }
 
 // New create an instance of a server.
@@ -196,7 +160,7 @@ func (s *Server) Start() {
 // Web socket loop.
 func (s *Server) loop() {
 	for event := range s.storeEventsChan {
-		s.ws.Broadcast(&msg{
+		s.ws.Broadcast(&jsonws.Message{
 			Type: string(event.EventType),
 			Data: event.Data,
 		}, nil)

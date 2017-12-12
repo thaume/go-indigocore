@@ -142,18 +142,18 @@ type Info struct {
 // Fossilizer is the type that
 // implements github.com/stratumn/sdk/fossilizer.Adapter.
 type Fossilizer struct {
-	config      *Config
-	startedChan chan chan struct{}
-	fossilChan  chan *fossil
-	resultChan  chan error
-	batchChan   chan *batch
-	stopChan    chan error
-	semChan     chan struct{}
-	resultChans []chan *fossilizer.Result
-	waitGroup   sync.WaitGroup
-	transformer Transformer
-	pending     *batch
-	stopping    bool
+	config               *Config
+	startedChan          chan chan struct{}
+	fossilChan           chan *fossil
+	resultChan           chan error
+	batchChan            chan *batch
+	stopChan             chan error
+	semChan              chan struct{} // used to control number of simultaneous batches
+	fossilizerEventChans []chan *fossilizer.Event
+	waitGroup            sync.WaitGroup
+	transformer          Transformer
+	pending              *batch
+	stopping             bool
 }
 
 // Transformer is the type of a function to transform results.
@@ -197,10 +197,10 @@ func (a *Fossilizer) GetInfo() (interface{}, error) {
 	}, nil
 }
 
-// AddResultChan implements
-// github.com/stratumn/sdk/fossilizer.Adapter.AddResultChan.
-func (a *Fossilizer) AddResultChan(resultChan chan *fossilizer.Result) {
-	a.resultChans = append(a.resultChans, resultChan)
+// AddFossilizerEventChan implements
+// github.com/stratumn/sdk/fossilizer.Adapter.AddFossilizerEventChan.
+func (a *Fossilizer) AddFossilizerEventChan(fossilizerEventChan chan *fossilizer.Event) {
+	a.fossilizerEventChans = append(a.fossilizerEventChans, fossilizerEventChan)
 }
 
 // Fossilize implements github.com/stratumn/sdk/fossilizer.Adapter.Fossilize.
@@ -400,8 +400,12 @@ func (a *Fossilizer) sendEvidence(tree *merkle.StaticTree, meta [][]byte) {
 		if r, err = a.transformer(&evidence, d, m); err != nil {
 			log.WithField("error", err).Error("Failed to transform evidence")
 		} else {
-			for _, c := range a.resultChans {
-				c <- r
+			event := &fossilizer.Event{
+				EventType: fossilizer.DidFossilizeLink,
+				Data:      r,
+			}
+			for _, c := range a.fossilizerEventChans {
+				c <- event
 			}
 		}
 	}

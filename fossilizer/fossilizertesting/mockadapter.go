@@ -25,8 +25,8 @@ type MockAdapter struct {
 	// The mock for the GetInfo function.
 	MockGetInfo MockGetInfo
 
-	// The mock for the AddResultChan function.
-	MockAddResultChan MockAddResultChan
+	// The mock for the AddFossilizerEventChan function.
+	MockAddFossilizerEventChan MockAddFossilizerEventChan
 
 	// The mock for the Fossilize function.
 	MockFossilize MockFossilize
@@ -41,19 +41,19 @@ type MockGetInfo struct {
 	Fn func() (interface{}, error)
 }
 
-// MockAddResultChan mocks the AddResultChan function.
-type MockAddResultChan struct {
+// MockAddFossilizerEventChan mocks the AddFossilizerEventChan function.
+type MockAddFossilizerEventChan struct {
 	// The number of times the function was called.
 	CalledCount int
 
 	// The channel that was passed to each call.
-	CalledWith []chan *fossilizer.Result
+	CalledWith []chan *fossilizer.Event
 
 	// The last channel that was passed.
-	LastCalledWith chan *fossilizer.Result
+	LastCalledWith chan *fossilizer.Event
 
 	// An optional implementation of the function.
-	Fn func(chan *fossilizer.Result)
+	Fn func(chan *fossilizer.Event)
 }
 
 // MockFossilize mocks the Fossilize function.
@@ -88,15 +88,15 @@ func (a *MockAdapter) GetInfo() (interface{}, error) {
 	return nil, nil
 }
 
-// AddResultChan implements
-// github.com/stratumn/sdk/fossilizer.Adapter.AddResultChan.
-func (a *MockAdapter) AddResultChan(resultChan chan *fossilizer.Result) {
-	a.MockAddResultChan.CalledCount++
-	a.MockAddResultChan.CalledWith = append(a.MockAddResultChan.CalledWith, resultChan)
-	a.MockAddResultChan.LastCalledWith = resultChan
+// AddFossilizerEventChan implements
+// github.com/stratumn/sdk/fossilizer.Adapter.AddFossilizerEventChan.
+func (a *MockAdapter) AddFossilizerEventChan(eventChan chan *fossilizer.Event) {
+	a.MockAddFossilizerEventChan.CalledCount++
+	a.MockAddFossilizerEventChan.CalledWith = append(a.MockAddFossilizerEventChan.CalledWith, eventChan)
+	a.MockAddFossilizerEventChan.LastCalledWith = eventChan
 
-	if a.MockAddResultChan.Fn != nil {
-		a.MockAddResultChan.Fn(resultChan)
+	if a.MockAddFossilizerEventChan.Fn != nil {
+		a.MockAddFossilizerEventChan.Fn(eventChan)
 	}
 }
 

@@ -27,28 +27,22 @@
 package fossilizerhttp
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/stratumn/sdk/fossilizer"
 	"github.com/stratumn/sdk/jsonhttp"
+	"github.com/stratumn/sdk/jsonws"
 )
 
 const (
 	// DefaultAddress is the default address of the server.
 	DefaultAddress = ":6000"
-
-	// DefaultNumResultWorkers is the default number of goroutines that will
-	// be used to handle fossilizer results.
-	DefaultNumResultWorkers = 8
 
 	// DefaultMinDataLen is the default minimum fossilize data length.
 	DefaultMinDataLen = 32
@@ -59,14 +53,13 @@ const (
 	// DefaultCallbackTimeout is the default timeout of requests to the
 	// callback URLs.
 	DefaultCallbackTimeout = 10 * time.Second
+
+	// DefaultFossilizerEventChanSize is the default size of the fossilizer event channel.
+	DefaultFossilizerEventChanSize = 256
 )
 
 // Config contains configuration options for the server.
 type Config struct {
-	// The number of goroutines that will be used to handle
-	// fossilizer results.
-	NumResultWorkers int
-
 	// The minimum fossilize data length.
 	MinDataLen int
 
@@ -75,6 +68,9 @@ type Config struct {
 
 	// The timeout of requests to the callback URLs.
 	CallbackTimeout time.Duration
+
+	// The size of the EventChan channel.
+	FossilizerEventChanSize int
 }
 
 // Info is the info returned by the root route.
@@ -85,26 +81,31 @@ type Info struct {
 // Server is an HTTP server for fossilizers.
 type Server struct {
 	*jsonhttp.Server
-	adapter    fossilizer.Adapter
-	config     *Config
-	resultChan chan *fossilizer.Result
+	adapter             fossilizer.Adapter
+	config              *Config
+	ws                  *jsonws.Basic
+	fossilizerEventChan chan *fossilizer.Event
 }
 
 // New create an instance of a server.
-func New(a fossilizer.Adapter, config *Config, httpConfig *jsonhttp.Config) *Server {
-	if config.NumResultWorkers < 1 {
-		config.NumResultWorkers = DefaultNumResultWorkers
-	}
-
+func New(
+	a fossilizer.Adapter,
+	config *Config,
+	httpConfig *jsonhttp.Config,
+	basicConfig *jsonws.BasicConfig,
+	bufConnConfig *jsonws.BufferedConnConfig,
+) *Server {
 	s := Server{
-		Server:     jsonhttp.New(httpConfig),
-		adapter:    a,
-		config:     config,
-		resultChan: make(chan *fossilizer.Result, config.NumResultWorkers),
+		Server:              jsonhttp.New(httpConfig),
+		adapter:             a,
+		config:              config,
+		ws:                  jsonws.NewBasic(basicConfig, bufConnConfig),
+		fossilizerEventChan: make(chan *fossilizer.Event, config.FossilizerEventChanSize),
 	}
 
 	s.Get("/", s.root)
 	s.Post("/fossils", s.fossilize)
+	s.GetRaw("/websocket", s.getWebSocket)
 
 	return &s
 }
@@ -131,18 +132,39 @@ func (s *Server) ListenAndServe() (err error) {
 
 // Shutdown stops the server.
 func (s *Server) Shutdown(ctx context.Context) error {
-	close(s.resultChan)
+	s.ws.Stop()
+	close(s.fossilizerEventChan)
 	return s.Server.Shutdown(ctx)
 }
 
 // Start starts the main loops. You do not need to call this if you call
 // ListenAndServe().
 func (s *Server) Start() {
-	s.adapter.AddResultChan(s.resultChan)
-	client := http.Client{Timeout: s.config.CallbackTimeout}
+	s.adapter.AddFossilizerEventChan(s.fossilizerEventChan)
 
-	for i := 0; i < s.config.NumResultWorkers; i++ {
-		go handleResults(s.resultChan, &client)
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	go func() {
+		s.ws.Start()
+		wg.Done()
+	}()
+
+	go func() {
+		s.handleEvents()
+		wg.Done()
+	}()
+
+	wg.Wait()
+}
+
+// Forward events to websocket
+func (s *Server) handleEvents() {
+	for event := range s.fossilizerEventChan {
+		s.ws.Broadcast(&jsonws.Message{
+			Type: string(event.EventType),
+			Data: event.Data,
+		}, nil)
 	}
 }
 
@@ -158,12 +180,12 @@ func (s *Server) root(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 }
 
 func (s *Server) fossilize(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
-	data, url, err := s.parseFossilizeValues(r)
+	data, process, err := s.parseFossilizeValues(r)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.adapter.Fossilize(data, []byte(url)); err != nil {
+	if err := s.adapter.Fossilize(data, []byte(process)); err != nil {
 		return nil, err
 	}
 
@@ -193,51 +215,14 @@ func (s *Server) parseFossilizeValues(r *http.Request) ([]byte, string, error) {
 		return nil, "", jsonhttp.NewErrHTTP(err.Error(), http.StatusBadRequest)
 	}
 
-	url := r.Form.Get("callbackUrl")
-	if url == "" {
-		return nil, "", newErrCallbackURL("")
+	process := r.Form.Get("process")
+	if process == "" {
+		return nil, "", newErrProcess("")
 	}
 
-	return data, url, nil
+	return data, process, nil
 }
 
-func handleResults(resultChan chan *fossilizer.Result, client *http.Client) {
-	for r := range resultChan {
-		body, err := json.Marshal(r.Evidence)
-		if err != nil {
-			log.WithField("error", err).Error("Failed to marshal evidence")
-			continue
-		}
-
-		url := string(r.Meta)
-		req, err := http.NewRequest("POST", string(r.Meta), bytes.NewReader(body))
-		if err != nil {
-			log.WithFields(log.Fields{
-				"url":   url,
-				"error": err,
-			}).Error("Failed to create callback request")
-			continue
-		}
-		req.Header.Set("Content-Type", "application/json")
-		res, err := client.Do(req)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"url":   url,
-				"error": err,
-			}).Error("Failed to execute callback request")
-			continue
-		} else if res.StatusCode >= 300 {
-			log.WithFields(log.Fields{
-				"url":    url,
-				"status": res.StatusCode,
-				"error":  err,
-			}).Error("Invalid callback status code")
-		}
-		if err := res.Body.Close(); err != nil {
-			log.WithFields(log.Fields{
-				"url":   url,
-				"error": err,
-			}).Error("Failed to close callback request")
-		}
-	}
+func (s *Server) getWebSocket(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	s.ws.Handle(w, r)
 }

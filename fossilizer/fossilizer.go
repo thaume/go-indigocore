@@ -24,11 +24,11 @@ type Adapter interface {
 	// Returns arbitrary information about the adapter.
 	GetInfo() (interface{}, error)
 
-	// Adds a channel that receives results whenever data is fossilized.
-	AddResultChan(resultChan chan *Result)
+	// Adds a channel that receives events from the fossilizer
+	AddFossilizerEventChan(chan *Event)
 
 	// Requests data to be fossilized.
-	// Meta is arbitrary data that will be sent to the result channels.
+	// Meta is arbitrary data that will be forwarded to the websocket.
 	Fossilize(data []byte, meta []byte) error
 }
 
@@ -42,4 +42,19 @@ type Result struct {
 
 	// The meta data that was given to Adapter.Fossilize.
 	Meta []byte
+}
+
+// EventType lets you know the kind of event received.
+// A client should ignore events it doesn't care about or doesn't understand.
+type EventType string
+
+const (
+	// DidFossilizeLink means that the link was fossilized
+	DidFossilizeLink EventType = "DidFossilizeLink"
+)
+
+// Event is the object fossilizers send to notify of important events.
+type Event struct {
+	EventType EventType
+	Data      interface{}
 }
