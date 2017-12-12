@@ -48,66 +48,19 @@ type Factory struct {
 
 // RunKeyValueStoreTests runs all the tests for the key value store interface.
 func (f Factory) RunKeyValueStoreTests(t *testing.T) {
-	t.Run("TestSaveValue", f.TestSaveValue)
-	t.Run("TestGetValue", f.TestGetValue)
-	t.Run("TestGetValueNotFound", f.TestGetValueNotFound)
-	t.Run("TestDeleteValue", f.TestDeleteValue)
-	t.Run("TestDeleteValueNotFound", f.TestDeleteValueNotFound)
+	t.Run("TestKeyValueStore", f.TestKeyValueStore)
 }
 
 // RunStoreTests runs all the tests for the store adapter interface.
 func (f Factory) RunStoreTests(t *testing.T) {
-	// Notifications
-	t.Run("TestLinkSavedChannel", f.TestLinkSavedChannel)
-	t.Run("TestEvidenceAddedChannel", f.TestEvidenceAddedChannel)
-	// Store info
-	t.Run("GetInfo", f.TestGetInfo)
-	// Find segments
-	t.Run("TestFindSegments", f.TestFindSegments)
-	t.Run("TestFindSegmentsPagination", f.TestFindSegmentsPagination)
-	t.Run("TestFindSegmentEmpty", f.TestFindSegmentEmpty)
-	t.Run("TestFindSegmentsSingleTag", f.TestFindSegmentsSingleTag)
-	t.Run("TestFindSegmentsMultipleTags", f.TestFindSegmentsMultipleTags)
-	t.Run("TestFindSegmentsMapID", f.TestFindSegmentsMapID)
-	t.Run("TestFindSegmentsMapIDs", f.TestFindSegmentsMapIDs)
-	t.Run("TestFindSegmentsMapIDTags", f.TestFindSegmentsMapIDTags)
-	t.Run("TestFindSegmentsMapIDNotFound", f.TestFindSegmentsMapIDNotFound)
-	t.Run("TestFindSegmentsLinkHashesMultiMatch", f.TestFindSegmentsLinkHashesMultiMatch)
-	t.Run("TestFindSegmentsLinkHashesWithProcess", f.TestFindSegmentsLinkHashesWithProcess)
-	t.Run("TestFindSegmentsLinkHashesNoMatch", f.TestFindSegmentsLinkHashesNoMatch)
-	t.Run("TestFindSegmentsEmptyPrevLinkHash", f.TestFindSegmentsEmptyPrevLinkHash)
-	t.Run("TestFindSegmentsPrevLinkHash", f.TestFindSegmentsPrevLinkHash)
-	t.Run("TestFindSegmentsPrevLinkHashTags", f.TestFindSegmentsPrevLinkHashTags)
-	t.Run("TestFindSegmentsPrevLinkHashGoodMapID", f.TestFindSegmentsPrevLinkHashGoodMapID)
-	t.Run("TestFindSegmentsPrevLinkHashBadMapID", f.TestFindSegmentsPrevLinkHashBadMapID)
-	t.Run("TestFindSegmentsPrevLinkHashNotFound", f.TestFindSegmentsPrevLinkHashNotFound)
-	t.Run("TestFindSegmentWithGoodProcess", f.TestFindSegmentWithGoodProcess)
-	t.Run("TestFindSegmentWithBadProcess", f.TestFindSegmentWithBadProcess)
-	// Map ids
-	t.Run("TestGetMapIDs", f.TestGetMapIDs)
-	t.Run("TestGetMapIDsPagination", f.TestGetMapIDsPagination)
-	t.Run("TestGetMapIDsEmpty", f.TestGetMapIDsEmpty)
-	t.Run("TestGetMapIDsByProcess", f.TestGetMapIDsByProcess)
-	// Get segment
-	t.Run("TestGetSegment", f.TestGetSegment)
-	t.Run("TestGetSegmentUpdatedState", f.TestGetSegmentUpdatedState)
-	t.Run("TestGetSegmentUpdatedMapID", f.TestGetSegmentUpdatedMapID)
-	t.Run("TestGetSegmentWithEvidences", f.TestGetSegmentWithEvidences)
-	t.Run("TestGetSegmentNotFound", f.TestGetSegmentNotFound)
-	// Create link
-	t.Run("TestCreateLink", f.TestCreateLink)
-	t.Run("TestCreateLinkNoPriority", f.TestCreateLinkNoPriority)
-	t.Run("TestCreateLinkUpdatedState", f.TestCreateLinkUpdatedState)
-	t.Run("TestCreateLinkUpdatedMapID", f.TestCreateLinkUpdatedMapID)
-	t.Run("TestCreateLinkBranch", f.TestCreateLinkBranch)
-	// Add evidence
-	t.Run("TestAddEvidences", f.TestAddEvidences)
-	t.Run("TestAddDuplicateEvidences", f.TestAddDuplicateEvidences)
-	// Batch
-	t.Run("TestBatchCreateLink", f.TestBatchCreateLink)
-	t.Run("TestBatchWriteCreateLink", f.TestBatchWriteCreateLink)
-	t.Run("TestBatchFindSegments", f.TestBatchFindSegments)
-	t.Run("TestBatchGetMapIDs", f.TestBatchGetMapIDs)
+	t.Run("Test store events", f.TestStoreEvents)
+	t.Run("Test store info", f.TestGetInfo)
+	t.Run("Test finding segments", f.TestFindSegments)
+	t.Run("Test getting map IDs", f.TestGetMapIDs)
+	t.Run("Test getting segments", f.TestGetSegment)
+	t.Run("Test creating links", f.TestCreateLink)
+	t.Run("Test batch implementation", f.TestBatch)
+	t.Run("Test evidence store", f.TestEvidenceStore)
 }
 
 // RunStoreBenchmarks runs all the benchmarks for the store adapter interface.
