@@ -34,6 +34,7 @@ import (
 	"github.com/stratumn/sdk/store/storetesting"
 	"github.com/stratumn/sdk/testutil"
 	"github.com/stratumn/sdk/types"
+	"github.com/stretchr/testify/assert"
 )
 
 const zeros = "0000000000000000000000000000000000000000000000000000000000000000"
@@ -392,6 +393,30 @@ func TestFindSegments_multipleMapIDs(t *testing.T) {
 	}
 }
 
+func TestFindSegments_multipleLinkHashes(t *testing.T) {
+	s, a := createServer()
+	var s1 cs.SegmentSlice
+	for i := 0; i < 10; i++ {
+		s1 = append(s1, cstesting.RandomLink().Segmentify())
+	}
+	a.MockFindSegments.Fn = func(*store.SegmentFilter) (cs.SegmentSlice, error) { return s1, nil }
+
+	var s2 cs.SegmentSlice
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?offset=1&limit=2&linkHashes[]="+zeros+"&linkHashes%5B%5D="+zeros, nil, &s2)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, s1, s2)
+	assert.Equal(t, 1, a.MockFindSegments.CalledCount)
+
+	f := a.MockFindSegments.LastCalledWith
+	wantLinkHash, _ := types.NewBytes32FromString(zeros)
+	assert.Equal(t, 1, f.Offset)
+	assert.Equal(t, 2, f.Limit)
+	assert.Equal(t, 2, len(f.LinkHashes))
+	assert.True(t, f.LinkHashes[0].Equals(wantLinkHash))
+	assert.True(t, f.LinkHashes[1].Equals(wantLinkHash))
+}
+
 func TestFindSegments_defaultLimit(t *testing.T) {
 	s, a := createServer()
 	var s1 cs.SegmentSlice
@@ -499,6 +524,16 @@ func TestFindSegments_invalidPrevLinkHash(t *testing.T) {
 	if got, want := a.MockFindSegments.CalledCount, 0; got != want {
 		t.Errorf("a.MockFindSegments.CalledCount = %d want %d", got, want)
 	}
+}
+func TestFindSegments_invalidLinkHashes(t *testing.T) {
+	s, a := createServer()
+
+	var body map[string]interface{}
+	w, err := testutil.RequestJSON(s.ServeHTTP, "GET", "/segments?linkHashes[]=3", nil, &body)
+	assert.NoError(t, err)
+	assert.Equal(t, newErrLinkHashes("").Status(), w.Code)
+	assert.Equal(t, newErrLinkHashes("").Error(), body["error"].(string))
+	assert.Equal(t, 0, a.MockFindSegments.CalledCount)
 }
 
 func TestGetMapIDs(t *testing.T) {
