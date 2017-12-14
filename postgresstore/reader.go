@@ -84,7 +84,13 @@ func (a *reader) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, err
 			}
 		}
 	} else if len(filter.LinkHashes) > 0 {
-		linkHashesArray := pq.Array(filter.LinkHashes)
+
+		linkHashes, err := cs.NewLinkHashesFromStrings(filter.LinkHashes)
+		if err != nil {
+			return nil, err
+		}
+
+		linkHashesArray := pq.Array(linkHashes)
 		if len(filter.MapIDs) > 0 {
 			mapIDs := pq.Array(filter.MapIDs)
 			if len(filter.Tags) > 0 {

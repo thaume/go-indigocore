@@ -253,7 +253,13 @@ func (a *Store) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, erro
 		})
 	}
 
-	if linkHashes := filter.LinkHashes; len(linkHashes) > 0 {
+	if len(filter.LinkHashes) > 0 {
+
+		linkHashes, err := cs.NewLinkHashesFromStrings(filter.LinkHashes)
+		if err != nil {
+			return nil, err
+		}
+
 		ids := make([]interface{}, len(linkHashes))
 		for i, v := range linkHashes {
 			ids[i] = v
