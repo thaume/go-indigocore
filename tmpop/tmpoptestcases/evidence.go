@@ -44,7 +44,7 @@ func (f Factory) TestTendermintEvidence(t *testing.T) {
 	req = commitLink(t, h, invalidLink, req)
 	previousAppHash := req.Header.AppHash
 	tmClientMock.On("Block", 1).Return(&tmpop.Block{
-		Header: &abci.Header{Height: uint64(1)},
+		Header: &abci.Header{Height: int64(1)},
 	})
 
 	// Second block contains two valid links
@@ -61,7 +61,7 @@ func (f Factory) TestTendermintEvidence(t *testing.T) {
 	expectedTx2 := &tmpop.Tx{TxType: tmpop.CreateLink, Link: link2}
 	expectedBlock := &tmpop.Block{
 		Header: &abci.Header{
-			Height:  uint64(2),
+			Height:  int64(2),
 			AppHash: previousAppHash,
 		},
 		Txs: []*tmpop.Tx{expectedTx1, expectedTx2},
@@ -82,7 +82,7 @@ func (f Factory) TestTendermintEvidence(t *testing.T) {
 
 		proof := evidence.Proof.(*evidences.TendermintProof)
 		assert.NotNil(t, proof, "h.Commit(): expected proof not to be nil")
-		assert.Equal(t, uint64(2), proof.BlockHeight, "Invalid block height in proof")
+		assert.Equal(t, int64(2), proof.BlockHeight, "Invalid block height in proof")
 
 		tree, _ := merkle.NewStaticTree([]types.Bytes32{*linkHash1, *linkHash2})
 		assert.EqualValues(t, tree.Root(), proof.Root, "Invalid proof merkle root")

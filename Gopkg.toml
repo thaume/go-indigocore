@@ -36,7 +36,7 @@
 
 [[constraint]]
   name = "github.com/tendermint/abci"
-  version = "0.7.1"
+  version = "0.8.0"
 
 [[constraint]]
   branch = "master"
@@ -44,15 +44,15 @@
 
 [[constraint]]
   name = "github.com/tendermint/go-wire"
-  version = "0.7.1"
+  version = "0.7.2"
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "0.12.0"
+  version = "0.13.0"
 
 [[constraint]]
   name = "github.com/tendermint/tmlibs"
-  version = "0.4.0"
+  version = "0.5.0"
 
 [[constraint]]
   branch = "master"
@@ -77,3 +77,9 @@
 [[constraint]]
   name = "github.com/google/go-querystring"
   branch="master"
+
+[[override]] 
+  # This is required because Tendermint needs v0.5
+  # but Docker claims it needs v0.4 (but probably not intentionnally)
+  name = "github.com/gogo/protobuf"
+  version = "v0.5"

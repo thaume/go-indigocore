@@ -44,7 +44,7 @@ func (f Factory) TestQuery(t *testing.T) {
 
 	t.Run("Info() returns correct last seen height and app hash", func(t *testing.T) {
 		abciInfo := h.Info(abci.RequestInfo{})
-		assert.Equal(t, uint64(3), abciInfo.LastBlockHeight)
+		assert.Equal(t, int64(3), abciInfo.LastBlockHeight)
 	})
 
 	t.Run("GetInfo() correctly returns name", func(t *testing.T) {
@@ -154,12 +154,12 @@ func (f Factory) TestQuery(t *testing.T) {
 		q := h.Query(abci.RequestQuery{
 			Path: "Unsupported",
 		})
-		assert.EqualValues(t, abci.CodeType_UnknownRequest, q.GetCode())
+		assert.EqualValues(t, tmpop.CodeTypeNotImplemented, q.GetCode())
 
 		q = h.Query(abci.RequestQuery{
 			Path:   tmpop.FindSegments,
 			Height: 12,
 		})
-		assert.EqualValues(t, abci.CodeType_InternalError, q.GetCode())
+		assert.EqualValues(t, tmpop.CodeTypeInternalError, q.GetCode())
 	})
 }
