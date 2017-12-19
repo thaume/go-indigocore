@@ -40,25 +40,18 @@ type Event struct {
 }
 
 // NewSavedLinks creates a new event to notify links were saved.
-func NewSavedLinks() *Event {
-	links := make([]*cs.Link, 0)
+func NewSavedLinks(linkArgs ...*cs.Link) *Event {
+	links := make([]*cs.Link, 0, len(linkArgs))
+	links = append(links, linkArgs...)
 	return &Event{
 		EventType: SavedLinks,
 		Data:      links,
 	}
 }
 
-// AddSavedLink adds a link to the event.
-// It assumes the event is a correctly initialized SavedLinks event.
-func (event *Event) AddSavedLink(link *cs.Link) {
-	linksData := event.Data.([]*cs.Link)
-	linksData = append(linksData, link)
-	event.Data = linksData
-}
-
 // AddSavedLinks adds links to the event.
 // It assumes the event is a correctly initialized SavedLinks event.
-func (event *Event) AddSavedLinks(links []*cs.Link) {
+func (event *Event) AddSavedLinks(links ...*cs.Link) {
 	linksData := event.Data.([]*cs.Link)
 	linksData = append(linksData, links...)
 	event.Data = linksData
