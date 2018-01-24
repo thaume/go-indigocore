@@ -16,8 +16,9 @@ package validator
 
 import (
 	"crypto/sha256"
-	"encoding/json"
 
+	cj "github.com/gibson042/canonicaljson-go"
+	"github.com/pkg/errors"
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/store"
 	"github.com/stratumn/sdk/types"
@@ -53,10 +54,13 @@ func NewMultiValidator(config *MultiValidatorConfig) Validator {
 	}
 }
 
-func (v multiValidator) Hash() *types.Bytes32 {
-	b, _ := json.Marshal(v.config)
+func (v multiValidator) Hash() (*types.Bytes32, error) {
+	b, err := cj.Marshal(v.config)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 	validationsHash := types.Bytes32(sha256.Sum256(b))
-	return &validationsHash
+	return &validationsHash, nil
 }
 
 func (v multiValidator) Validate(r store.SegmentReader, l *cs.Link) error {
