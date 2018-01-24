@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package validator_test
+package validator
 
 import (
 	"io/ioutil"
 	"os"
 	"testing"
 
-	"github.com/stratumn/sdk/cs"
-	"github.com/stratumn/sdk/validator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -94,62 +92,7 @@ const validJSONConfig = `
 }
 `
 
-type testCase struct {
-	name  string
-	link  *cs.Link
-	valid bool
-}
-
-var testCases = []testCase{{
-	name: "valid-link",
-	link: &cs.Link{
-		State: map[string]interface{}{
-			"buyer":    "alice",
-			"bidPrice": 42,
-		},
-		Meta: map[string]interface{}{
-			"process": "auction",
-			"action":  "bid",
-		},
-	},
-	valid: true,
-}, {
-	name: "no-validator-match",
-	link: &cs.Link{
-		Meta: map[string]interface{}{
-			"process": "unknown",
-			"action":  "unknown",
-		},
-	},
-	valid: true,
-}, {
-	name: "missing-required-field",
-	link: &cs.Link{
-		State: map[string]interface{}{
-			"to": "bob",
-		},
-		Meta: map[string]interface{}{
-			"process": "chat",
-			"action":  "message",
-		},
-	},
-	valid: false,
-}, {
-	name: "invalid-field-value",
-	link: &cs.Link{
-		State: map[string]interface{}{
-			"buyer":    "alice",
-			"bidPrice": -10,
-		},
-		Meta: map[string]interface{}{
-			"process": "auction",
-			"action":  "bid",
-		},
-	},
-	valid: false,
-}}
-
-func TestValidator(t *testing.T) {
+func TestLoadConfig_Success(t *testing.T) {
 	tmpfile, err := ioutil.TempFile("", "valid-config")
 	require.NoError(t, err, "ioutil.TempFile()")
 
@@ -158,20 +101,48 @@ func TestValidator(t *testing.T) {
 	_, err = tmpfile.WriteString(validJSONConfig)
 	require.NoError(t, err, "tmpfile.WriteString()")
 
-	cfg, err := validator.LoadConfig(tmpfile.Name())
-	assert.NoError(t, err, "validator.LoadConfig()")
+	cfg, err := LoadConfig(tmpfile.Name())
 
-	v := validator.NewMultiValidator(cfg)
-	assert.NotNil(t, v, "validator.NewMultiValidator()")
+	assert.NoError(t, err, "LoadConfig()")
+	assert.NotNil(t, cfg)
 
-	for _, tt := range testCases {
-		t.Run(tt.name, func(t *testing.T) {
-			err := v.Validate(nil, tt.link)
-			if tt.valid {
-				assert.NoError(t, err, "v.Validate()")
-			} else {
-				assert.Error(t, err, "v.Validate()")
-			}
-		})
-	}
+	assert.Len(t, cfg.SchemaConfigs, 3)
+}
+
+const invalidJSONConfig = `
+{
+  "auction": [
+  {
+    "type": "init"
+  },
+  {
+    "type": "bid",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "buyer": {
+    	  "type": "string"
+        }
+      },
+      "required": [
+        "buyer"
+      ]
+    }
+  }]
+}
+`
+
+func TestLoadConfig_Error(t *testing.T) {
+	tmpfile, err := ioutil.TempFile("", "invalid-config")
+	require.NoError(t, err, "ioutil.TempFile()")
+
+	defer os.Remove(tmpfile.Name())
+
+	_, err = tmpfile.WriteString(invalidJSONConfig)
+	require.NoError(t, err, "tmpfile.WriteString()")
+
+	cfg, err := LoadConfig(tmpfile.Name())
+
+	assert.Nil(t, cfg)
+	assert.EqualError(t, err, ErrMissingSchema.Error())
 }
