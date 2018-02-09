@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
 
 	cj "github.com/gibson042/canonicaljson-go"
@@ -23,6 +24,7 @@ import (
 
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/types"
 	"github.com/stratumn/sdk/validator/signature"
 )
 
@@ -35,40 +37,29 @@ var (
 	ErrEmptyPayload = errors.New("JMESPATH query does not match any link data")
 )
 
-// signatureValidatorConfig contains everything a signatureValidator needs to
-// validate links.
-type signatureValidatorConfig struct {
-	*validatorBaseConfig
+// signatureValidator validates the json signature of a link's state.
+type signatureValidator struct {
 }
 
-// newSignatureValidatorConfig creates a signatureValidatorConfig for a given process and type.
-func newSignatureValidatorConfig(process, linkType string) (*signatureValidatorConfig, error) {
-	baseConfig, err := newValidatorBaseConfig(process, linkType)
+func newSignatureValidator() Validator {
+	return &signatureValidator{}
+}
+
+func (sv signatureValidator) Hash() (*types.Bytes32, error) {
+	b, err := cj.Marshal(sv)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-
-	return &signatureValidatorConfig{baseConfig}, nil
+	validationsHash := types.Bytes32(sha256.Sum256(b))
+	return &validationsHash, nil
 }
 
-// signatureValidator validates the json signature of a link's state.
-type signatureValidator struct {
-	config *signatureValidatorConfig
-}
-
-func newSignatureValidator(config *signatureValidatorConfig) validator {
-	return &signatureValidator{config: config}
+func (sv signatureValidator) ShouldValidate(link *cs.Link) bool {
+	return true
 }
 
 // Validate validates the signature of a link's state.
 func (sv signatureValidator) Validate(_ store.SegmentReader, link *cs.Link) error {
-	if !sv.config.shouldValidate(link) {
-		return nil
-	}
-
-	if len(link.Signatures) == 0 {
-		return ErrMissingSignature
-	}
 
 	for _, sig := range link.Signatures {
 
@@ -93,9 +84,6 @@ func (sv signatureValidator) Validate(_ store.SegmentReader, link *cs.Link) erro
 			return errors.WithStack(err)
 		}
 	}
-	// TODO: check that
-	// - public keys match PKI of rules.json
-	// - required signatures for this action are present/valid
 
 	return nil
 }

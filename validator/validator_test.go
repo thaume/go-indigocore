@@ -27,71 +27,98 @@ import (
 
 const validJSONConfig = `
 {
-  "auction": [
-    {
-      "type": "init",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "seller": {
-            "type": "string"
-          },
-          "lot": {
-            "type": "string"
-          },
-          "initialPrice": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "seller",
-          "lot",
-          "initialPrice"
-        ]
-      }
-    },
-    {
-      "type": "bid",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "buyer": {
-            "type": "string"
-          },
-          "bidPrice": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "buyer",
-          "bidPrice"
-        ]
-      }
+	"pki": {
+	    "TESTKEY1": {
+		"name": "Alice Van den Budenmayer",
+		"roles": [
+		    "employee"
+		]
+	    },
+	    "TESTKEY2": {
+		"name": "Bob Wagner",
+		"roles": [
+		    "manager",
+		    "it"
+		]
+	    }
+	},
+	"validators": {
+	    "auction": [
+		{
+		    "id": "initFormat",	
+		    "type": "init",
+		    "signatures": ["Alice Van den Budenmayer"],
+		    "schema": {
+			"type": "object",
+			"properties": {
+			    "seller": {
+				"type": "string"
+			    },
+			    "lot": {
+				"type": "string"
+			    },
+			    "initialPrice": {
+				"type": "integer",
+				"minimum": 0
+			    }
+			},
+			"required": [
+			    "seller",
+			    "lot",
+			    "initialPrice"
+			]
+		    }
+		},
+		{
+    		    "id": "bidFormat",	
+	  	    "type": "bid",
+		    "schema": {
+			"type": "object",
+			"properties": {
+			    "buyer": {
+				"type": "string"
+			    },
+			    "bidPrice": {
+				"type": "integer",
+				"minimum": 0
+			    }
+			},
+			"required": [
+			    "buyer",
+			    "bidPrice"
+			]
+		    }
+		}
+	    ],
+	    "chat": [
+		{
+		    "id": "messageFormat",	
+		    "type": "message",
+		    "signatures": null,
+		    "schema": {
+			"type": "object",
+			"properties": {
+			    "to": {
+				"type": "string"
+			    },
+			    "content": {
+				"type": "string"
+			    }
+			},
+			"required": [
+			    "to",
+			    "content"
+			]
+		    }
+		},
+		{
+		    "id": "initSigned",
+		    "type": "init",
+		    "signatures": ["manager"]
+		}
+	    ]
+	}
     }
-  ],
-  "chat": [
-    {
-      "type": "message",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "to": {
-            "type": "string"
-          },
-          "content": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "to",
-          "content"
-        ]   
-      }
-    }
-  ]
-}
 `
 
 type testCase struct {
@@ -158,11 +185,10 @@ func TestValidator(t *testing.T) {
 	_, err = tmpfile.WriteString(validJSONConfig)
 	require.NoError(t, err, "tmpfile.WriteString()")
 
-	cfg, err := validator.LoadConfig(tmpfile.Name())
+	children, err := validator.LoadConfig(tmpfile.Name())
 	assert.NoError(t, err, "validator.LoadConfig()")
 
-	v := validator.NewMultiValidator(cfg)
-	assert.NotNil(t, v, "validator.NewMultiValidator()")
+	v := validator.NewMultiValidator(children)
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {

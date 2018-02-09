@@ -25,17 +25,15 @@ const (
 	DefaultFilename = "/data/validation/rules.json"
 )
 
-// validator defines the interface with single Validate() method
-type validator interface {
-	// Validate runs validations on a link and returns an error
-	// if the link is invalid.
-	Validate(store.SegmentReader, *cs.Link) error
-}
-
 // Validator defines a validator that has an internal state, identified by
 // its hash.
 type Validator interface {
-	validator
+	// Validate runs validations on a link and returns an error
+	// if the link is invalid.
+	Validate(store.SegmentReader, *cs.Link) error
+
+	// ShouldValidate returns a boolean whether the link should be checked
+	ShouldValidate(*cs.Link) bool
 
 	// Hash returns the hash of the validator's state.
 	// It can be used to know which set of validations were applied

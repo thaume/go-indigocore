@@ -24,42 +24,25 @@ import (
 	"github.com/stratumn/sdk/types"
 )
 
-// MultiValidatorConfig sets the behavior of the validator.
-// Its hash can be used to know which validations were applied to a block.
-type MultiValidatorConfig struct {
-	SchemaConfigs    []*schemaValidatorConfig
-	SignatureConfigs []*signatureValidatorConfig
-}
-
 type multiValidator struct {
-	config     *MultiValidatorConfig
-	validators []validator
+	validators []Validator
 }
 
 // NewMultiValidator creates a validator that will simply be a collection
 // of single-purpose validators.
-// The configuration should be loaded from a JSON file via validator.LoadConfig().
-func NewMultiValidator(config *MultiValidatorConfig) Validator {
-	if config == nil {
-		return &multiValidator{}
-	}
-
-	var v []validator
-	for _, schemaCfg := range config.SchemaConfigs {
-		v = append(v, newSchemaValidator(schemaCfg))
-	}
-	for _, signatureCfg := range config.SignatureConfigs {
-		v = append(v, newSignatureValidator(signatureCfg))
-	}
-
+// The slice of validators should be loaded from a JSON file via validator.LoadConfig().
+func NewMultiValidator(validators []Validator) Validator {
 	return &multiValidator{
-		config:     config,
-		validators: v,
+		validators: append(validators, newSignatureValidator()),
 	}
 }
 
+func (v multiValidator) ShouldValidate(link *cs.Link) bool {
+	return true
+}
+
 func (v multiValidator) Hash() (*types.Bytes32, error) {
-	b, err := cj.Marshal(v.config)
+	b, err := cj.Marshal(v.validators)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -67,13 +50,24 @@ func (v multiValidator) Hash() (*types.Bytes32, error) {
 	return &validationsHash, nil
 }
 
-func (v multiValidator) Validate(r store.SegmentReader, l *cs.Link) error {
+func (v multiValidator) matchValidators(l *cs.Link) (linkValidators []Validator) {
 	for _, child := range v.validators {
+		if child.ShouldValidate(l) {
+			linkValidators = append(linkValidators, child)
+		}
+	}
+	return
+}
+
+// Validate runs the validation on every child validator matching the provided link.
+// It is the multiValidator's responsability to call child.ShouldValidate() before running the validation.
+func (v multiValidator) Validate(r store.SegmentReader, l *cs.Link) error {
+	linkValidators := v.matchValidators(l)
+	for _, child := range linkValidators {
 		err := child.Validate(r, l)
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }

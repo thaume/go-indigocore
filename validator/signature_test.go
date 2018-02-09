@@ -21,15 +21,11 @@ import (
 	"github.com/stratumn/sdk/cs/cstesting"
 	"github.com/stratumn/sdk/validator/signature"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSignatureValidator(t *testing.T) {
 	process := "p1"
 	action := "test"
-	cfg, err := newSignatureValidatorConfig(process, action)
-	require.NoError(t, err)
-	sv := newSignatureValidator(cfg)
 
 	createValidLink := func() *cs.Link {
 		l := cstesting.RandomLink()
@@ -39,10 +35,11 @@ func TestSignatureValidator(t *testing.T) {
 	}
 
 	type testCase struct {
-		name  string
-		link  func() *cs.Link
-		valid bool
-		err   string
+		name               string
+		link               func() *cs.Link
+		valid              bool
+		err                string
+		requiredSignatures []string
 	}
 
 	testCases := []testCase{
@@ -50,34 +47,6 @@ func TestSignatureValidator(t *testing.T) {
 			name:  "valid-link",
 			valid: true,
 			link:  createValidLink,
-		},
-		{
-			name:  "process-not-matched",
-			valid: true,
-			link: func() *cs.Link {
-				l := createValidLink()
-				l.Meta["process"] = "p2"
-				return l
-			},
-		},
-		{
-			name:  "type-not-matched",
-			valid: true,
-			link: func() *cs.Link {
-				l := createValidLink()
-				l.Meta["action"] = "buy"
-				return l
-			},
-		},
-		{
-			name:  "empty-signatures",
-			valid: false,
-			err:   ErrMissingSignature.Error(),
-			link: func() *cs.Link {
-				l := createValidLink()
-				l.Signatures = nil
-				return l
-			},
 		},
 		{
 			name:  "unsupported-signature-type",
@@ -122,6 +91,8 @@ func TestSignatureValidator(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
+		sv := newSignatureValidator()
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := sv.Validate(nil, tt.link())
 			if tt.valid {

@@ -15,63 +15,59 @@
 package validator
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 
+	cj "github.com/gibson042/canonicaljson-go"
 	"github.com/pkg/errors"
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/sdk/types"
 
 	"github.com/xeipuuv/gojsonschema"
 )
 
-// schemaValidatorConfig contains everything a schemaValidator needs to
-// validate links.
-type schemaValidatorConfig struct {
-	*validatorBaseConfig
+// schemaValidator validates the json schema of a link's state.
+type schemaValidator struct {
+	Config *validatorBaseConfig
 	Schema *gojsonschema.Schema
 }
 
-// newSchemaValidatorConfig creates a schemaValidatorConfig for a given process and type.
-func newSchemaValidatorConfig(process, linkType string, schemaData []byte) (*schemaValidatorConfig, error) {
-	baseConfig, err := newValidatorBaseConfig(process, linkType)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
+func newSchemaValidator(baseConfig *validatorBaseConfig, schemaData []byte) (Validator, error) {
 	schema, err := gojsonschema.NewSchema(gojsonschema.NewBytesLoader(schemaData))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	return &schemaValidatorConfig{
-		validatorBaseConfig: baseConfig,
-		Schema:              schema,
+	return &schemaValidator{
+		Config: baseConfig,
+		Schema: schema,
 	}, nil
 }
 
-// schemaValidator validates the json schema of a link's state.
-type schemaValidator struct {
-	config *schemaValidatorConfig
+func (sv schemaValidator) Hash() (*types.Bytes32, error) {
+	b, err := cj.Marshal(sv)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	validationsHash := types.Bytes32(sha256.Sum256(b))
+	return &validationsHash, nil
 }
 
-func newSchemaValidator(config *schemaValidatorConfig) validator {
-	return &schemaValidator{config: config}
+func (sv schemaValidator) ShouldValidate(link *cs.Link) bool {
+	return sv.Config.ShouldValidate(link)
 }
 
 // Validate validates the schema of a link's state.
 func (sv schemaValidator) Validate(_ store.SegmentReader, link *cs.Link) error {
-	if !sv.config.shouldValidate(link) {
-		return nil
-	}
-
 	stateBytes, err := json.Marshal(link.State)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	stateData := gojsonschema.NewBytesLoader(stateBytes)
-	result, err := sv.config.Schema.Validate(stateData)
+	result, err := sv.Schema.Validate(stateData)
 	if err != nil {
 		return errors.WithStack(err)
 	}

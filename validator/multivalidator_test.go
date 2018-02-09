@@ -22,18 +22,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMultiValidator_New(t *testing.T) {
-	mv := NewMultiValidator(&MultiValidatorConfig{
-		SchemaConfigs: []*schemaValidatorConfig{
-			&schemaValidatorConfig{},
-			&schemaValidatorConfig{},
-		},
-		SignatureConfigs: []*signatureValidatorConfig{
-			&signatureValidatorConfig{},
-		},
-	})
+const validJSON = `
+{
+	"pki": {
+	},
+	"validators": {
+	}
+    }
+`
 
-	assert.Len(t, mv.(*multiValidator).validators, 3)
+func TestMultiValidator_New(t *testing.T) {
+	mv := NewMultiValidator([]Validator{})
+
+	assert.Len(t, mv.(*multiValidator).validators, 1)
 }
 
 func TestMultiValidator_Hash(t *testing.T) {
@@ -41,69 +42,66 @@ func TestMultiValidator_Hash(t *testing.T) {
 	baseConfig2 := &validatorBaseConfig{Process: "p2"}
 
 	t.Run("With schema validator", func(t *testing.T) {
-		mv1 := NewMultiValidator(&MultiValidatorConfig{
-			SchemaConfigs: []*schemaValidatorConfig{
-				&schemaValidatorConfig{
-					validatorBaseConfig: baseConfig1,
-				}},
-		})
+		mv1 := NewMultiValidator([]Validator{
+			schemaValidator{
+				Config: baseConfig1,
+			}},
+		)
 
 		h1, err := mv1.Hash()
 		assert.NoError(t, err)
 		assert.NotNil(t, h1)
 
-		mv2 := NewMultiValidator(&MultiValidatorConfig{
-			SchemaConfigs: []*schemaValidatorConfig{
-				&schemaValidatorConfig{
-					validatorBaseConfig: baseConfig1,
-				}},
-		})
+		mv2 := NewMultiValidator([]Validator{
+			&schemaValidator{
+				Config: baseConfig1,
+			}},
+		)
 
 		h2, err := mv2.Hash()
 		assert.NoError(t, err)
 		assert.EqualValues(t, h1, h2)
 
-		mv3 := NewMultiValidator(&MultiValidatorConfig{
-			SchemaConfigs: []*schemaValidatorConfig{
-				&schemaValidatorConfig{
-					validatorBaseConfig: baseConfig2,
-				}},
-		})
+		mv3 := NewMultiValidator([]Validator{
+			schemaValidator{
+				Config: baseConfig2,
+			}},
+		)
 
 		h3, err := mv3.Hash()
 		assert.NoError(t, err)
 		assert.False(t, h1.Equals(h3))
 	})
 
-	t.Run("With signature validator", func(t *testing.T) {
-		mv1 := NewMultiValidator(&MultiValidatorConfig{
-			SignatureConfigs: []*signatureValidatorConfig{
-				&signatureValidatorConfig{
-					validatorBaseConfig: baseConfig1,
-				}},
-		})
+	t.Run("With pki validator", func(t *testing.T) {
+		mv1 := NewMultiValidator([]Validator{
+			&pkiValidator{
+				Config: baseConfig1,
+			},
+		},
+		)
 
 		h1, err := mv1.Hash()
 		assert.NoError(t, err)
 		assert.NotNil(t, h1)
 
-		mv2 := NewMultiValidator(&MultiValidatorConfig{
-			SignatureConfigs: []*signatureValidatorConfig{
-				&signatureValidatorConfig{
-					validatorBaseConfig: baseConfig1,
-				}},
-		})
+		mv2 := NewMultiValidator([]Validator{
+			&pkiValidator{
+				Config: baseConfig1,
+			},
+		},
+		)
 
 		h2, err := mv2.Hash()
 		assert.NoError(t, err)
 		assert.EqualValues(t, h1, h2)
 
-		mv3 := NewMultiValidator(&MultiValidatorConfig{
-			SignatureConfigs: []*signatureValidatorConfig{
-				&signatureValidatorConfig{
-					validatorBaseConfig: baseConfig2,
-				}},
-		})
+		mv3 := NewMultiValidator([]Validator{
+			&pkiValidator{
+				Config: baseConfig2,
+			},
+		},
+		)
 
 		h3, err := mv3.Hash()
 		assert.NoError(t, err)
@@ -125,22 +123,33 @@ const testMessageSchema = `
 }`
 
 func TestMultiValidator_Validate(t *testing.T) {
-	svCfg1, _ := newSchemaValidatorConfig("p", "a1", []byte(testMessageSchema))
-	svCfg2, _ := newSchemaValidatorConfig("p", "a2", []byte(testMessageSchema))
+	baseConfig1, _ := newValidatorBaseConfig("p", "id1", "a1")
+	baseConfig2, _ := newValidatorBaseConfig("p", "id2", "a2")
+	baseConfig3, _ := newValidatorBaseConfig("p", "id3", "a1")
+	baseConfig4, _ := newValidatorBaseConfig("p", "id4", "a2")
 
-	sigVCfg1, _ := newSignatureValidatorConfig("p", "a1")
-	sigVCfg2, _ := newSignatureValidatorConfig("p", "a2")
+	svCfg1, _ := newSchemaValidator(baseConfig1, []byte(testMessageSchema))
+	svCfg2, _ := newSchemaValidator(baseConfig2, []byte(testMessageSchema))
 
-	mv := NewMultiValidator(&MultiValidatorConfig{
-		SchemaConfigs:    []*schemaValidatorConfig{svCfg1, svCfg2},
-		SignatureConfigs: []*signatureValidatorConfig{sigVCfg1, sigVCfg2},
-	})
+	sigVCfg1 := newPkiValidator(baseConfig3, []string{}, &PKI{})
+	sigVCfg2 := newPkiValidator(baseConfig4, []string{}, &PKI{})
+
+	// append a signatureValidator in the validators to reproduce NewMultiValidator behaviour
+	mv := multiValidator{
+		validators: []Validator{svCfg1, svCfg2, sigVCfg1, sigVCfg2, newSignatureValidator()},
+	}
 
 	t.Run("Validate succeeds when all children succeed", func(t *testing.T) {
 		l := cstesting.RandomLink()
-		l.Signatures = append(l.Signatures, &cs.Signature{})
 		err := mv.Validate(nil, l)
 		assert.NoError(t, err)
+	})
+
+	t.Run("Run the default signature validator when no match is found", func(t *testing.T) {
+		l := cstesting.RandomLink()
+		l.Signatures = append(l.Signatures, &cs.Signature{})
+		err := mv.Validate(nil, l)
+		assert.Error(t, err)
 	})
 
 	t.Run("Validate fails if one of the children fails (schema)", func(t *testing.T) {
@@ -154,11 +163,12 @@ func TestMultiValidator_Validate(t *testing.T) {
 
 	t.Run("Validate fails if one of the children fails (signature)", func(t *testing.T) {
 		l := cstesting.RandomLink()
+		l.Signatures = append(l.Signatures, &cs.Signature{})
 		l.Meta["process"] = "p"
 		l.Meta["action"] = "a2"
 		l.State["message"] = "test"
 
 		err := mv.Validate(nil, l)
-		assert.EqualError(t, err, ErrMissingSignature.Error())
+		assert.Error(t, err)
 	})
 }

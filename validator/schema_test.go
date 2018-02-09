@@ -76,17 +76,14 @@ func TestSchemaValidatorConfig(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg, err := newSchemaValidatorConfig(
-				tt.process,
-				tt.linkType,
-				tt.schema,
-			)
+			baseCfg, _ := newValidatorBaseConfig(process, tt.name, tt.linkType)
+			sv, err := newSchemaValidator(baseCfg, tt.schema)
 
 			if tt.valid {
-				assert.NotNil(t, cfg)
+				assert.NotNil(t, sv)
 				assert.NoError(t, err)
 			} else {
-				assert.Nil(t, cfg)
+				assert.Nil(t, sv)
 				assert.Error(t, err)
 				if tt.expectedError != nil {
 					assert.EqualError(t, err, tt.expectedError.Error())
@@ -99,9 +96,10 @@ func TestSchemaValidatorConfig(t *testing.T) {
 
 func TestSchemaValidator(t *testing.T) {
 	schema := []byte(testSellSchema)
-	cfg, err := newSchemaValidatorConfig("p1", "sell", schema)
+	baseCfg, err := newValidatorBaseConfig("p1", "id1", "sell")
 	require.NoError(t, err)
-	sv := newSchemaValidator(cfg)
+	sv, err := newSchemaValidator(baseCfg, schema)
+	require.NoError(t, err)
 
 	createValidLink := func() *cs.Link {
 		l := cstesting.RandomLink()
@@ -126,30 +124,6 @@ func TestSchemaValidator(t *testing.T) {
 	}
 
 	testCases := []testCase{{
-		name:  "process-not-matched",
-		valid: true,
-		link: func() *cs.Link {
-			l := createInvalidLink()
-			l.Meta["process"] = "p2"
-			return l
-		},
-	}, {
-		name:  "type-not-matched",
-		valid: true,
-		link: func() *cs.Link {
-			l := createInvalidLink()
-			l.Meta["action"] = "buy"
-			return l
-		},
-	}, {
-		name:  "missing-action",
-		valid: true,
-		link: func() *cs.Link {
-			l := createInvalidLink()
-			delete(l.Meta, "action")
-			return l
-		},
-	}, {
 		name:  "valid-link",
 		valid: true,
 		link:  createValidLink,
