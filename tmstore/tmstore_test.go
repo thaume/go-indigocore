@@ -71,6 +71,7 @@ func updateValidatorRulesFile(t *testing.T, in, out string) {
 				Height:  tmInfo.LastBlockHeight,
 			},
 		})
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
@@ -95,7 +96,6 @@ func TestTMStore(t *testing.T) {
 		require.NoError(t, err)
 
 		updateValidatorRulesFile(t, filepath.Join("testdata", "rules.json"), rulesFilename)
-		time.Sleep(500 * time.Millisecond)
 
 		t.Run("Validation succeeds", func(t *testing.T) {
 			l := cstesting.RandomLink()
@@ -154,7 +154,6 @@ func TestTMStore(t *testing.T) {
 			assert.NoError(t, err, "CreateLink() failed")
 
 			updateValidatorRulesFile(t, filepath.Join("testdata", "rules.new.json"), rulesFilename)
-			time.Sleep(500 * time.Millisecond)
 
 			l = cstesting.RandomLink()
 			l.Meta["process"] = "testProcess"
