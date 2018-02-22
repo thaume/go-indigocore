@@ -117,13 +117,9 @@ func (m *GovernanceManager) getAllProcesses() []string {
 			return []string{}
 		}
 		for _, segment := range segments {
-			tags, ok := segment.Link.Meta["tags"].([]interface{})
-			if !ok {
-				return []string{}
-			}
-			for _, tag := range tags {
-				if t, ok := tag.(string); ok && t != validatorTag {
-					processSet[t] = nil
+			for _, tag := range segment.Link.Meta.Tags {
+				if tag != validatorTag {
+					processSet[tag] = nil
 				}
 			}
 		}
@@ -234,8 +230,8 @@ func (m *GovernanceManager) uploadValidator(process string, schema rulesSchema, 
 	mapID := ""
 	prevLinkHash := ""
 	if prevLink != nil {
-		priority = prevLink.GetPriority() + 1.
-		mapID = prevLink.GetMapID()
+		priority = prevLink.Meta.Priority + 1.
+		mapID = prevLink.Meta.MapID
 		var err error
 		if prevLinkHash, err = prevLink.HashString(); err != nil {
 			return errors.Wrapf(err, "cannot get previous hash for process governance %s", process)
@@ -247,15 +243,12 @@ func (m *GovernanceManager) uploadValidator(process string, schema rulesSchema, 
 		"pki":   schema.PKI,
 		"types": schema.Types,
 	}
-	linkMeta := map[string]interface{}{
-		"process":  governanceProcessName,
-		"mapId":    mapID,
-		"priority": priority,
-		"tags":     []interface{}{process, validatorTag},
-	}
-
-	if prevLink != nil {
-		linkMeta["prevLinkHash"] = prevLinkHash
+	linkMeta := cs.LinkMeta{
+		Process:      governanceProcessName,
+		MapID:        mapID,
+		PrevLinkHash: prevLinkHash,
+		Priority:     priority,
+		Tags:         []string{process, validatorTag},
 	}
 
 	link := &cs.Link{

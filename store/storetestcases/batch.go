@@ -22,6 +22,7 @@ import (
 	"github.com/stratumn/go-indigocore/cs/cstesting"
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func initBatch(t *testing.T, a store.Adapter) store.Batch {
@@ -39,7 +40,7 @@ func (f Factory) TestBatch(t *testing.T) {
 	// Initialize the adapter with a few links with specific map ids
 	for i := 0; i < 6; i++ {
 		link := cstesting.RandomLink()
-		link.Meta["mapId"] = fmt.Sprintf("map%d", i%3)
+		link.Meta.MapID = fmt.Sprintf("map%d", i%3)
 		a.CreateLink(link)
 	}
 
@@ -67,6 +68,7 @@ func (f Factory) TestBatch(t *testing.T) {
 
 		found, err := a.GetSegment(linkHash)
 		assert.NoError(t, err, "a.GetSegment()")
+		require.NotNil(t, found, "a.GetSegment()")
 		assert.EqualValues(t, *link, found.Link, "Link should be found in adapter after a Write")
 	})
 
@@ -96,7 +98,7 @@ func (f Factory) TestBatch(t *testing.T) {
 
 		for _, mapID := range []string{"map42", "map43"} {
 			link := cstesting.RandomLink()
-			link.Meta["mapId"] = mapID
+			link.Meta.MapID = mapID
 			b.CreateLink(link)
 		}
 

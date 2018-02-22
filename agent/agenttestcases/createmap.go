@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	cj "github.com/gibson042/canonicaljson-go"
-	"github.com/stratumn/go-indigocore/agent/client"
+	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/testutil"
 	"github.com/stretchr/testify/assert"
 )
@@ -35,14 +35,14 @@ func (f Factory) TestCreateMapOK(t *testing.T) {
 // when one or multiple references are passed.
 func (f Factory) TestCreateMapWithRefs(t *testing.T) {
 	process := "test"
-	refs := []client.SegmentRef{{Process: "other", LinkHash: testutil.RandomHash()}}
+	refs := []cs.SegmentReference{{Process: "other", LinkHash: testutil.RandomHash().String()}}
 
 	segment, err := f.Client.CreateMap(process, refs, "test")
 	assert.NoError(t, err)
 	assert.NotNil(t, segment)
-	assert.NotNil(t, segment.Link.Meta["refs"])
+	assert.NotNil(t, segment.Link.Meta.Refs)
 	want, _ := cj.Marshal(refs)
-	got, _ := cj.Marshal(segment.Link.Meta["refs"])
+	got, _ := cj.Marshal(segment.Link.Meta.Refs)
 	assert.Equal(t, want, got)
 }
 
@@ -50,10 +50,11 @@ func (f Factory) TestCreateMapWithRefs(t *testing.T) {
 // when the provided reference is ill formatted.
 func (f Factory) TestCreateMapWithBadRefs(t *testing.T) {
 	process, arg := "test", "wrongref"
-	refs := []client.SegmentRef{{Process: "wrong"}}
+	refs := []cs.SegmentReference{{Process: "wrong"}}
 
 	segment, err := f.Client.CreateMap(process, refs, arg)
-	assert.EqualError(t, err, "missing segment or (process and linkHash)")
+	assert.Error(t, err, "missing segment or (process and linkHash)")
+	assert.Contains(t, err.Error(), "linkHash should be a non empty string")
 	assert.Nil(t, segment)
 }
 

@@ -112,7 +112,7 @@ func checkLastValidatorPriority(t *testing.T, a store.Adapter, process string, e
 	})
 	assert.NoError(t, err, "FindSegment(governance) should sucess")
 	require.Len(t, segs, 1, "The last validator config should be retrieved")
-	assert.Equal(t, expected, segs[0].Link.GetPriority(), "The last validator config should be retrieved")
+	assert.Equal(t, expected, segs[0].Link.Meta.Priority, "The last validator config should be retrieved")
 }
 
 func TestGovernanceUpdate(t *testing.T) {
@@ -185,8 +185,8 @@ func TestGetAllProcesses(t *testing.T) {
 		a := dummystore.New(nil)
 		for i := 0; i < store.MaxLimit+42; i++ {
 			link := cstesting.RandomLink()
-			link.Meta["process"] = governanceProcessName
-			link.Meta["tags"] = []interface{}{fmt.Sprintf("p%d", i), validatorTag}
+			link.Meta.Process = governanceProcessName
+			link.Meta.Tags = []string{fmt.Sprintf("p%d", i), validatorTag}
 			_, err := a.CreateLink(link)
 			assert.NoErrorf(t, err, "Cannot insert link %+v", link)
 		}
@@ -207,8 +207,8 @@ func populateStoreWithValidData(t *testing.T, a store.LinkWriter) {
 
 	auctionPKI, _ = json.Marshal(strings.Replace(validAuctionJSONPKIConfig, "alice", "charlie", -1))
 	link = createGovernanceLink("auction", auctionPKI, auctionTypes)
-	link.Meta["prevLinkHash"] = hash.String()
-	link.Meta["priority"] = 1.
+	link.Meta.PrevLinkHash = hash.String()
+	link.Meta.Priority = 1.
 	_, err = a.CreateLink(link)
 	assert.NoErrorf(t, err, "Cannot insert link %+v", link)
 
@@ -221,9 +221,9 @@ func populateStoreWithValidData(t *testing.T, a store.LinkWriter) {
 
 func createGovernanceLink(process string, pki, types json.RawMessage) *cs.Link {
 	link := cstesting.RandomLink()
-	link.Meta["process"] = governanceProcessName
-	link.Meta["priority"] = 0.
-	link.Meta["tags"] = []interface{}{process, validatorTag}
+	link.Meta.Process = governanceProcessName
+	link.Meta.Priority = 0.
+	link.Meta.Tags = []string{process, validatorTag}
 	link.State["pki"] = pki
 	link.State["types"] = types
 	return link

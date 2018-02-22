@@ -18,8 +18,8 @@ package rethinkstore
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
@@ -29,7 +29,7 @@ import (
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/types"
 	"github.com/stratumn/go-indigocore/utils"
-	rethink "gopkg.in/dancannon/gorethink.v3"
+	rethink "gopkg.in/dancannon/gorethink.v4"
 )
 
 func init() {
@@ -101,7 +101,7 @@ type linkWrapper struct {
 	UpdatedAt    time.Time `json:"updatedAt"`
 	MapID        string    `json:"mapId"`
 	PrevLinkHash []byte    `json:"prevLinkHash"`
-	Tags         []string  `json:"tags"`
+	Tags         []string  `json:"tags,omitempty"`
 	Process      string    `json:"process"`
 }
 
@@ -168,9 +168,27 @@ func (a *Store) GetInfo() (interface{}, error) {
 	}, nil
 }
 
+// Rethink cannot retrieve nil slices, so we force putting empty slices in Link
+func formatLink(link *cs.Link) {
+	if link.Meta.Tags == nil {
+		link.Meta.Tags = []string{}
+	}
+	if link.Meta.Inputs == nil {
+		link.Meta.Inputs = []interface{}{}
+	}
+	if link.Meta.Refs == nil {
+		link.Meta.Refs = []cs.SegmentReference{}
+	}
+	if link.Signatures == nil {
+		link.Signatures = []*cs.Signature{}
+	}
+}
+
 // CreateLink implements github.com/stratumn/go-indigocore/store.LinkWriter.CreateLink.
 func (a *Store) CreateLink(link *cs.Link) (*types.Bytes32, error) {
-	prevLinkHash := link.GetPrevLinkHash()
+	prevLinkHash := link.Meta.GetPrevLinkHash()
+
+	formatLink(link)
 
 	linkHash, err := link.Hash()
 	if err != nil {
@@ -180,20 +198,15 @@ func (a *Store) CreateLink(link *cs.Link) (*types.Bytes32, error) {
 	w := linkWrapper{
 		ID:        linkHash[:],
 		Content:   link,
-		Priority:  link.GetPriority(),
+		Priority:  link.Meta.Priority,
 		UpdatedAt: time.Now().UTC(),
-		MapID:     link.GetMapID(),
-		Tags:      link.GetTags(),
-		Process:   link.GetProcess(),
+		MapID:     link.Meta.MapID,
+		Tags:      link.Meta.Tags,
+		Process:   link.Meta.Process,
 	}
 
 	if prevLinkHash != nil {
 		w.PrevLinkHash = prevLinkHash[:]
-	}
-
-	// rethink does not handle -Inf
-	if w.Priority == math.Inf(-1) {
-		w.Priority = -math.MaxFloat64
 	}
 
 	if err := a.links.Get(linkHash).Replace(&w).Exec(a.session); err != nil {
@@ -485,9 +498,23 @@ func (a *Store) DeleteValue(key []byte) ([]byte, error) {
 	return w.Value, nil
 }
 
+type rethinkBufferedBatch struct {
+	*bufferedbatch.Batch
+}
+
+// CreateLink implements github.com/stratumn/go-indigocore/store.LinkWriter.CreateLink.
+func (b *rethinkBufferedBatch) CreateLink(link *cs.Link) (*types.Bytes32, error) {
+	formatLink(link)
+	return b.Batch.CreateLink(link)
+}
+
 // NewBatch implements github.com/stratumn/go-indigocore/store.Adapter.NewBatch.
 func (a *Store) NewBatch() (store.Batch, error) {
-	return bufferedbatch.NewBatch(a), nil
+	bbBatch := bufferedbatch.NewBatch(a)
+	if bbBatch == nil {
+		return nil, errors.New("cannot create underlying batch")
+	}
+	return &rethinkBufferedBatch{bbBatch}, nil
 }
 
 // Create creates the database tables and indexes.
