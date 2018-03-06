@@ -54,7 +54,8 @@ const validAuctionJSONTypesConfig = `
 				}
 			},
 			"required": ["seller", "lot", "initialPrice"]
-		}
+		},
+		"transitions": [""]
 	},
 	"bid": {
 		"schema": {
@@ -69,7 +70,8 @@ const validAuctionJSONTypesConfig = `
 				}
 			},
 			"required": ["buyer", "bidPrice"]
-		}
+		},
+		"transitions": ["init", "bid"]
 	}
 }
 `
@@ -98,10 +100,12 @@ const validChatJSONTypesConfig = `
 				}
 			},
 			"required": ["to", "content"]
-		}
+		},
+		"transitions": ["init", "message"]
 	},
 	"init": {
-		"signatures": ["manager", "it"]
+		"signatures": ["manager", "it"],
+		"transitions": [""]
 	}
 }
 `
