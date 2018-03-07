@@ -20,12 +20,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/stratumn/go-indigocore/utils"
 )
 
 func TestLoadConfig_Success(t *testing.T) {
 
 	t.Run("schema & signatures & transitions", func(T *testing.T) {
-		testFile := createTempFile(t, validJSONConfig)
+		testFile := utils.CreateTempFile(t, ValidJSONConfig)
 		defer os.Remove(testFile)
 		validators, err := LoadConfig(testFile, nil)
 
@@ -48,7 +50,7 @@ func TestLoadConfig_Success(t *testing.T) {
 	})
 
 	t.Run("schema & signatures & transitions with listener", func(T *testing.T) {
-		testFile := createTempFile(t, validJSONConfig)
+		testFile := utils.CreateTempFile(t, ValidJSONConfig)
 		defer os.Remove(testFile)
 		validatorProcessCount := 0
 		validatorCount := 0
@@ -84,7 +86,7 @@ func TestLoadConfig_Success(t *testing.T) {
 			}
 		}`
 
-		testFile := createTempFile(t, validJSONSig)
+		testFile := utils.CreateTempFile(t, validJSONSig)
 		defer os.Remove(testFile)
 		validators, err := LoadConfig(testFile, nil)
 
@@ -116,7 +118,7 @@ func TestLoadConfig_Success(t *testing.T) {
 			}
 		}`
 
-		testFile := createTempFile(t, validJSONSig)
+		testFile := utils.CreateTempFile(t, validJSONSig)
 		defer os.Remove(testFile)
 		validators, err := LoadConfig(testFile, nil)
 
@@ -142,14 +144,13 @@ func TestLoadConfig_Success(t *testing.T) {
 			}
 		}`
 
-		testFile := createTempFile(t, validJSONSig)
+		testFile := utils.CreateTempFile(t, validJSONSig)
 		defer os.Remove(testFile)
 		validators, err := LoadConfig(testFile, nil)
 
 		require.NoError(t, err, "LoadConfig()")
 		assert.NotNil(t, validators)
 
-		assert.Len(t, validators, 1)
 		require.Len(t, validators, 1)
 		assert.IsType(t, &schemaValidator{}, validators[0])
 	})
@@ -170,7 +171,7 @@ func TestLoadValidators_Error(t *testing.T) {
 			  "pki": {}
 			}
 		}`
-		testFile := createTempFile(t, invalidValidatorConfig)
+		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
 		validators, err := LoadConfig(testFile, nil)
 
 		assert.Nil(t, validators)
@@ -189,7 +190,7 @@ func TestLoadValidators_Error(t *testing.T) {
 			  "pki": {}
 			}
 		}`
-		testFile := createTempFile(t, invalidValidatorConfig)
+		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
 		validators, err := LoadConfig(testFile, nil)
 
 		assert.Nil(t, validators)
@@ -206,7 +207,7 @@ func TestLoadValidators_Error(t *testing.T) {
 			  "pki": {}
 			}
 		}`
-		testFile := createTempFile(t, invalidValidatorConfig)
+		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
 		validators, err := LoadConfig(testFile, nil)
 
 		assert.Nil(t, validators)
@@ -224,7 +225,7 @@ func TestLoadValidators_Error(t *testing.T) {
 				}
 			}
 		}`
-		testFile := createTempFile(t, invalidValidatorConfig)
+		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
 		defer os.Remove(testFile)
 		validators, err := LoadConfig(testFile, nil)
 
@@ -243,12 +244,35 @@ func TestLoadValidators_Error(t *testing.T) {
 				}
 			}
 		}`
-		testFile := createTempFile(t, invalidValidatorConfig)
+		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
 		defer os.Remove(testFile)
 		validators, err := LoadConfig(testFile, nil)
 
 		assert.Nil(t, validators)
 		assert.Error(t, err)
+	})
+
+	t.Run("Missing transitions validator", func(T *testing.T) {
+		const invalidValidatorConfig = `
+		{
+			"test": {
+				"types": {
+				    "foo": {
+						"schema": { "type": "object" },
+						"transitions": ["test"]
+				    },
+				    "bar": {
+						"schema": { "type": "object" }
+				    }
+				}
+			}
+		}`
+		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
+		defer os.Remove(testFile)
+		validators, err := LoadConfig(testFile, nil)
+
+		assert.Nil(t, validators)
+		assert.EqualError(t, err, "missing transition definition for process test and linkTypes [bar]")
 	})
 }
 
@@ -266,7 +290,7 @@ func TestLoadPKI_Error(t *testing.T) {
 			    }
 			}
 		`
-		testFile := createTempFile(t, noPKIConfig)
+		testFile := utils.CreateTempFile(t, noPKIConfig)
 		defer os.Remove(testFile)
 		validators, err := LoadConfig(testFile, nil)
 
@@ -294,7 +318,7 @@ func TestLoadPKI_Error(t *testing.T) {
 			}
 		}
 				      `
-		testFile := createTempFile(t, invalidPKIConfig)
+		testFile := utils.CreateTempFile(t, invalidPKIConfig)
 		defer os.Remove(testFile)
 		validators, err := LoadConfig(testFile, nil)
 
