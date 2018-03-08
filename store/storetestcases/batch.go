@@ -27,7 +27,7 @@ import (
 
 func initBatch(t *testing.T, a store.Adapter) store.Batch {
 	b, err := a.NewBatch()
-	assert.NoError(t, err, "a.NewBatch()")
+	require.NoError(t, err, "a.NewBatch()")
 	assert.NotNil(t, b, "Batch should not be nil")
 	return b
 }
