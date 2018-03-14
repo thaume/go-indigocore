@@ -49,6 +49,9 @@ type Config struct {
 
 	// Use sniffing feature of ElasticSearch.
 	Sniffing bool
+
+	// Logrus log level.
+	LogLevel string
 }
 
 // Info is the info returned by GetInfo.
@@ -93,6 +96,16 @@ func New(config *Config) (*ESStore, error) {
 		elastic.SetErrorLog(errorLogger{}),
 		elastic.SetInfoLog(debugLogger{}),
 		elastic.SetTraceLog(debugLogger{}),
+	}
+
+	if config.LogLevel != "" {
+		lvl, err := log.ParseLevel(config.LogLevel)
+
+		if err != nil {
+			return nil, err
+		}
+
+		log.SetLevel(lvl)
 	}
 
 	client, err := elastic.NewClient(opts...)
@@ -217,4 +230,18 @@ func (es *ESStore) DeleteValue(key []byte) ([]byte, error) {
 	hexKey := hex.EncodeToString(key)
 	return es.deleteValue(hexKey)
 
+}
+
+/********** Search feature **********/
+
+// SimpleSearchQuery searches through the store for segments matching query criteria
+// using ES simple query string feature
+func (es *ESStore) SimpleSearchQuery(query *SearchQuery) (cs.SegmentSlice, error) {
+	return es.simpleSearchQuery(query)
+}
+
+// MultiMatchQuery searches through the store for segments matching query criteria
+// using ES multi match query
+func (es *ESStore) MultiMatchQuery(query *SearchQuery) (cs.SegmentSlice, error) {
+	return es.multiMatchQuery(query)
 }
