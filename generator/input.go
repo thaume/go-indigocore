@@ -17,11 +17,12 @@ package generator
 // Input must be implemented by all input types.
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
-	"strings"
+
+	"github.com/manifoldco/promptui"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -45,16 +46,7 @@ const noValue = "<no value>"
 
 // Input must be implemented by all input types.
 type Input interface {
-	// Set must set the value of the input or return an error.
-	// It should be able to, at the very least, set the value from a string.
-	Set(interface{}) error
-
-	// Get must return the value of the input.
-	Get() interface{}
-
-	// Msg must return a message that will be displayed when prompting the
-	// value.
-	Msg() string
+	Run() (interface{}, error)
 }
 
 // InputMap is a maps input names to inputs.
@@ -70,7 +62,7 @@ func (im *InputMap) UnmarshalJSON(data []byte) error {
 	for k, v := range raw {
 		in, err := UnmarshalJSONInput(v)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "cannot unmarshall input file %s", v)
 		}
 		inputs[k] = in
 	}
@@ -110,13 +102,13 @@ func UnmarshalJSONInput(data []byte) (Input, error) {
 		}
 		return &in, nil
 	case StringSliceID:
-		var in = StringSlice{Separator: ","}
+		var in = StringSlice{}
 		if err := json.Unmarshal(data, &in); err != nil {
 			return nil, err
 		}
 		return &in, nil
 	default:
-		return nil, fmt.Errorf("invalid input type %q", shared.Type)
+		return nil, errors.Errorf("invalid input type %q", shared.Type)
 	}
 }
 
@@ -135,41 +127,39 @@ type IntInput struct {
 	InputShared
 
 	Default int `json:"default"`
-
-	value int
 }
 
-// Set implements github.com/stratumn/go-indigocore/generator.Input.
-func (in *IntInput) Set(val interface{}) error {
-	str, ok := val.(string)
-	if !ok {
-		return errors.New("value string could not be parsed")
+func (in *InputShared) createStringPrompt(label, format, defaultValue string) promptui.Prompt {
+	prompt := promptui.Prompt{
+		Label: label,
+		Validate: func(input string) error {
+			if format != "" {
+				ok, err := regexp.MatchString(format, input)
+				if err != nil {
+					return err
+				}
+				if !ok {
+					return errors.Errorf("value must have format %q", format)
+				}
+			}
+			return nil
+		},
 	}
-	if str == "" {
-		in.value = in.Default
-	} else {
-		i, err := strconv.ParseInt(str, 10, 0)
-		if err != nil {
-			return errors.New(err.Error())
-		}
-
-		in.value = int(i)
+	if defaultValue != noValue {
+		prompt.Default = defaultValue
 	}
-
-	return nil
+	return prompt
 }
 
-// Get implements github.com/stratumn/go-indigocore/generator.Input.
-func (in IntInput) Get() interface{} {
-	if in.value <= 0 {
-		return in.Default
+// Run implements github.com/stratumn/sdk/generator.Input.
+func (in *IntInput) Run() (interface{}, error) {
+	prompt := in.createStringPrompt(in.Prompt, "^[0-9]+$", fmt.Sprintf("%d", in.Default))
+	txt, err := prompt.Run()
+	if err != nil {
+		return nil, err
 	}
-	return in.value
-}
-
-// Msg implements github.com/stratumn/go-indigocore/generator.Input.
-func (in *IntInput) Msg() string {
-	return fmt.Sprintf("%s (default %d)\n", in.Prompt, in.Default)
+	i, err := strconv.ParseInt(txt, 10, 0)
+	return int(i), err
 }
 
 // StringInput contains properties for string inputs.
@@ -181,46 +171,33 @@ type StringInput struct {
 
 	// Format is a string containing a regexp the value must have.
 	Format string `json:"format"`
-
-	value string
 }
 
-// Set implements github.com/stratumn/go-indigocore/generator.Input.
-func (in *StringInput) Set(val interface{}) error {
-	str, ok := val.(string)
-	if !ok {
-		return errors.New("value must be a string")
+// Run implements github.com/stratumn/sdk/generator.Input.
+func (in *StringInput) Run() (interface{}, error) {
+	prompt := in.createStringPrompt(in.Prompt, in.Format, in.Default)
+	return prompt.Run()
+}
+
+// StringSelectOptions is a map of options (key/value strings)
+type StringSelectOptions map[string]string
+
+// FindText have to be replaced when []StringSelectOption will be a map[string]string
+func (options StringSelectOptions) FindText(value string) string {
+	if ret, ok := options[value]; ok {
+		return ret
 	}
-	if str == "" && in.Default != noValue {
-		str = in.Default
-	}
-	if in.Format != "" {
-		ok, err := regexp.MatchString(in.Format, str)
-		if err != nil {
-			return err
+	return value
+}
+
+// FindValue have to be replaced when []StringSelectOption will be a map[string]string
+func (options StringSelectOptions) FindValue(text string) string {
+	for k, v := range options {
+		if text == v {
+			return k
 		}
-		if !ok {
-			return fmt.Errorf("value must have format %q", in.Format)
-		}
 	}
-	in.value = str
-	return nil
-}
-
-// Get implements github.com/stratumn/go-indigocore/generator.Input.
-func (in StringInput) Get() interface{} {
-	if in.value == "" && in.Default != noValue {
-		return in.Default
-	}
-	return in.value
-}
-
-// Msg implements github.com/stratumn/go-indigocore/generator.Input.
-func (in *StringInput) Msg() string {
-	if in.Default != "" && in.Default != noValue {
-		return fmt.Sprintf("%s (default %q)\n", in.Prompt, in.Default)
-	}
-	return in.Prompt + "\n"
+	return text
 }
 
 // StringSelect contains properties for string select inputs.
@@ -230,66 +207,30 @@ type StringSelect struct {
 	// Default is the default value.
 	Default string `json:"default"`
 
-	// Options is an array of possible values.
-	Options []StringSelectOption `json:"options"`
-
-	value string
+	// Options is a map of possible values.
+	Options StringSelectOptions `json:"options"`
 }
 
-// Set implements github.com/stratumn/go-indigocore/generator.Input.
-func (in *StringSelect) Set(val interface{}) error {
-	str, ok := val.(string)
-	if !ok {
-		return fmt.Errorf("value must be a string, got %q", val)
-	}
-	if str == "" && in.Default != noValue {
-		for _, opt := range in.Options {
-			if opt.Value == in.Default {
-				in.value = opt.Value
-				return nil
+// Run implements github.com/stratumn/sdk/generator.Input.
+func (in *StringSelect) Run() (interface{}, error) {
+	prompt := promptui.Select{
+		Label: in.Prompt,
+		Items: func() (items []interface{}) {
+			items = make([]interface{}, 0, len(in.Options))
+			if in.Default != "" {
+				items = append(items, in.Options.FindText(in.Default))
 			}
-		}
+			for k, v := range in.Options {
+				if in.Default == "" || k != in.Default {
+					items = append(items, v)
+				}
+			}
+			return
+		}(),
+		Size: len(in.Options),
 	}
-	for _, opt := range in.Options {
-		if opt.Input == str {
-			in.value = opt.Value
-			return nil
-		}
-	}
-	return fmt.Errorf("invalid value %q", str)
-}
-
-// Get implements github.com/stratumn/go-indigocore/generator.Input.
-func (in StringSelect) Get() interface{} {
-	if in.value == "" && in.Default != noValue {
-		return in.Default
-	}
-	return in.value
-}
-
-// Msg implements github.com/stratumn/go-indigocore/generator.Input.
-func (in *StringSelect) Msg() string {
-	p := in.Prompt + "\n"
-	for _, v := range in.Options {
-		if in.Default == v.Value && in.Default != noValue {
-			p += v.Input + ": " + v.Text + " (default)\n"
-		} else {
-			p += v.Input + ": " + v.Text + "\n"
-		}
-	}
-	return p
-}
-
-// StringSelectOption contains properties for string select options.
-type StringSelectOption struct {
-	// Input is the string the user must enter to choose this option.
-	Input string `json:"input"`
-
-	// Value is the value the input will have if this option is selected.
-	Value string `json:"value"`
-
-	// Text will be displayed when presenting this option to the user.
-	Text string `json:"text"`
+	_, txt, err := prompt.Run()
+	return in.Options.FindValue(txt), err
 }
 
 // StringSelectMulti contains properties for multiple select inputs.
@@ -300,73 +241,60 @@ type StringSelectMulti struct {
 	Default string `json:"default"`
 
 	// Options is an array of possible values.
-	Options []StringSelectOption `json:"options"`
+	Options StringSelectOptions `json:"options"`
 
 	// IsRequired is a bool indicating wether an input is needed.
 	IsRequired bool `json:"isRequired"`
-
-	// Separator is a string used to split the input to list.
-	Separator string `json:"separator"`
-
-	values []string
 }
 
-// Set implements github.com/stratumn/go-indigocore/generator.Input.
-func (in *StringSelectMulti) Set(val interface{}) error {
-	str, ok := val.(string)
-	if !ok {
-		return fmt.Errorf("value must be a string, got %q", val)
-	}
-
-	if str == "" && in.Default != noValue && in.Default != "" {
-		str = in.Default
-	} else if str == "" && !in.IsRequired {
-		return nil
-	}
-
-PARSE_LOOP:
-	for _, value := range strings.Split(str, in.Separator) {
-		value = strings.TrimSpace(value)
-		if value == "" {
-			in.values = nil
-			return fmt.Errorf("Value format should match [[1-%d][,[1-%d]]*]?", len(in.Options), len(in.Options))
+func appendIfNotSelected(value string, input, output []string) []string {
+	for _, val := range input {
+		if val == value {
+			return output
 		}
-		for _, opt := range in.Options {
-			if opt.Input == value {
-				in.values = append(in.values, opt.Value)
-				continue PARSE_LOOP
+	}
+	return append(output, value)
+}
+
+// Run implements github.com/stratumn/sdk/generator.Input.
+func (in *StringSelectMulti) Run() (interface{}, error) {
+	values := make([]string, 0)
+	for {
+		options := make([]string, 0)
+		if in.Default != "" {
+			options = appendIfNotSelected(in.Options.FindText(in.Default), values, options)
+		}
+		options = append(options, "")
+		for k, v := range in.Options {
+			if in.Default == "" || k != in.Default {
+				options = appendIfNotSelected(v, values, options)
 			}
 		}
-		in.values = nil
-		return fmt.Errorf("invalid value %q", str)
-	}
-
-	return nil
-}
-
-// Get implements github.com/stratumn/go-indigocore/generator.Input.
-func (in StringSelectMulti) Get() interface{} {
-	if len(in.values) == 0 && in.Default != noValue && in.Default != "" && in.Separator != "" {
-		return strings.Split(in.Default, in.Separator)
-	}
-	return in.values
-}
-
-// Msg implements github.com/stratumn/go-indigocore/generator.Input.
-func (in *StringSelectMulti) Msg() string {
-	p := fmt.Sprintf("%s (separator %q)", in.Prompt, in.Separator)
-	if in.Default == "" && in.IsRequired == false {
-		p += " (default: None)"
-	}
-	p += "\n"
-	for _, v := range in.Options {
-		if in.Default == v.Value && in.Default != noValue {
-			p += v.Input + ": " + v.Text + " (default)\n"
-		} else {
-			p += v.Input + ": " + v.Text + "\n"
+		prompt := promptui.Select{
+			Label: in.Prompt,
+			Items: options,
+			Size:  len(options),
 		}
+		prompt.Templates = new(promptui.SelectTemplates)
+		prompt.Templates.Help = fmt.Sprintf(`{{ "Use the arrow keys to navigate:" | faint }} {{ .NextKey | faint }} ` +
+			`{{ .PrevKey | faint }} {{ .PageDownKey | faint }} {{ .PageUpKey | faint }} ` +
+			`{{ "(select empty line to finish your selection) "| faint }}`)
+		_, val, err := prompt.Run()
+		if err != nil {
+			return nil, err
+		}
+		if val == "" {
+			break
+		}
+		values = append(values, val)
 	}
-	return p
+	if in.IsRequired && len(values) == 0 {
+		return nil, errors.New("Selection is mandatory")
+	}
+	for i, out := range values {
+		values[i] = in.Options.FindValue(out)
+	}
+	return values, nil
 }
 
 // StringSlice contains properties for string inputs.
@@ -378,56 +306,27 @@ type StringSlice struct {
 
 	// Format is a string containing a regexp the value must have.
 	Format string `json:"format"`
-
-	// Separator is a string used to split the input to list.
-	Separator string `json:"separator"`
-
-	values []string
 }
 
-// Set implements github.com/stratumn/go-indigocore/generator.Input.
-func (in *StringSlice) Set(val interface{}) error {
-	str, ok := val.(string)
-	if !ok {
-		return errors.New("value must be a string")
-	}
-	if str == "" && in.Default != noValue {
-		str = in.Default
-	}
-	if str == "" {
-		return fmt.Errorf("list must be non empty")
-	}
-
-	for _, value := range strings.Split(str, in.Separator) {
-		value = strings.TrimSpace(value)
-		if in.Format != "" {
-			ok, err := regexp.MatchString(in.Format, value)
-			if !ok {
-				err = fmt.Errorf("value %q must have format %q", value, in.Format)
-			}
-			if err != nil {
-				in.values = nil
-				return err
-			}
+// Run implements github.com/stratumn/sdk/generator.Input.
+func (in *StringSlice) Run() (interface{}, error) {
+	values := make([]interface{}, 0)
+	label := fmt.Sprintf("%s %s",
+		in.Prompt,
+		promptui.Styler(promptui.FGFaint)("(one per line, empty line to finish)"))
+	for {
+		prompt := in.createStringPrompt(label, fmt.Sprintf("|%s", in.Format), in.Default)
+		val, err := prompt.Run()
+		if err != nil {
+			return nil, err
 		}
-		in.values = append(in.values, value)
+		if val == "" {
+			break
+		}
+		values = append(values, val)
 	}
-	return nil
-}
-
-// Get implements github.com/stratumn/go-indigocore/generator.Input.
-func (in StringSlice) Get() interface{} {
-	if len(in.values) == 0 && in.Default != noValue && in.Separator != "" {
-		return strings.Split(in.Default, in.Separator)
+	if len(values) == 0 {
+		return nil, errors.New("list must be non empty")
 	}
-	return in.values
-}
-
-// Msg implements github.com/stratumn/go-indigocore/generator.Input.
-func (in *StringSlice) Msg() string {
-	ret := fmt.Sprintf("%s (separator %q)\n", in.Prompt, in.Separator)
-	if in.Default != "" && in.Default != noValue {
-		ret = fmt.Sprintf("%s (default %q)\n", ret[0:len(ret)-1], in.Default)
-	}
-	return ret
+	return values, nil
 }
