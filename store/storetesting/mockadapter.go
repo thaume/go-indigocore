@@ -15,6 +15,8 @@
 package storetesting
 
 import (
+	"context"
+
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/types"
@@ -148,21 +150,6 @@ type MockGetEvidences struct {
 	Fn func(*types.Bytes32) (*cs.Evidences, error)
 }
 
-// MockDeleteSegment mocks the DeleteSegment function.
-type MockDeleteSegment struct {
-	// The number of times the function was called.
-	CalledCount int
-
-	// The link hash that was passed to each call.
-	CalledWith []*types.Bytes32
-
-	// The last link hash that was passed.
-	LastCalledWith *types.Bytes32
-
-	// An optional implementation of the function.
-	Fn func(*types.Bytes32) (*cs.Segment, error)
-}
-
 // MockFindSegments mocks the FindSegments function.
 type MockFindSegments struct {
 	// The number of times the function was called.
@@ -248,7 +235,7 @@ type MockDeleteValue struct {
 }
 
 // GetInfo implements github.com/stratumn/go-indigocore/store.Adapter.GetInfo.
-func (a *MockAdapter) GetInfo() (interface{}, error) {
+func (a *MockAdapter) GetInfo(ctx context.Context) (interface{}, error) {
 	a.MockGetInfo.CalledCount++
 
 	if a.MockGetInfo.Fn != nil {
@@ -271,7 +258,7 @@ func (a *MockAdapter) AddStoreEventChannel(storeChan chan *store.Event) {
 }
 
 // CreateLink implements github.com/stratumn/go-indigocore/store.Adapter.CreateLink.
-func (a *MockAdapter) CreateLink(link *cs.Link) (*types.Bytes32, error) {
+func (a *MockAdapter) CreateLink(ctx context.Context, link *cs.Link) (*types.Bytes32, error) {
 	a.MockCreateLink.CalledCount++
 	a.MockCreateLink.CalledWith = append(a.MockCreateLink.CalledWith, link)
 	a.MockCreateLink.LastCalledWith = link
@@ -284,7 +271,7 @@ func (a *MockAdapter) CreateLink(link *cs.Link) (*types.Bytes32, error) {
 }
 
 // AddEvidence implements github.com/stratumn/go-indigocore/store.Adapter.AddEvidence.
-func (a *MockAdapter) AddEvidence(linkHash *types.Bytes32, evidence *cs.Evidence) error {
+func (a *MockAdapter) AddEvidence(ctx context.Context, linkHash *types.Bytes32, evidence *cs.Evidence) error {
 	a.MockAddEvidence.CalledCount++
 	a.MockAddEvidence.CalledWith = append(a.MockAddEvidence.CalledWith, evidence)
 	a.MockAddEvidence.LastCalledWith = evidence
@@ -297,7 +284,7 @@ func (a *MockAdapter) AddEvidence(linkHash *types.Bytes32, evidence *cs.Evidence
 }
 
 // GetSegment implements github.com/stratumn/go-indigocore/store.Adapter.GetSegment.
-func (a *MockAdapter) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
+func (a *MockAdapter) GetSegment(ctx context.Context, linkHash *types.Bytes32) (*cs.Segment, error) {
 	a.MockGetSegment.CalledCount++
 	a.MockGetSegment.CalledWith = append(a.MockGetSegment.CalledWith, linkHash)
 	a.MockGetSegment.LastCalledWith = linkHash
@@ -310,7 +297,7 @@ func (a *MockAdapter) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 }
 
 // GetEvidences implements github.com/stratumn/go-indigocore/store.Adapter.GetEvidences.
-func (a *MockAdapter) GetEvidences(linkHash *types.Bytes32) (*cs.Evidences, error) {
+func (a *MockAdapter) GetEvidences(ctx context.Context, linkHash *types.Bytes32) (*cs.Evidences, error) {
 	a.MockGetEvidences.CalledCount++
 	a.MockGetEvidences.CalledWith = append(a.MockGetEvidences.CalledWith, linkHash)
 	a.MockGetEvidences.LastCalledWith = linkHash
@@ -323,7 +310,7 @@ func (a *MockAdapter) GetEvidences(linkHash *types.Bytes32) (*cs.Evidences, erro
 }
 
 // FindSegments implements github.com/stratumn/go-indigocore/store.Adapter.FindSegments.
-func (a *MockAdapter) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice, error) {
+func (a *MockAdapter) FindSegments(ctx context.Context, filter *store.SegmentFilter) (cs.SegmentSlice, error) {
 	a.MockFindSegments.CalledCount++
 	a.MockFindSegments.CalledWith = append(a.MockFindSegments.CalledWith, filter)
 	a.MockFindSegments.LastCalledWith = filter
@@ -336,7 +323,7 @@ func (a *MockAdapter) FindSegments(filter *store.SegmentFilter) (cs.SegmentSlice
 }
 
 // GetMapIDs implements github.com/stratumn/go-indigocore/store.Adapter.GetMapIDs.
-func (a *MockAdapter) GetMapIDs(filter *store.MapFilter) ([]string, error) {
+func (a *MockAdapter) GetMapIDs(ctx context.Context, filter *store.MapFilter) ([]string, error) {
 	a.MockGetMapIDs.CalledCount++
 	a.MockGetMapIDs.CalledWith = append(a.MockGetMapIDs.CalledWith, filter)
 	a.MockGetMapIDs.LastCalledWith = filter
@@ -349,7 +336,7 @@ func (a *MockAdapter) GetMapIDs(filter *store.MapFilter) ([]string, error) {
 }
 
 // NewBatch implements github.com/stratumn/go-indigocore/store.Adapter.NewBatch.
-func (a *MockAdapter) NewBatch() (store.Batch, error) {
+func (a *MockAdapter) NewBatch(ctx context.Context) (store.Batch, error) {
 	a.MockNewBatch.CalledCount++
 
 	if a.MockNewBatch.Fn != nil {
@@ -360,7 +347,7 @@ func (a *MockAdapter) NewBatch() (store.Batch, error) {
 }
 
 // SetValue implements github.com/stratumn/go-indigocore/store.KeyValueStore.SetValue.
-func (a *MockKeyValueStore) SetValue(key, value []byte) error {
+func (a *MockKeyValueStore) SetValue(ctx context.Context, key, value []byte) error {
 	a.MockSetValue.CalledCount++
 	calledWith := [][]byte{key, value}
 	a.MockSetValue.CalledWith = append(a.MockSetValue.CalledWith, calledWith)
@@ -374,7 +361,7 @@ func (a *MockKeyValueStore) SetValue(key, value []byte) error {
 }
 
 // GetValue implements github.com/stratumn/go-indigocore/store.KeyValueStore.GetValue.
-func (a *MockKeyValueStore) GetValue(key []byte) ([]byte, error) {
+func (a *MockKeyValueStore) GetValue(ctx context.Context, key []byte) ([]byte, error) {
 	a.MockGetValue.CalledCount++
 	a.MockGetValue.CalledWith = append(a.MockGetValue.CalledWith, key)
 	a.MockGetValue.LastCalledWith = key
@@ -387,7 +374,7 @@ func (a *MockKeyValueStore) GetValue(key []byte) ([]byte, error) {
 }
 
 // DeleteValue implements github.com/stratumn/go-indigocore/store.KeyValueStore.DeleteValue.
-func (a *MockKeyValueStore) DeleteValue(key []byte) ([]byte, error) {
+func (a *MockKeyValueStore) DeleteValue(ctx context.Context, key []byte) ([]byte, error) {
 	a.MockDeleteValue.CalledCount++
 	a.MockDeleteValue.CalledWith = append(a.MockDeleteValue.CalledWith, key)
 	a.MockDeleteValue.LastCalledWith = key

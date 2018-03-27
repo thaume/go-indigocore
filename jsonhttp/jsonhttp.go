@@ -26,6 +26,8 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
+
+	"go.opencensus.io/plugin/ochttp"
 )
 
 const (
@@ -84,7 +86,7 @@ func New(config *Config) *Server {
 	router.NotFound = notFoundHandler{config, NotFound}.ServeHTTP
 	server := &http.Server{
 		Addr:           config.Address,
-		Handler:        router,
+		Handler:        &ochttp.Handler{Handler: router},
 		ReadTimeout:    config.ReadTimeout,
 		WriteTimeout:   config.WriteTimeout,
 		MaxHeaderBytes: config.MaxHeaderBytes,
@@ -197,6 +199,8 @@ func renderErr(w http.ResponseWriter, r *http.Request, err error) {
 			"origin": r.RemoteAddr,
 			"error":  err,
 		}).Error("Failed to handle request")
+		// Note: we choose not to expose the internal details of the error.
+		// Users shouldn't be able to guess what went wrong in case of http 500.
 		e = NewErrInternalServer("")
 	}
 
