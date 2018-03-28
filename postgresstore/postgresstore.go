@@ -23,8 +23,10 @@ import (
 	"encoding/json"
 
 	"github.com/stratumn/go-indigocore/cs"
+	"github.com/stratumn/go-indigocore/monitoring"
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/types"
+	"go.opencensus.io/trace"
 )
 
 const (
@@ -83,7 +85,10 @@ func New(config *Config) (*Store, error) {
 }
 
 // GetInfo implements github.com/stratumn/go-indigocore/store.Adapter.GetInfo.
-func (a *Store) GetInfo(ctx context.Context) (interface{}, error) {
+func (a *Store) GetInfo(ctx context.Context) (_ interface{}, err error) {
+	ctx, span := trace.StartSpan(ctx, "postgresstore/GetInfo")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	return &Info{
 		Name:        Name,
 		Description: Description,
@@ -93,7 +98,10 @@ func (a *Store) GetInfo(ctx context.Context) (interface{}, error) {
 }
 
 // NewBatch implements github.com/stratumn/go-indigocore/store.Adapter.NewBatch.
-func (a *Store) NewBatch(ctx context.Context) (store.Batch, error) {
+func (a *Store) NewBatch(ctx context.Context) (_ store.Batch, err error) {
+	ctx, span := trace.StartSpan(ctx, "postgresstore/NewBatch")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	for b := range a.batches {
 		if b.done {
 			delete(a.batches, b)
@@ -119,7 +127,10 @@ func (a *Store) AddStoreEventChannel(eventChan chan *store.Event) {
 }
 
 // CreateLink implements github.com/stratumn/go-indigocore/store.LinkWriter.CreateLink.
-func (a *Store) CreateLink(ctx context.Context, link *cs.Link) (*types.Bytes32, error) {
+func (a *Store) CreateLink(ctx context.Context, link *cs.Link) (_ *types.Bytes32, err error) {
+	ctx, span := trace.StartSpan(ctx, "postgresstore/CreateLink")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	linkHash, err := a.writer.CreateLink(ctx, link)
 	if err != nil {
 		return nil, err
@@ -134,7 +145,10 @@ func (a *Store) CreateLink(ctx context.Context, link *cs.Link) (*types.Bytes32, 
 }
 
 // AddEvidence implements github.com/stratumn/go-indigocore/store.EvidenceWriter.AddEvidence.
-func (a *Store) AddEvidence(ctx context.Context, linkHash *types.Bytes32, evidence *cs.Evidence) error {
+func (a *Store) AddEvidence(ctx context.Context, linkHash *types.Bytes32, evidence *cs.Evidence) (err error) {
+	ctx, span := trace.StartSpan(ctx, "postgresstore/AddEvidence")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	data, err := json.Marshal(evidence)
 	if err != nil {
 		return err

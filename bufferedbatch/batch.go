@@ -18,8 +18,13 @@ import (
 	"context"
 
 	"github.com/stratumn/go-indigocore/cs"
+	"github.com/stratumn/go-indigocore/monitoring"
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/types"
+
+	"go.opencensus.io/stats"
+	"go.opencensus.io/tag"
+	"go.opencensus.io/trace"
 )
 
 // Batch can be used as a base class for types
@@ -32,12 +37,16 @@ type Batch struct {
 }
 
 // NewBatch creates a new Batch.
-func NewBatch(a store.Adapter) *Batch {
+func NewBatch(ctx context.Context, a store.Adapter) *Batch {
+	stats.Record(ctx, batchCount.M(1))
 	return &Batch{originalStore: a}
 }
 
 // CreateLink implements github.com/stratumn/go-indigocore/store.LinkWriter.CreateLink.
-func (b *Batch) CreateLink(ctx context.Context, link *cs.Link) (*types.Bytes32, error) {
+func (b *Batch) CreateLink(ctx context.Context, link *cs.Link) (_ *types.Bytes32, err error) {
+	ctx, span := trace.StartSpan(ctx, "bufferedbatch/CreateLink")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	if err := link.Validate(ctx, b.GetSegment); err != nil {
 		return nil, err
 	}
@@ -47,6 +56,9 @@ func (b *Batch) CreateLink(ctx context.Context, link *cs.Link) (*types.Bytes32, 
 
 // GetSegment returns a segment from the cache or delegates the call to the store.
 func (b *Batch) GetSegment(ctx context.Context, linkHash *types.Bytes32) (segment *cs.Segment, err error) {
+	ctx, span := trace.StartSpan(ctx, "bufferedbatch/GetSegment")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	for _, link := range b.Links {
 		lh, err := link.Hash()
 		if err != nil {
@@ -66,7 +78,10 @@ func (b *Batch) GetSegment(ctx context.Context, linkHash *types.Bytes32) (segmen
 }
 
 // FindSegments returns the union of segments in the store and not committed yet.
-func (b *Batch) FindSegments(ctx context.Context, filter *store.SegmentFilter) (cs.SegmentSlice, error) {
+func (b *Batch) FindSegments(ctx context.Context, filter *store.SegmentFilter) (_ cs.SegmentSlice, err error) {
+	ctx, span := trace.StartSpan(ctx, "bufferedbatch/FindSegments")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	segments, err := b.originalStore.FindSegments(ctx, filter)
 	if err != nil {
 		return segments, err
@@ -82,7 +97,10 @@ func (b *Batch) FindSegments(ctx context.Context, filter *store.SegmentFilter) (
 }
 
 // GetMapIDs returns the union of mapIds in the store and not committed yet.
-func (b *Batch) GetMapIDs(ctx context.Context, filter *store.MapFilter) ([]string, error) {
+func (b *Batch) GetMapIDs(ctx context.Context, filter *store.MapFilter) (_ []string, err error) {
+	ctx, span := trace.StartSpan(ctx, "bufferedbatch/GetMapIDs")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	tmpMapIDs, err := b.originalStore.GetMapIDs(ctx, filter)
 	if err != nil {
 		return tmpMapIDs, err
@@ -109,12 +127,25 @@ func (b *Batch) GetMapIDs(ctx context.Context, filter *store.MapFilter) ([]strin
 
 // Write implements github.com/stratumn/go-indigocore/store.Batch.Write.
 func (b *Batch) Write(ctx context.Context) (err error) {
+	ctx, span := trace.StartSpan(ctx, "bufferedbatch/Write")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
+	stats.Record(ctx, linksPerBatch.M(int64(len(b.Links))))
+
 	for _, link := range b.Links {
 		_, err = b.originalStore.CreateLink(ctx, link)
 		if err != nil {
 			break
 		}
 	}
+
+	if err == nil {
+		ctx, _ = tag.New(ctx, tag.Upsert(writeStatus, "success"))
+	} else {
+		ctx, _ = tag.New(ctx, tag.Upsert(writeStatus, "failure"))
+	}
+
+	stats.Record(ctx, writeCount.M(1))
 
 	return
 }

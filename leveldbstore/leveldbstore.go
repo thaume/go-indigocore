@@ -19,7 +19,9 @@ package leveldbstore
 import (
 	"context"
 
+	"github.com/stratumn/go-indigocore/monitoring"
 	"github.com/tendermint/tmlibs/db"
+	"go.opencensus.io/trace"
 )
 
 // LevelDBStore implements github.com/stratumn/go-indigocore/store.KeyValueStore.
@@ -45,18 +47,27 @@ func New(config *Config) (*LevelDBStore, error) {
 }
 
 // SetValue implements github.com/stratumn/go-indigocore/store.KeyValueStore.SetValue.
-func (a *LevelDBStore) SetValue(ctx context.Context, key []byte, value []byte) error {
+func (a *LevelDBStore) SetValue(ctx context.Context, key []byte, value []byte) (err error) {
+	ctx, span := trace.StartSpan(ctx, "leveldbstore/SetValue")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	a.kvDB.Set(key, value)
 	return nil
 }
 
 // GetValue implements github.com/stratumn/go-indigocore/store.KeyValueStore.GetValue.
-func (a *LevelDBStore) GetValue(ctx context.Context, key []byte) ([]byte, error) {
+func (a *LevelDBStore) GetValue(ctx context.Context, key []byte) (_ []byte, err error) {
+	ctx, span := trace.StartSpan(ctx, "leveldbstore/GetValue")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	return a.kvDB.Get(key), nil
 }
 
 // DeleteValue implements github.com/stratumn/go-indigocore/store.KeyValueStore.DeleteValue.
-func (a *LevelDBStore) DeleteValue(ctx context.Context, key []byte) ([]byte, error) {
+func (a *LevelDBStore) DeleteValue(ctx context.Context, key []byte) (_ []byte, err error) {
+	ctx, span := trace.StartSpan(ctx, "leveldbstore/DeleteValue")
+	defer monitoring.SetSpanStatusAndEnd(span, err)
+
 	v := a.kvDB.Get(key)
 
 	if v != nil {
