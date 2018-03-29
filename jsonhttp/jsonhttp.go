@@ -26,7 +26,6 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
-
 	"go.opencensus.io/plugin/ochttp"
 )
 

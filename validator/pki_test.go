@@ -16,10 +16,12 @@ package validator
 
 import (
 	"context"
+	"crypto"
 	"crypto/rand"
 	"encoding/base64"
 	"testing"
 
+	"github.com/stratumn/go-crypto/keys"
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/cs/cstesting"
 	"github.com/stretchr/testify/assert"
@@ -39,15 +41,15 @@ func TestPKIValidator(t *testing.T) {
 		return cstesting.SignLink(l)
 	}
 
-	createValidLinkWithKey := func(priv ed25519.PrivateKey) *cs.Link {
+	createValidLinkWithKey := func(priv crypto.PrivateKey) *cs.Link {
 		l := cstesting.RandomLink()
 		l.Meta.Process = process
 		l.Meta.Type = linkType
 		return cstesting.SignLinkWithKey(l, priv)
 	}
 
-	_, priv1, _ := ed25519.GenerateKey(rand.Reader)
-	_, priv2, _ := ed25519.GenerateKey(rand.Reader)
+	_, priv1, _ := keys.NewEd25519KeyPair()
+	_, priv2, _ := keys.NewEd25519KeyPair()
 	link1 := createValidLinkWithKey(priv1)
 	link2 := createValidLinkWithKey(priv2)
 

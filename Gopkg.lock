@@ -39,15 +39,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/agl/ed25519"
-  packages = [
-    ".",
-    "edwards25519"
-  ]
-  revision = "5312a61534124124185d41f09206b9fef1d88403"
-
-[[projects]]
-  branch = "master"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
   revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
@@ -524,6 +515,16 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/stratumn/go-crypto"
+  packages = [
+    "encoding",
+    "keys",
+    "signatures"
+  ]
+  revision = "1a5009b67d6c88d46ff009712da69481d56ddbbe"
+
+[[projects]]
+  branch = "master"
   name = "github.com/stratumn/merkle"
   packages = [
     ".",
@@ -856,6 +857,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f67bd2a7b3fecef64ae488f417047aef7ce218396f0aaaceec42cf84539a4c7e"
+  inputs-digest = "d3f21f9739854429947914815e97ad2ee9850a373c2389ba8cab62e5bc92b968"
   solver-name = "gps-cdcl"
   solver-version = 1
