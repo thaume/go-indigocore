@@ -29,13 +29,15 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/cs/evidences"
 	"github.com/stratumn/go-indigocore/fossilizer"
+	"github.com/stratumn/go-indigocore/monitoring"
 	"github.com/stratumn/go-indigocore/types"
-
 	"github.com/stratumn/merkle"
+
+	"go.opencensus.io/stats"
+	"go.opencensus.io/trace"
 )
 
 const (
@@ -192,7 +194,7 @@ func New(config *Config) (*Fossilizer, error) {
 }
 
 // GetInfo implements github.com/stratumn/go-indigocore/fossilizer.Adapter.GetInfo.
-func (a *Fossilizer) GetInfo() (interface{}, error) {
+func (a *Fossilizer) GetInfo(ctx context.Context) (interface{}, error) {
 	return &Info{
 		Name:        Name,
 		Description: Description,
@@ -210,7 +212,7 @@ func (a *Fossilizer) AddFossilizerEventChan(fossilizerEventChan chan *fossilizer
 }
 
 // Fossilize implements github.com/stratumn/go-indigocore/fossilizer.Adapter.Fossilize.
-func (a *Fossilizer) Fossilize(data []byte, meta []byte) error {
+func (a *Fossilizer) Fossilize(ctx context.Context, data []byte, meta []byte) error {
 	f := fossil{Meta: meta}
 	f.Data = data
 	a.fossilChan <- &f
@@ -313,18 +315,22 @@ func (a *Fossilizer) sendBatch() {
 func (a *Fossilizer) batch(b *batch) {
 	log.Info("Starting batch...")
 
+	stats.Record(context.Background(), batchCount.M(1))
 	a.waitGroup.Add(1)
 
 	go func() {
+		ctx, span := trace.StartSpan(context.Background(), "batchfossilizer/batch")
 		defer func() {
 			a.waitGroup.Done()
 			<-a.semChan
+			span.End()
 		}()
 
 		a.semChan <- struct{}{}
 
 		tree, err := merkle.NewStaticTree(b.data)
 		if err != nil {
+			span.SetStatus(trace.Status{Code: monitoring.Internal, Message: err.Error()})
 			if !a.stopping {
 				a.stop(err)
 			}
@@ -334,7 +340,7 @@ func (a *Fossilizer) batch(b *batch) {
 		root := tree.Root()
 		log.WithField("root", root).Info("Created tree with Merkle root")
 
-		a.sendEvidence(tree, b.meta)
+		a.sendEvidence(ctx, tree, b.meta)
 		log.WithField("root", root).Info("Sent evidence for batch with Merkle root")
 
 		if b.file != nil {
@@ -342,6 +348,7 @@ func (a *Fossilizer) batch(b *batch) {
 
 			if err := b.close(); err != nil {
 				log.WithField("error", err).Warn("Failed to close batch file")
+				span.SetStatus(trace.Status{Code: monitoring.Unknown, Message: err.Error()})
 			}
 
 			if a.config.Archive {
@@ -351,30 +358,38 @@ func (a *Fossilizer) batch(b *batch) {
 						"old": filepath.Base(path),
 						"new": filepath.Base(archivePath),
 					}).Info("Renamed batch file")
+					span.Annotate(nil, "Renamed batch file")
 				} else {
 					log.WithFields(log.Fields{
 						"old":   filepath.Base(path),
 						"new":   filepath.Base(archivePath),
 						"error": err,
 					}).Warn("Failed to rename batch file")
+					span.SetStatus(trace.Status{Code: monitoring.Unknown, Message: err.Error()})
 				}
 			} else {
 				if err := os.Remove(path); err == nil {
 					log.WithField("file", filepath.Base(path)).Info("Removed pending hashes file")
+					span.Annotate(nil, "Removed pending hashes file")
 				} else {
 					log.WithFields(log.Fields{
 						"file":  filepath.Base(path),
 						"error": err,
 					}).Warn("Failed to remove batch file")
+					span.Annotatef(nil, "Failed to remove batch file: %s", err.Error())
 				}
 			}
 		}
 
 		log.WithField("root", root).Info("Finished batch")
+		span.Annotate(nil, "Finished batch")
 	}()
 }
 
-func (a *Fossilizer) sendEvidence(tree *merkle.StaticTree, meta [][]byte) {
+func (a *Fossilizer) sendEvidence(ctx context.Context, tree *merkle.StaticTree, meta [][]byte) {
+	ctx, span := trace.StartSpan(ctx, "batchfossilizer/sendEvidence")
+	defer span.End()
+
 	for i := 0; i < tree.LeavesLen(); i++ {
 		var (
 			err  error
@@ -398,16 +413,21 @@ func (a *Fossilizer) sendEvidence(tree *merkle.StaticTree, meta [][]byte) {
 
 		if r, err = a.transformer(&evidence, d, m); err != nil {
 			log.WithField("error", err).Error("Failed to transform evidence")
+			span.SetStatus(trace.Status{Code: monitoring.InvalidArgument, Message: err.Error()})
 		} else {
 			event := &fossilizer.Event{
 				EventType: fossilizer.DidFossilizeLink,
 				Data:      r,
 			}
+
 			a.fossilizerEventMutex.RLock()
 			defer a.fossilizerEventMutex.RUnlock()
+
 			for _, c := range a.fossilizerEventChans {
 				c <- event
 			}
+
+			stats.Record(ctx, fossilizedLinksCount.M(1))
 		}
 	}
 }

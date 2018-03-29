@@ -24,6 +24,7 @@ import (
 
 	"github.com/stratumn/go-indigocore/dummyfossilizer"
 	"github.com/stratumn/go-indigocore/fossilizer/fossilizerhttp"
+	"github.com/stratumn/go-indigocore/monitoring"
 	"github.com/stratumn/go-indigocore/utils"
 )
 
@@ -34,6 +35,7 @@ var (
 
 func init() {
 	fossilizerhttp.RegisterFlags()
+	monitoring.RegisterFlags()
 }
 
 func main() {
@@ -43,6 +45,9 @@ func main() {
 	ctx = utils.CancelOnInterrupt(ctx)
 
 	log.Infof("%s v%s@%s", dummyfossilizer.Description, version, commit[:7])
-	a := dummyfossilizer.New(&dummyfossilizer.Config{Version: version, Commit: commit})
+	a := monitoring.NewFossilizerAdapter(
+		dummyfossilizer.New(&dummyfossilizer.Config{Version: version, Commit: commit}),
+		"dummyfossilizer",
+	)
 	fossilizerhttp.RunWithFlags(ctx, a)
 }

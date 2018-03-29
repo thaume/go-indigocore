@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/stratumn/go-indigocore/fossilizer/fossilizerhttp"
+	"github.com/stratumn/go-indigocore/monitoring"
 	"github.com/stratumn/go-indigocore/utils"
 
 	"github.com/stratumn/go-indigocore/bcbatchfossilizer"
@@ -39,6 +40,7 @@ func init() {
 	blockcypher.RegisterFlags()
 	btctimestamper.RegisterFlags()
 	bcbatchfossilizer.RegisterFlags()
+	monitoring.RegisterFlags()
 }
 
 func main() {
@@ -49,6 +51,9 @@ func main() {
 
 	bcy := blockcypher.RunWithFlags(ctx, *key)
 	ts := btctimestamper.InitializeWithFlags(version, commit, *key, bcy, bcy)
-	a := bcbatchfossilizer.RunWithFlags(ctx, version, commit, ts)
+	a := monitoring.NewFossilizerAdapter(
+		bcbatchfossilizer.RunWithFlags(ctx, version, commit, ts),
+		"bcbatchfossilizer",
+	)
 	fossilizerhttp.RunWithFlags(ctx, a)
 }

@@ -19,6 +19,7 @@ import (
 	"flag"
 
 	"github.com/stratumn/go-indigocore/fossilizer/fossilizerhttp"
+	"github.com/stratumn/go-indigocore/monitoring"
 	"github.com/stratumn/go-indigocore/utils"
 
 	"github.com/stratumn/go-indigocore/bcbatchfossilizer"
@@ -33,6 +34,7 @@ var (
 func init() {
 	fossilizerhttp.RegisterFlags()
 	bcbatchfossilizer.RegisterFlags()
+	monitoring.RegisterFlags()
 }
 
 func main() {
@@ -41,6 +43,9 @@ func main() {
 	ctx := context.Background()
 	ctx = utils.CancelOnInterrupt(ctx)
 
-	a := bcbatchfossilizer.RunWithFlags(ctx, version, commit, dummytimestamper.Timestamper{})
+	a := monitoring.NewFossilizerAdapter(
+		bcbatchfossilizer.RunWithFlags(ctx, version, commit, dummytimestamper.Timestamper{}),
+		"dummybatchfossilizer",
+	)
 	fossilizerhttp.RunWithFlags(ctx, a)
 }

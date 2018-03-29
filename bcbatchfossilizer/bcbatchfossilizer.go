@@ -17,17 +17,16 @@
 package bcbatchfossilizer
 
 import (
+	"context"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
-
+	"github.com/stratumn/go-indigocore/batchfossilizer"
+	"github.com/stratumn/go-indigocore/blockchain"
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/cs/evidences"
 	"github.com/stratumn/go-indigocore/fossilizer"
 	"github.com/stratumn/go-indigocore/types"
-
-	"github.com/stratumn/go-indigocore/batchfossilizer"
-	"github.com/stratumn/go-indigocore/blockchain"
 )
 
 const (
@@ -83,8 +82,8 @@ func New(config *Config, batchConfig *batchfossilizer.Config) (*Fossilizer, erro
 }
 
 // GetInfo implements github.com/stratumn/go-indigocore/fossilizer.Adapter.GetInfo.
-func (a *Fossilizer) GetInfo() (interface{}, error) {
-	batchInfo, err := a.Fossilizer.GetInfo()
+func (a *Fossilizer) GetInfo(ctx context.Context) (interface{}, error) {
+	batchInfo, err := a.Fossilizer.GetInfo(ctx)
 	if err != nil {
 		return nil, err
 	}

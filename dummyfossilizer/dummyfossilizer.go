@@ -18,6 +18,7 @@
 package dummyfossilizer
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
@@ -98,7 +99,7 @@ func New(config *Config) *DummyFossilizer {
 }
 
 // GetInfo implements github.com/stratumn/go-indigocore/fossilizer.Adapter.GetInfo.
-func (a *DummyFossilizer) GetInfo() (interface{}, error) {
+func (a *DummyFossilizer) GetInfo(ctx context.Context) (interface{}, error) {
 	return &Info{
 		Name:        Name,
 		Description: Description,
@@ -114,8 +115,7 @@ func (a *DummyFossilizer) AddFossilizerEventChan(fossilizerEventChan chan *fossi
 }
 
 // Fossilize implements github.com/stratumn/go-indigocore/fossilizer.Adapter.Fossilize.
-func (a *DummyFossilizer) Fossilize(data []byte, meta []byte) error {
-
+func (a *DummyFossilizer) Fossilize(ctx context.Context, data []byte, meta []byte) error {
 	r := &fossilizer.Result{
 		Evidence: cs.Evidence{
 			Backend:  Name,
