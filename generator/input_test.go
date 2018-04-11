@@ -84,3 +84,257 @@ func TestInputSliceUnmarshalJSON(t *testing.T) {
 		assert.Error(t, err, "invalid json")
 	})
 }
+
+func TestStringSelect_createItems(t *testing.T) {
+	type fields struct {
+		Default string
+		Options StringSelectOptions
+	}
+	tests := []struct {
+		name      string
+		fields    fields
+		wantItems []interface{}
+	}{
+		{
+			name: "empty",
+			fields: fields{
+				Options: map[string]string{},
+			},
+			wantItems: []interface{}{},
+		},
+		{
+			name: "sorted",
+			fields: fields{
+				Options: map[string]string{"a": "A", "b": "B", "c": "C"},
+			},
+			wantItems: []interface{}{"A", "B", "C"},
+		},
+		{
+			name: "reverse",
+			fields: fields{
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			wantItems: []interface{}{"A", "B", "C"},
+		},
+		{
+			name: "case sensitive",
+			fields: fields{
+				Options: map[string]string{"a": "a", "b": "B", "c": "C"},
+			},
+			wantItems: []interface{}{"B", "C", "a"},
+		},
+		{
+			name: "reverse with first default",
+			fields: fields{
+				Default: "a",
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			wantItems: []interface{}{"A", "B", "C"},
+		},
+		{
+			name: "reverse with last default",
+			fields: fields{
+				Default: "c",
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			wantItems: []interface{}{"C", "A", "B"},
+		},
+		{
+			name: "reverse with unknown default",
+			fields: fields{
+				Default: "foo",
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			wantItems: []interface{}{"A", "B", "C"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := &StringSelect{
+				Default: tt.fields.Default,
+				Options: tt.fields.Options,
+			}
+			assert.EqualValues(t, tt.wantItems, in.createItems())
+		})
+	}
+}
+
+func TestGenericSelect_createItems(t *testing.T) {
+	type fields struct {
+		Options GenericSelectOptions
+	}
+	tests := []struct {
+		name      string
+		fields    fields
+		wantItems []interface{}
+	}{
+		{
+			name: "empty",
+			fields: fields{
+				Options: map[interface{}]string{},
+			},
+			wantItems: []interface{}{},
+		},
+		{
+			name: "sorted",
+			fields: fields{
+				Options: map[interface{}]string{42: "A", "foo": "B", 26.0: "C"},
+			},
+			wantItems: []interface{}{"A", "B", "C"},
+		},
+		{
+			name: "reverse",
+			fields: fields{
+				Options: map[interface{}]string{26.0: "C", "foo": "B", 42: "A"},
+			},
+			wantItems: []interface{}{"A", "B", "C"},
+		},
+		{
+			name: "case sensitive",
+			fields: fields{
+				Options: map[interface{}]string{42: "a", "foo": "B", 26.0: "C"},
+			},
+			wantItems: []interface{}{"B", "C", "a"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := &GenericSelect{
+				Options: tt.fields.Options,
+			}
+			assert.EqualValues(t, tt.wantItems, in.createItems())
+		})
+	}
+}
+
+func TestStringSelectMulti_createItems(t *testing.T) {
+	type fields struct {
+		Default    string
+		Options    StringSelectOptions
+		IsRequired bool
+	}
+	type args struct {
+		values []string
+	}
+	tests := []struct {
+		name      string
+		fields    fields
+		args      args
+		wantItems []interface{}
+	}{
+		{
+			name: "empty",
+			fields: fields{
+				Options: map[string]string{},
+			},
+			wantItems: nil,
+		},
+		{
+			name: "sorted",
+			fields: fields{
+				Options: map[string]string{"a": "A", "b": "B", "c": "C"},
+			},
+			wantItems: []interface{}{"", "A", "B", "C"},
+		},
+		{
+			name: "reverse",
+			fields: fields{
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			wantItems: []interface{}{"", "A", "B", "C"},
+		},
+		{
+			name: "case sensitive",
+			fields: fields{
+				Options: map[string]string{"a": "a", "b": "B", "c": "C"},
+			},
+			wantItems: []interface{}{"", "B", "C", "a"},
+		},
+		{
+			name: "reverse with first default",
+			fields: fields{
+				Default: "a",
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			wantItems: []interface{}{"A", "", "B", "C"},
+		},
+		{
+			name: "reverse with last default",
+			fields: fields{
+				Default: "c",
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			wantItems: []interface{}{"C", "", "A", "B"},
+		},
+		{
+			name: "reverse with unknown default",
+			fields: fields{
+				Default: "foo",
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			wantItems: []interface{}{"", "A", "B", "C"},
+		},
+		{
+			name: "first selected",
+			fields: fields{
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			args: args{
+				values: []string{"A"},
+			},
+			wantItems: []interface{}{"", "B", "C"},
+		},
+		{
+			name: "last selected",
+			fields: fields{
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			args: args{
+				values: []string{"C"},
+			},
+			wantItems: []interface{}{"", "A", "B"},
+		},
+		{
+			name: "all selected",
+			fields: fields{
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			args: args{
+				values: []string{"A", "B", "C"},
+			},
+			wantItems: nil,
+		},
+		{
+			name: "default selected",
+			fields: fields{
+				Default: "a",
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			args: args{
+				values: []string{"A"},
+			},
+			wantItems: []interface{}{"", "B", "C"},
+		},
+		{
+			name: "non-default selected",
+			fields: fields{
+				Default: "a",
+				Options: map[string]string{"c": "C", "b": "B", "a": "A"},
+			},
+			args: args{
+				values: []string{"C"},
+			},
+			wantItems: []interface{}{"A", "", "B"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := &StringSelectMulti{
+				Default:    tt.fields.Default,
+				Options:    tt.fields.Options,
+				IsRequired: tt.fields.IsRequired,
+			}
+			assert.EqualValues(t, tt.wantItems, in.createItems(tt.args.values))
+		})
+	}
+}

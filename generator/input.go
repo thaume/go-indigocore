@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 
 	"github.com/manifoldco/promptui"
@@ -211,23 +212,34 @@ type StringSelect struct {
 	Options StringSelectOptions `json:"options"`
 }
 
+// createItems create items list sorted by name.
+// Default value is the first element of the list.
+func (in *StringSelect) createItems() (items []interface{}) {
+	stringItems := make([]string, 0, len(in.Options))
+	for k, v := range in.Options {
+		if in.Default == "" || k != in.Default {
+			stringItems = append(stringItems, v)
+		}
+	}
+	sort.StringSlice(stringItems).Sort()
+	items = make([]interface{}, len(in.Options))
+	idx := 0
+	if in.Default != "" && len(stringItems) != len(in.Options) {
+		items[idx] = in.Options.FindText(in.Default)
+		idx++
+	}
+	for i, s := range stringItems {
+		items[i+idx] = s
+	}
+	return
+}
+
 // Run implements github.com/stratumn/sdk/generator.Input.
 func (in *StringSelect) Run() (interface{}, error) {
 	prompt := promptui.Select{
 		Label: in.Prompt,
-		Items: func() (items []interface{}) {
-			items = make([]interface{}, 0, len(in.Options))
-			if in.Default != "" {
-				items = append(items, in.Options.FindText(in.Default))
-			}
-			for k, v := range in.Options {
-				if in.Default == "" || k != in.Default {
-					items = append(items, v)
-				}
-			}
-			return
-		}(),
-		Size: len(in.Options),
+		Items: in.createItems(),
+		Size:  len(in.Options),
 	}
 	_, txt, err := prompt.Run()
 	return in.Options.FindValue(txt), err
@@ -258,30 +270,30 @@ func (options GenericSelectOptions) FindValue(text string) interface{} {
 type GenericSelect struct {
 	InputShared
 
-	// Default is the default value.
-	Default string `json:"default"`
-
 	// Options is a map of possible values.
 	Options GenericSelectOptions `json:"options"`
+}
+
+// createItems create items list sorted by name.
+func (in *GenericSelect) createItems() (items []interface{}) {
+	stringItems := make([]string, 0, len(in.Options))
+	for _, v := range in.Options {
+		stringItems = append(stringItems, v)
+	}
+	sort.StringSlice(stringItems).Sort()
+	items = make([]interface{}, len(in.Options))
+	for i, s := range stringItems {
+		items[i] = s
+	}
+	return
 }
 
 // Run implements github.com/stratumn/sdk/generator.Input.
 func (in *GenericSelect) Run() (interface{}, error) {
 	prompt := promptui.Select{
 		Label: in.Prompt,
-		Items: func() (items []interface{}) {
-			items = make([]interface{}, 0, len(in.Options))
-			if in.Default != "" {
-				items = append(items, in.Options.FindText(in.Default))
-			}
-			for k, v := range in.Options {
-				if in.Default == "" || k != in.Default {
-					items = append(items, v)
-				}
-			}
-			return
-		}(),
-		Size: len(in.Options),
+		Items: in.createItems(),
+		Size:  len(in.Options),
 	}
 	_, txt, err := prompt.Run()
 	return in.Options.FindValue(txt), err
@@ -301,28 +313,56 @@ type StringSelectMulti struct {
 	IsRequired bool `json:"isRequired"`
 }
 
-func appendIfNotSelected(value string, input, output []string) []string {
+func isSelected(value string, input []string) bool {
 	for _, val := range input {
 		if val == value {
-			return output
+			return true
 		}
 	}
+	return false
+}
+
+func appendIfNotSelected(value string, input, output []string) []string {
+	if isSelected(value, input) {
+		return output
+	}
 	return append(output, value)
+}
+
+// createItems create items list sorted by name.
+// Default value is the first element of the list.
+func (in *StringSelectMulti) createItems(values []string) (items []interface{}) {
+	if len(values) == len(in.Options) {
+		return nil
+	}
+	stringItems := make([]string, 0)
+	for k, v := range in.Options {
+		if in.Default == "" || k != in.Default {
+			stringItems = appendIfNotSelected(v, values, stringItems)
+		}
+	}
+	sort.StringSlice(stringItems).Sort()
+	items = make([]interface{}, 0, len(in.Options))
+	defaultValue := in.Options.FindText(in.Default)
+	if in.Default != "" &&
+		len(stringItems) != (len(in.Options)-len(values)) &&
+		!isSelected(defaultValue, values) {
+		items = append(items, defaultValue)
+	}
+	items = append(items, "")
+	for _, s := range stringItems {
+		items = append(items, s)
+	}
+	return
 }
 
 // Run implements github.com/stratumn/sdk/generator.Input.
 func (in *StringSelectMulti) Run() (interface{}, error) {
 	values := make([]string, 0)
 	for {
-		options := make([]string, 0)
-		if in.Default != "" {
-			options = appendIfNotSelected(in.Options.FindText(in.Default), values, options)
-		}
-		options = append(options, "")
-		for k, v := range in.Options {
-			if in.Default == "" || k != in.Default {
-				options = appendIfNotSelected(v, values, options)
-			}
+		options := in.createItems(values)
+		if len(options) == 0 {
+			break
 		}
 		prompt := promptui.Select{
 			Label: in.Prompt,
