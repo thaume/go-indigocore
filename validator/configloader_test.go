@@ -30,7 +30,9 @@ func TestLoadConfig_Success(t *testing.T) {
 	t.Run("schema & signatures & transitions", func(T *testing.T) {
 		testFile := utils.CreateTempFile(t, ValidJSONConfig)
 		defer os.Remove(testFile)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		assert.NoError(t, err, "LoadConfig()")
 		assert.NotNil(t, validators)
@@ -55,7 +57,9 @@ func TestLoadConfig_Success(t *testing.T) {
 		defer os.Remove(testFile)
 		validatorProcessCount := 0
 		validatorCount := 0
-		validators, err := LoadConfig(testFile, func(process string, schema rulesSchema, validators []Validator) {
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, func(process string, schema rulesSchema, validators []Validator) {
 			validatorProcessCount++
 			validatorCount = validatorCount + len(validators)
 		})
@@ -89,7 +93,9 @@ func TestLoadConfig_Success(t *testing.T) {
 
 		testFile := utils.CreateTempFile(t, validJSONSig)
 		defer os.Remove(testFile)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		require.NoError(t, err, "LoadConfig()")
 		assert.NotNil(t, validators)
@@ -121,7 +127,9 @@ func TestLoadConfig_Success(t *testing.T) {
 
 		testFile := utils.CreateTempFile(t, validJSONSig)
 		defer os.Remove(testFile)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		require.NoError(t, err, "LoadConfig()")
 		assert.NotNil(t, validators)
@@ -147,7 +155,9 @@ func TestLoadConfig_Success(t *testing.T) {
 
 		testFile := utils.CreateTempFile(t, validJSONSig)
 		defer os.Remove(testFile)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		require.NoError(t, err, "LoadConfig()")
 		assert.NotNil(t, validators)
@@ -171,7 +181,9 @@ func TestLoadConfig_Success(t *testing.T) {
 
 		testFile := utils.CreateTempFile(t, validJSONSig)
 		defer os.Remove(testFile)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		require.NoError(t, err, "LoadConfig()")
 		assert.NotNil(t, validators)
@@ -197,7 +209,9 @@ func TestLoadValidators_Error(t *testing.T) {
 			}
 		}`
 		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		assert.Nil(t, validators)
 		assert.EqualError(t, err, ErrMissingProcess.Error())
@@ -216,7 +230,9 @@ func TestLoadValidators_Error(t *testing.T) {
 			}
 		}`
 		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		assert.Nil(t, validators)
 		assert.EqualError(t, err, ErrMissingLinkType.Error())
@@ -233,7 +249,9 @@ func TestLoadValidators_Error(t *testing.T) {
 			}
 		}`
 		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		assert.Nil(t, validators)
 		assert.EqualError(t, err, ErrInvalidValidator.Error())
@@ -252,7 +270,9 @@ func TestLoadValidators_Error(t *testing.T) {
 		}`
 		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
 		defer os.Remove(testFile)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		assert.Nil(t, validators)
 		assert.Error(t, err)
@@ -271,7 +291,9 @@ func TestLoadValidators_Error(t *testing.T) {
 		}`
 		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
 		defer os.Remove(testFile)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		assert.Nil(t, validators)
 		assert.Error(t, err)
@@ -294,7 +316,9 @@ func TestLoadValidators_Error(t *testing.T) {
 		}`
 		testFile := utils.CreateTempFile(t, invalidValidatorConfig)
 		defer os.Remove(testFile)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		assert.Nil(t, validators)
 		assert.EqualError(t, err, "missing transition definition for process test and linkTypes [bar]")
@@ -317,7 +341,9 @@ func TestLoadPKI_Error(t *testing.T) {
 		`
 		testFile := utils.CreateTempFile(t, noPKIConfig)
 		defer os.Remove(testFile)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		assert.Nil(t, validators)
 		assert.EqualError(t, err, "rules.json needs a 'pki' field to list authorized public keys")
@@ -345,7 +371,9 @@ func TestLoadPKI_Error(t *testing.T) {
 				      `
 		testFile := utils.CreateTempFile(t, invalidPKIConfig)
 		defer os.Remove(testFile)
-		validators, err := LoadConfig(testFile, nil)
+		validators, err := LoadConfig(&Config{
+			RulesPath: testFile,
+		}, nil)
 
 		assert.Nil(t, validators)
 		assert.EqualError(t, err, "error while parsing public key [badPrivateKey]: failed to decode PEM block")

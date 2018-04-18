@@ -48,7 +48,7 @@ func TestGovernanceCreation(t *testing.T) {
 	t.Run("Governance without file", func(t *testing.T) {
 		var v Validator
 		a := new(storetesting.MockAdapter)
-		gov, err := NewGovernanceManager(context.Background(), a, "")
+		gov, err := NewGovernanceManager(context.Background(), a, &Config{})
 		assert.NoError(t, err, "Gouvernance is initialized by store")
 		assert.NotNil(t, gov, "Gouvernance is initialized by store")
 
@@ -61,7 +61,7 @@ func TestGovernanceCreation(t *testing.T) {
 		var v Validator
 		a := dummystore.New(nil)
 		populateStoreWithValidData(t, a)
-		gov, err := NewGovernanceManager(context.Background(), a, "")
+		gov, err := NewGovernanceManager(context.Background(), a, &Config{})
 		assert.NoError(t, err, "Gouvernance is initialized by store")
 		assert.NotNil(t, gov, "Gouvernance is initialized by store")
 
@@ -75,7 +75,9 @@ func TestGovernanceCreation(t *testing.T) {
 		a := new(storetesting.MockAdapter)
 		testFile := utils.CreateTempFile(t, ValidJSONConfig)
 		defer os.Remove(testFile)
-		gov, err := NewGovernanceManager(context.Background(), a, testFile)
+		gov, err := NewGovernanceManager(context.Background(), a, &Config{
+			RulesPath: testFile,
+		})
 		assert.NoError(t, err, "Gouvernance is initialized by file and store")
 		assert.NotNil(t, gov, "Gouvernance is initialized by file and store")
 
@@ -87,7 +89,9 @@ func TestGovernanceCreation(t *testing.T) {
 	t.Run("Governance with invalid file", func(t *testing.T) {
 		var v Validator
 		a := new(storetesting.MockAdapter)
-		gov, err := NewGovernanceManager(context.Background(), a, "governance_test.go")
+		gov, err := NewGovernanceManager(context.Background(), a, &Config{
+			RulesPath: "governance_test.go",
+		})
 		assert.NoError(t, err, "Gouvernance is initialized by store")
 		assert.NotNil(t, gov, "Gouvernance is initialized by store")
 
@@ -98,7 +102,9 @@ func TestGovernanceCreation(t *testing.T) {
 
 	t.Run("Governance with unexisting file", func(t *testing.T) {
 		a := new(storetesting.MockAdapter)
-		gov, err := NewGovernanceManager(context.Background(), a, "/foo/bar")
+		gov, err := NewGovernanceManager(context.Background(), a, &Config{
+			RulesPath: "foo/bar",
+		})
 		assert.Error(t, err, "Cannot initialize gouvernance with bad file")
 		assert.Nil(t, gov, "Cannot initialize gouvernance with bad file")
 	})
@@ -123,7 +129,9 @@ func TestGovernanceUpdate(t *testing.T) {
 		checkLastValidatorPriority(t, a, "auction", 1.)
 		testFile := utils.CreateTempFile(t, ValidJSONConfig)
 		defer os.Remove(testFile)
-		gov, err := NewGovernanceManager(context.Background(), a, testFile)
+		gov, err := NewGovernanceManager(context.Background(), a, &Config{
+			RulesPath: testFile,
+		})
 		require.NotNil(t, gov, "Gouvernance is initialized by file and store")
 
 		err = waitForUpdate(gov, &v)
@@ -138,7 +146,9 @@ func TestGovernanceUpdate(t *testing.T) {
 		a := dummystore.New(nil)
 		testFile := utils.CreateTempFile(t, validJSON)
 		defer os.Remove(testFile)
-		gov, err := NewGovernanceManager(context.Background(), a, testFile)
+		gov, err := NewGovernanceManager(context.Background(), a, &Config{
+			RulesPath: testFile,
+		})
 		require.NotNil(t, gov, "Gouvernance is initialized by file and store")
 
 		err = waitForUpdate(gov, &v)
@@ -151,7 +161,9 @@ func TestGovernanceUpdate(t *testing.T) {
 			ValidChatJSONTypesConfig)
 		validJSON = fmt.Sprintf(`{%s}`, chatJSON)
 		f, err := os.OpenFile(testFile, os.O_WRONLY, 0)
-		require.NoErrorf(t, err, "cannot modify file %s", testFile)
+		require.NoErrorf(t, err, "cannot modify file %s", &Config{
+			RulesPath: testFile,
+		})
 		defer f.Close()
 		_, err = f.WriteString(validJSON)
 		require.NoError(t, err, "tmpfile.WriteString()")
@@ -166,7 +178,7 @@ func TestGovernanceUpdate(t *testing.T) {
 func TestGetAllProcesses(t *testing.T) {
 	t.Run("No process", func(t *testing.T) {
 		a := new(storetesting.MockAdapter)
-		gov, err := NewGovernanceManager(context.Background(), a, "")
+		gov, err := NewGovernanceManager(context.Background(), a, &Config{})
 		require.NoError(t, err, "Gouvernance is initialized by store")
 		processes := gov.getAllProcesses(context.Background())
 		assert.Empty(t, processes)
@@ -175,7 +187,7 @@ func TestGetAllProcesses(t *testing.T) {
 	t.Run("2 processes", func(t *testing.T) {
 		a := dummystore.New(nil)
 		populateStoreWithValidData(t, a)
-		gov, err := NewGovernanceManager(context.Background(), a, "")
+		gov, err := NewGovernanceManager(context.Background(), a, &Config{})
 		require.NoError(t, err, "Gouvernance is initialized by store")
 		processes := gov.getAllProcesses(context.Background())
 		assert.Len(t, processes, 2)
@@ -190,7 +202,7 @@ func TestGetAllProcesses(t *testing.T) {
 			_, err := a.CreateLink(context.Background(), link)
 			assert.NoErrorf(t, err, "Cannot insert link %+v", link)
 		}
-		gov, err := NewGovernanceManager(context.Background(), a, "")
+		gov, err := NewGovernanceManager(context.Background(), a, &Config{})
 		require.NoError(t, err, "Gouvernance is initialized by store")
 		processes := gov.getAllProcesses(context.Background())
 		assert.Len(t, processes, store.MaxLimit+42)

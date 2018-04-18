@@ -1,20 +1,33 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"errors"
 
 	"github.com/stratumn/go-indigocore/cs"
+	"github.com/stratumn/go-indigocore/store"
 )
 
-// Valid validates the transition towards the "init" state
-func Valid(l *cs.Link) error {
-	fmt.Println("youhou")
+// Valid validates the transition towards the "valid" state
+func Valid(storeReader store.SegmentReader, l *cs.Link) error {
 	return nil
 }
 
-// Invalid validates the transition towards the "init" state
-func Invalid(l *cs.Link) error {
-	fmt.Println("youhou")
+// FetchLink fetches a link and returns a nil error
+func FetchLink(storeReader store.SegmentReader, l *cs.Link) error {
+	_, err := storeReader.FindSegments(context.Background(), &store.SegmentFilter{
+		MapIDs: []string{l.Meta.MapID},
+	})
+	return err
+}
+
+// Invalid validates the transition towards the "invalid" state
+func Invalid(storeReader store.SegmentReader, l *cs.Link) error {
+	return errors.New("error")
+}
+
+// BadSignature is an example of validator which is not of type ScriptValidatorFunc
+func BadSignature() error {
 	return nil
 }
 

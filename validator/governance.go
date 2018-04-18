@@ -46,44 +46,46 @@ var defaultPagination = store.Pagination{
 type GovernanceManager struct {
 	adapter store.Adapter
 
+	validationCfg    *Config
 	validatorWatcher *fsnotify.Watcher
 	validatorChan    chan Validator
 	validators       map[string][]Validator
 }
 
 // NewGovernanceManager enhances validator management with some governance concepts.
-func NewGovernanceManager(ctx context.Context, a store.Adapter, filename string) (*GovernanceManager, error) {
+func NewGovernanceManager(ctx context.Context, a store.Adapter, validationCfg *Config) (*GovernanceManager, error) {
 	var err error
 	var govMgr = GovernanceManager{
 		adapter:       a,
 		validatorChan: make(chan Validator, 1),
 		validators:    make(map[string][]Validator, 0),
+		validationCfg: validationCfg,
 	}
 
-	govMgr.loadValidatorsFromFile(ctx, filename)
+	govMgr.loadValidatorsFromFile(ctx)
 	govMgr.loadValidatorsFromStore(ctx)
 	if len(govMgr.validators) > 0 {
 		govMgr.sendValidators()
 	}
-	if filename != "" {
+	if validationCfg != nil && validationCfg.RulesPath != "" {
 		if govMgr.validatorWatcher, err = fsnotify.NewWatcher(); err != nil {
 			return nil, errors.Wrap(err, "cannot create a new filesystem watcher for validators")
 		}
-		if err := govMgr.validatorWatcher.Add(filename); err != nil {
-			return nil, errors.Wrapf(err, "cannot watch validator configuration file %s", filename)
+		if err := govMgr.validatorWatcher.Add(validationCfg.RulesPath); err != nil {
+			return nil, errors.Wrapf(err, "cannot watch validator configuration file %s", validationCfg.RulesPath)
 		}
 	}
 
 	return &govMgr, nil
 }
 
-func (m *GovernanceManager) loadValidatorsFromFile(ctx context.Context, filename string) (err error) {
-	if filename != "" {
-		_, err = LoadConfig(filename, func(process string, schema rulesSchema, validators []Validator) {
+func (m *GovernanceManager) loadValidatorsFromFile(ctx context.Context) (err error) {
+	if m.validationCfg.RulesPath != "" {
+		_, err = LoadConfig(m.validationCfg, func(process string, schema rulesSchema, validators []Validator) {
 			m.validators[process] = m.updateValidatorInStore(ctx, process, schema, validators)
 		})
 		if err != nil {
-			log.Errorf("Cannot load validator rules file %s: %s", filename, err)
+			log.Errorf("Cannot load validator rules file %s: %s", m.validationCfg.RulesPath, err)
 		}
 	}
 	return err
@@ -92,7 +94,7 @@ func (m *GovernanceManager) loadValidatorsFromFile(ctx context.Context, filename
 func (m *GovernanceManager) loadValidatorsFromStore(ctx context.Context) {
 	for _, process := range m.getAllProcesses(ctx) {
 		if _, exist := m.validators[process]; !exist {
-			m.validators[process] = m.getValidators(ctx, process)
+			m.validators[process] = m.getValidators(ctx, process, m.validationCfg.PluginsPath)
 		}
 	}
 }
@@ -137,7 +139,7 @@ func (m *GovernanceManager) getAllProcesses(ctx context.Context) []string {
 	return ret
 }
 
-func (m *GovernanceManager) getValidators(ctx context.Context, process string) []Validator {
+func (m *GovernanceManager) getValidators(ctx context.Context, process string, pluginsPath string) []Validator {
 	segments, err := m.adapter.FindSegments(ctx, &store.SegmentFilter{
 		Pagination: defaultPagination,
 		Process:    governanceProcessName,
@@ -162,7 +164,7 @@ func (m *GovernanceManager) getValidators(ctx context.Context, process string) [
 			PKI:   rawPKI,
 			Types: rawTypes,
 		},
-	}, nil)
+	}, pluginsPath, nil)
 	if err != nil {
 		return v
 	}
@@ -282,7 +284,7 @@ func (m *GovernanceManager) UpdateValidators(ctx context.Context, v *Validator) 
 		}
 		if validatorFile != "" {
 			go func() {
-				if m.loadValidatorsFromFile(ctx, validatorFile) == nil {
+				if m.loadValidatorsFromFile(ctx) == nil {
 					m.sendValidators()
 				}
 			}()

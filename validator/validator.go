@@ -25,7 +25,16 @@ import (
 const (
 	// DefaultFilename is the default filename for the file with the rules of validation
 	DefaultFilename = "/data/validation/rules.json"
+
+	// DefaultPluginsDirectory is the default filename for the file with the rules of validation
+	DefaultPluginsDirectory = "/data/validation/"
 )
+
+// Config contains the path of the rules JSON file and the directory where the validator scripts are located.
+type Config struct {
+	RulesPath   string
+	PluginsPath string
+}
 
 // Validator defines a validator that has an internal state, identified by
 // its hash.

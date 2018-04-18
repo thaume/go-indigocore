@@ -17,6 +17,7 @@ package validator
 import (
 	"context"
 	"crypto/sha256"
+	"io/ioutil"
 	"path"
 	"plugin"
 	"strings"
@@ -28,55 +29,78 @@ import (
 	"github.com/stratumn/go-indigocore/types"
 )
 
-const baseValidatorPath = ""
+const (
+	golang = "go"
 
-var validScriptTypes = []string{"go"}
+	// ErrLoadingPlugin is the error returned in case the plugin could not be loaded
+	ErrLoadingPlugin = "Error while loading validation script for process %s and type %s"
 
-// TransitionValidator is the function called when validating a transition
-type TransitionValidator = func(l *cs.Link) error
+	// ErrBadPlugin is the error returned in case the plugin is missing exported symbols
+	ErrBadPlugin = "script does not implement the ScriptValidatorFunc type"
+
+	// ErrBadScriptType is the error returned when the type of script does not match the supported ones
+	ErrBadScriptType = "Validation engine does not handle script of type %s, valid types are %v"
+)
+
+var (
+	validScriptTypes = []string{golang}
+)
+
+// ScriptValidatorFunc is the function called when enforcing a custom validation rule
+type ScriptValidatorFunc = func(store.SegmentReader, *cs.Link) error
 
 type scriptValidator struct {
-	Script TransitionValidator
-	Config *validatorBaseConfig
+	script     ScriptValidatorFunc
+	scriptHash [32]byte
+	config     *validatorBaseConfig
 }
 
 func checkScriptType(cfg *scriptConfig) error {
 	switch cfg.Type {
-	case "go":
+	case golang:
 		return nil
 	default:
-		return errors.Errorf("Validation engine does not handle script of type %s, valid types are %v", cfg.Type, validScriptTypes)
+		return errors.Errorf(ErrBadScriptType, cfg.Type, validScriptTypes)
 	}
 }
 
-func newScriptValidator(baseConfig *validatorBaseConfig, scriptCfg *scriptConfig) (Validator, error) {
+func newScriptValidator(baseConfig *validatorBaseConfig, scriptCfg *scriptConfig, pluginsPath string) (Validator, error) {
 	if err := checkScriptType(scriptCfg); err != nil {
 		return nil, err
 	}
-
-	p, err := plugin.Open(path.Join(baseValidatorPath, scriptCfg.File))
+	pluginFile := path.Join(pluginsPath, scriptCfg.File)
+	p, err := plugin.Open(pluginFile)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not load validation plugin")
+		return nil, errors.Wrapf(err, ErrLoadingPlugin, baseConfig.Process, baseConfig.LinkType)
 	}
 
 	symbol, err := p.Lookup(strings.Title(baseConfig.LinkType))
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error while loading validation script for process %s and type %s", baseConfig.Process, baseConfig.LinkType)
+		return nil, errors.Wrapf(err, ErrLoadingPlugin, baseConfig.Process, baseConfig.LinkType)
 	}
 
-	customValidator, ok := symbol.(TransitionValidator)
+	customValidator, ok := symbol.(ScriptValidatorFunc)
 	if !ok {
-		return nil, errors.Errorf("Could not load validation script for process %s and linkType %s: script does not implement the CustomValidator interface", baseConfig.Process, baseConfig.LinkType)
+		return nil, errors.Wrapf(errors.New(ErrBadPlugin), ErrLoadingPlugin, baseConfig.Process, baseConfig.LinkType)
 	}
 
+	// here we ignore the error since there is no way we cannot read the file if the plugin has be loaded successfully
+	b, _ := ioutil.ReadFile(pluginFile)
 	return &scriptValidator{
-		Config: baseConfig,
-		Script: customValidator,
+		config:     baseConfig,
+		script:     customValidator,
+		scriptHash: sha256.Sum256(b),
 	}, nil
 }
 
 func (sv scriptValidator) Hash() (*types.Bytes32, error) {
-	b, err := cj.Marshal(sv)
+	b, err := cj.Marshal(struct {
+		ScriptHash [32]byte
+		Config     *validatorBaseConfig
+	}{
+		ScriptHash: sv.scriptHash,
+		Config:     sv.config,
+	})
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -85,12 +109,9 @@ func (sv scriptValidator) Hash() (*types.Bytes32, error) {
 }
 
 func (sv scriptValidator) ShouldValidate(link *cs.Link) bool {
-	return sv.Config.ShouldValidate(link)
+	return sv.config.ShouldValidate(link)
 }
 
-// Validate checks that the provided signatures match the required ones.
-// a requirement can either be: a public key, a name defined in PKI, a role defined in PKI.
 func (sv scriptValidator) Validate(_ context.Context, storeReader store.SegmentReader, link *cs.Link) error {
-	err := sv.Script(link)
-	return err
+	return sv.script(storeReader, link)
 }

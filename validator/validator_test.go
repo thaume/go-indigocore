@@ -119,7 +119,9 @@ func TestValidator(t *testing.T) {
 	testFile := utils.CreateTempFile(t, validator.ValidJSONConfig)
 	defer os.Remove(testFile)
 
-	children, err := validator.LoadConfig(testFile, nil)
+	children, err := validator.LoadConfig(&validator.Config{
+		RulesPath: testFile,
+	}, nil)
 	assert.NoError(t, err, "LoadConfig()")
 
 	v := validator.NewMultiValidator(children)
