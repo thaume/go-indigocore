@@ -18,6 +18,7 @@ package main
 import (
 	"flag"
 
+	_ "github.com/stratumn/go-indigocore/fossilizer/evidences"
 	"github.com/stratumn/go-indigocore/monitoring"
 	"github.com/stratumn/go-indigocore/rethinkstore"
 	"github.com/stratumn/go-indigocore/tendermint"

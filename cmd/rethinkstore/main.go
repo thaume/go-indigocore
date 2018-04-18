@@ -20,11 +20,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	_ "github.com/stratumn/go-indigocore/cs/evidences"
+	_ "github.com/stratumn/go-indigocore/fossilizer/evidences"
 	"github.com/stratumn/go-indigocore/monitoring"
-	"github.com/stratumn/go-indigocore/store/storehttp"
-
 	"github.com/stratumn/go-indigocore/rethinkstore"
+	"github.com/stratumn/go-indigocore/store/storehttp"
 )
 
 var (

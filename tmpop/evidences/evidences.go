@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package evidences defines any type of proof that can be used in a chainscript segment
-// It is needed by a store to know how to deserialize a segment containing any type of proof
+// Package evidences defines Tendermint proofs.
+// It is needed by a store to know how to deserialize a segment containing
+// a Tendermint proof.
 package evidences
 
 import (
@@ -22,9 +23,6 @@ import (
 	"encoding/json"
 
 	"github.com/stratumn/go-indigocore/cs"
-	// This package imports every package defining its own implementation of the cs.Proof interface
-	// The init() function of each package gets called hence providing a way for cs.Evidence.UnmarshalJSON to deserialize any kind of proof
-	_ "github.com/stratumn/go-indigocore/dummyfossilizer"
 	"github.com/stratumn/go-indigocore/types"
 	mktypes "github.com/stratumn/merkle/types"
 	"github.com/tendermint/go-crypto"
@@ -32,72 +30,9 @@ import (
 )
 
 var (
-	//BatchFossilizerName is the name used as the BatchProof backend
-	BatchFossilizerName = "batch"
-	//BcBatchFossilizerName is the name used as the BcBatchProof backend
-	BcBatchFossilizerName = "bcbatch"
 	// TMPopName is the name used as the Tendermint PoP backend
 	TMPopName = "TMPop"
 )
-
-// BatchProof implements the Proof interface
-type BatchProof struct {
-	Timestamp int64          `json:"timestamp"`
-	Root      *types.Bytes32 `json:"merkleRoot"`
-	Path      mktypes.Path   `json:"merklePath"`
-}
-
-// Time returns the timestamp from the block header
-func (p *BatchProof) Time() uint64 {
-	return uint64(p.Timestamp)
-}
-
-// FullProof returns a JSON formatted proof
-func (p *BatchProof) FullProof() []byte {
-	bytes, err := json.MarshalIndent(p, "", "   ")
-	if err != nil {
-		return nil
-	}
-	return bytes
-}
-
-// Verify returns true if the proof of a given linkHash is correct
-func (p *BatchProof) Verify(linkHash interface{}) bool {
-	err := p.Path.Validate()
-	if err != nil {
-		return false
-	}
-	return true
-}
-
-// BcBatchProof implements the Proof interface
-type BcBatchProof struct {
-	Batch         BatchProof          `json:"batch"`
-	TransactionID types.TransactionID `json:"txid"`
-}
-
-// Time returns the timestamp from the block header
-func (p *BcBatchProof) Time() uint64 {
-	return uint64(p.Batch.Timestamp)
-}
-
-// FullProof returns a JSON formatted proof
-func (p *BcBatchProof) FullProof() []byte {
-	bytes, err := json.MarshalIndent(p, "", "   ")
-	if err != nil {
-		return nil
-	}
-	return bytes
-}
-
-// Verify returns true if the proof of a given linkHash is correct
-func (p *BcBatchProof) Verify(linkHash interface{}) bool {
-	err := p.Batch.Path.Validate()
-	if err != nil {
-		return false
-	}
-	return true
-}
 
 // TendermintVote is a signed vote by one of the Tendermint validator nodes.
 type TendermintVote struct {
@@ -273,20 +208,6 @@ func (p *TendermintProof) validateVotes(header *tmtypes.Header, votes []*Tenderm
 }
 
 func init() {
-	cs.DeserializeMethods[BatchFossilizerName] = func(rawProof json.RawMessage) (cs.Proof, error) {
-		p := BatchProof{}
-		if err := json.Unmarshal(rawProof, &p); err != nil {
-			return nil, err
-		}
-		return &p, nil
-	}
-	cs.DeserializeMethods[BcBatchFossilizerName] = func(rawProof json.RawMessage) (cs.Proof, error) {
-		p := BcBatchProof{}
-		if err := json.Unmarshal(rawProof, &p); err != nil {
-			return nil, err
-		}
-		return &p, nil
-	}
 	cs.DeserializeMethods[TMPopName] = func(rawProof json.RawMessage) (cs.Proof, error) {
 		p := TendermintProof{}
 		if err := json.Unmarshal(rawProof, &p); err != nil {

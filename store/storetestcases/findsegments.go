@@ -21,9 +21,10 @@ import (
 	"sync/atomic"
 	"testing"
 
+	batchevidences "github.com/stratumn/go-indigocore/batchfossilizer/evidences"
+	bcbatchevidences "github.com/stratumn/go-indigocore/bcbatchfossilizer/evidences"
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/cs/cstesting"
-	"github.com/stratumn/go-indigocore/cs/evidences"
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/testutil"
 	"github.com/stretchr/testify/assert"
@@ -347,12 +348,11 @@ func (f Factory) TestFindSegments(t *testing.T) {
 
 	t.Run("Returns its evidences", func(t *testing.T) {
 		ctx := context.Background()
-		e1 := cs.Evidence{Backend: "TMPop", Provider: "1", Proof: &evidences.TendermintProof{Root: testutil.RandomHash()}}
-		e2 := cs.Evidence{Backend: "dummy", Provider: "2", Proof: &cs.GenericProof{}}
-		e3 := cs.Evidence{Backend: "batch", Provider: "3", Proof: &evidences.BatchProof{}}
-		e4 := cs.Evidence{Backend: "bcbatch", Provider: "4", Proof: &evidences.BcBatchProof{}}
-		e5 := cs.Evidence{Backend: "generic", Provider: "5"}
-		testEvidences := []cs.Evidence{e1, e2, e3, e4, e5}
+		e1 := cs.Evidence{Backend: "dummy", Provider: "1", Proof: &cs.GenericProof{}}
+		e2 := cs.Evidence{Backend: "batch", Provider: "2", Proof: &batchevidences.BatchProof{}}
+		e3 := cs.Evidence{Backend: "bcbatch", Provider: "3", Proof: &bcbatchevidences.BcBatchProof{}}
+		e4 := cs.Evidence{Backend: "generic", Provider: "4"}
+		testEvidences := []cs.Evidence{e1, e2, e3, e4}
 
 		for _, e := range testEvidences {
 			err := a.AddEvidence(ctx, linkHash4, &e)
@@ -370,7 +370,7 @@ func (f Factory) TestFindSegments(t *testing.T) {
 		assert.NoError(t, err, "a.FindSegments()")
 		assert.NotNil(t, got)
 		require.Len(t, got, 1)
-		assert.True(t, len(got[0].Meta.Evidences) >= 5)
+		assert.True(t, len(got[0].Meta.Evidences) >= 4)
 	})
 
 }

@@ -19,6 +19,7 @@ import (
 	"flag"
 
 	"github.com/stratumn/go-indigocore/elasticsearchstore"
+	_ "github.com/stratumn/go-indigocore/fossilizer/evidences"
 	"github.com/stratumn/go-indigocore/monitoring"
 	"github.com/stratumn/go-indigocore/tendermint"
 	"github.com/stratumn/go-indigocore/tmpop"

@@ -20,6 +20,8 @@ import (
 
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/cs/cstesting"
+	// Needed to serialize fossilizers evidence types.
+	_ "github.com/stratumn/go-indigocore/fossilizer/evidences"
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stretchr/testify/assert"
 )
