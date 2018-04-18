@@ -37,9 +37,8 @@ var (
 type processesRules map[string]rulesSchema
 
 type rulesSchema struct {
-	PKI         json.RawMessage `json:"pki"`
-	Types       json.RawMessage `json:"types"`
-	Transitions json.RawMessage `json:"transitions"`
+	PKI   json.RawMessage `json:"pki"`
+	Types json.RawMessage `json:"types"`
 }
 
 type rulesListener func(process string, schema rulesSchema, validators []Validator)
@@ -119,6 +118,12 @@ type jsonValidatorData struct {
 	Signatures  []string         `json:"signatures"`
 	Schema      *json.RawMessage `json:"schema"`
 	Transitions []string         `json:"transitions"`
+	Script      *scriptConfig    `json:"script"`
+}
+
+type scriptConfig struct {
+	File string `json:"file"`
+	Type string `json:"type"`
 }
 
 func loadValidatorsConfig(process string, data json.RawMessage, pki *PKI) ([]Validator, error) {
@@ -158,6 +163,15 @@ func loadValidatorsConfig(process string, data json.RawMessage, pki *PKI) ([]Val
 			}
 			validators = append(validators, schemaValidator)
 		}
+
+		if val.Script != nil {
+			schemaValidator, err := newScriptValidator(baseConfig, val.Script)
+			if err != nil {
+				return nil, err
+			}
+			validators = append(validators, schemaValidator)
+		}
+
 		if len(val.Transitions) > 0 {
 			validators = append(validators, newTransitionValidator(baseConfig, val.Transitions))
 		} else {
