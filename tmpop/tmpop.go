@@ -63,7 +63,7 @@ type Config struct {
 	Commit string
 
 	// path to the rules definition and validator plugins
-	ValidationCfg *validator.Config
+	Validation *validator.Config
 
 	// Monitoring configuration
 	Monitoring *monitoring.Config

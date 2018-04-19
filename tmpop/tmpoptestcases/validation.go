@@ -59,7 +59,7 @@ func (f Factory) TestValidation(t *testing.T) {
 	testFilename := utils.CreateTempFile(t, testValidationConfig)
 	defer os.Remove(testFilename)
 
-	h, req := f.newTMPop(t, &tmpop.Config{ValidationCfg: &validation.Config{RulesPath: testFilename}})
+	h, req := f.newTMPop(t, &tmpop.Config{Validation: &validation.Config{RulesPath: testFilename}})
 	defer f.free()
 
 	h.BeginBlock(req)

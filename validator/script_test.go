@@ -80,7 +80,7 @@ func TestScriptValidator(t *testing.T) {
 					Type: "go",
 				},
 				valid: false,
-				err:   errors.Wrapf(errors.New("plugin.Open(\"test\"): realpath failed"), ErrLoadingPlugin, "test", "invalid").Error(),
+				err:   errors.Wrapf(errors.New("plugin.Open(\"test\"): realpath failed"), "Error while loading validation script for process %s and type %s", "test", "invalid").Error(),
 			},
 			{
 				name: "unknown-script-validator-for-linkType",
@@ -105,7 +105,7 @@ func TestScriptValidator(t *testing.T) {
 					Type: "go",
 				},
 				valid: false,
-				err:   errors.Wrapf(errors.New(ErrBadPlugin), ErrLoadingPlugin, "test", "badSignature").Error(),
+				err:   errors.Wrapf(errors.New(ErrBadPlugin), "Error while loading validation script for process %s and type %s", "test", "badSignature").Error(),
 			},
 		}
 

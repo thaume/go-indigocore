@@ -84,7 +84,7 @@ func newScriptValidator(baseConfig *validatorBaseConfig, scriptCfg *scriptConfig
 		return nil, errors.Wrapf(errors.New(ErrBadPlugin), ErrLoadingPlugin, baseConfig.Process, baseConfig.LinkType)
 	}
 
-	// here we ignore the error since there is no way we cannot read the file if the plugin has be loaded successfully
+	// here we ignore the error since there is no way we cannot read the file if the plugin has been loaded successfully
 	b, _ := ioutil.ReadFile(pluginFile)
 	return &scriptValidator{
 		config:     baseConfig,

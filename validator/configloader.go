@@ -165,11 +165,11 @@ func loadValidatorsConfig(process, pluginsPath string, data json.RawMessage, pki
 		}
 
 		if val.Script != nil {
-			schemaValidator, err := newScriptValidator(baseConfig, val.Script, pluginsPath)
+			scriptValidator, err := newScriptValidator(baseConfig, val.Script, pluginsPath)
 			if err != nil {
 				return nil, err
 			}
-			validators = append(validators, schemaValidator)
+			validators = append(validators, scriptValidator)
 		}
 
 		if len(val.Transitions) > 0 {

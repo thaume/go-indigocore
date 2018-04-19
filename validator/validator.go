@@ -26,7 +26,7 @@ const (
 	// DefaultFilename is the default filename for the file with the rules of validation
 	DefaultFilename = "/data/validation/rules.json"
 
-	// DefaultPluginsDirectory is the default filename for the file with the rules of validation
+	// DefaultPluginsDirectory is the default directory where validation plugins are located
 	DefaultPluginsDirectory = "/data/validation/"
 )
 

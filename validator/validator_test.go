@@ -40,7 +40,6 @@ type testCase struct {
 var pluginFile string
 
 const (
-	// AlicePrivateKey  = "-----BEGIN ED25519 PRIVATE KEY-----\nBEC0TyVE2Y7+OgPHcSAAIAjUHCVA68swAp235LkQZBIrZnUfW/lss95djRXjIeX+\nezH5bdbVe7s4wbPJRBiej+it\n-----END ED25519 PRIVATE KEY-----\n"
 	pluginsPath      = "testdata"
 	pluginSourceFile = "custom_validator.go"
 )

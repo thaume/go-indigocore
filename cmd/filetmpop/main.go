@@ -51,7 +51,7 @@ func main() {
 	tmpopConfig := &tmpop.Config{
 		Commit:  commit,
 		Version: version,
-		ValidationCfg: &validator.Config{
+		Validation: &validator.Config{
 			RulesPath:   *validatorFilename,
 			PluginsPath: *pluginsPath,
 		},

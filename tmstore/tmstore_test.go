@@ -82,7 +82,7 @@ func updateValidatorRulesFile(t *testing.T, in, out string) {
 func TestTMStore(t *testing.T) {
 	rulesFilename := filepath.Join("testdata", "rules.test.json")
 	updateValidatorRulesFile(t, "/dev/null", rulesFilename)
-	testConfig := &tmpop.Config{ValidationCfg: &validator.Config{RulesPath: rulesFilename}}
+	testConfig := &tmpop.Config{Validation: &validator.Config{RulesPath: rulesFilename}}
 	node := StartNode(testConfig)
 	defer node.Wait()
 	defer node.Stop()
