@@ -28,15 +28,15 @@ import (
 )
 
 var (
-	path              = flag.String("path", filestore.DefaultPath, "Path to directory where files are stored")
-	validatorFilename = flag.String("rules_filename", validator.DefaultFilename, "Path to filename containing validation rules")
-	version           = "x.x.x"
-	commit            = "00000000000000000000000000000000"
+	path    = flag.String("path", filestore.DefaultPath, "Path to directory where files are stored")
+	version = "x.x.x"
+	commit  = "00000000000000000000000000000000"
 )
 
 func init() {
 	tendermint.RegisterFlags()
 	monitoring.RegisterFlags()
+	validator.RegisterFlags()
 }
 
 func main() {
@@ -48,10 +48,10 @@ func main() {
 	}
 
 	tmpopConfig := &tmpop.Config{
-		Commit:            commit,
-		Version:           version,
-		ValidatorFilename: *validatorFilename,
-		Monitoring:        monitoring.ConfigurationFromFlags(),
+		Commit:     commit,
+		Version:    version,
+		Validation: validator.ConfigurationFromFlags(),
+		Monitoring: monitoring.ConfigurationFromFlags(),
 	}
 	tmpop.Run(
 		monitoring.NewStoreAdapter(a, "filestore"),

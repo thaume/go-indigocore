@@ -27,6 +27,7 @@ import (
 	"github.com/stratumn/go-indigocore/cs/cstesting"
 	"github.com/stratumn/go-indigocore/dummystore"
 	"github.com/stratumn/go-indigocore/store"
+	"github.com/stratumn/go-indigocore/testutil"
 	"github.com/stratumn/go-indigocore/utils"
 	"github.com/stratumn/go-indigocore/validator"
 )
@@ -37,9 +38,26 @@ type testCase struct {
 	valid bool
 }
 
+var pluginFile string
+
 const (
-	AlicePrivateKey = "-----BEGIN ED25519 PRIVATE KEY-----\nBEC0TyVE2Y7+OgPHcSAAIAjUHCVA68swAp235LkQZBIrZnUfW/lss95djRXjIeX+\nezH5bdbVe7s4wbPJRBiej+it\n-----END ED25519 PRIVATE KEY-----\n"
+	pluginsPath      = "testdata"
+	pluginSourceFile = "custom_validator.go"
 )
+
+func TestMain(m *testing.M) {
+	var res int
+	defer os.Exit(res)
+
+	var err error
+	pluginFile, err = testutil.CompileGoPlugin(pluginsPath, pluginSourceFile)
+	if err != nil {
+		panic("could not launch validator tests: error while compiling validation plugin")
+	}
+	defer os.Remove(pluginFile)
+
+	res = m.Run()
+}
 
 func initTestCases(t *testing.T) (store.Adapter, []testCase) {
 	store := dummystore.New(nil)
@@ -55,7 +73,8 @@ func initTestCases(t *testing.T) (store.Adapter, []testCase) {
 			Type:    "init",
 		},
 	}
-	priv, _, err := keys.ParseSecretKey([]byte(AlicePrivateKey))
+	priv, _, err := keys.ParseSecretKey([]byte(validator.AlicePrivateKey))
+	require.NoError(t, err)
 	initAuctionLinkHash, err := store.CreateLink(context.Background(), cstesting.SignLinkWithKey(initAuctionLink, priv))
 	require.NoError(t, err)
 
@@ -119,8 +138,11 @@ func TestValidator(t *testing.T) {
 	testFile := utils.CreateTempFile(t, validator.ValidJSONConfig)
 	defer os.Remove(testFile)
 
-	children, err := validator.LoadConfig(testFile, nil)
-	assert.NoError(t, err, "LoadConfig()")
+	children, err := validator.LoadConfig(&validator.Config{
+		RulesPath:   testFile,
+		PluginsPath: pluginsPath,
+	}, nil)
+	require.NoError(t, err, "LoadConfig()")
 
 	v := validator.NewMultiValidator(children)
 

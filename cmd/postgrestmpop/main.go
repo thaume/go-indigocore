@@ -27,15 +27,15 @@ import (
 )
 
 var (
-	validatorFilename = flag.String("rules_filename", validator.DefaultFilename, "Path to filename containing validation rules")
-	version           = "x.x.x"
-	commit            = "00000000000000000000000000000000"
+	version = "x.x.x"
+	commit  = "00000000000000000000000000000000"
 )
 
 func init() {
 	tendermint.RegisterFlags()
 	postgresstore.RegisterFlags()
 	monitoring.RegisterFlags()
+	validator.RegisterFlags()
 }
 
 func main() {
@@ -43,10 +43,10 @@ func main() {
 
 	a := postgresstore.InitializeWithFlags(version, commit)
 	tmpopConfig := &tmpop.Config{
-		Commit:            commit,
-		Version:           version,
-		ValidatorFilename: *validatorFilename,
-		Monitoring:        monitoring.ConfigurationFromFlags(),
+		Commit:     commit,
+		Version:    version,
+		Validation: validator.ConfigurationFromFlags(),
+		Monitoring: monitoring.ConfigurationFromFlags(),
 	}
 	tmpop.Run(
 		monitoring.NewStoreAdapter(a, "postgresstore"),

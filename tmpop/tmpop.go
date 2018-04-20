@@ -26,6 +26,7 @@ import (
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/tmpop/evidences"
 	"github.com/stratumn/go-indigocore/types"
+	"github.com/stratumn/go-indigocore/validator"
 	"github.com/stratumn/merkle"
 	abci "github.com/tendermint/abci/types"
 
@@ -61,8 +62,8 @@ type Config struct {
 	// A git commit hash that will be set in the store's information.
 	Commit string
 
-	// JSON schema rules definition
-	ValidatorFilename string
+	// path to the rules definition and validator plugins
+	Validation *validator.Config
 
 	// Monitoring configuration
 	Monitoring *monitoring.Config
