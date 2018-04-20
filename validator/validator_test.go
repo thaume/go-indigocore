@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package validator
+package validator_test
 
 import (
 	"context"
@@ -29,6 +29,7 @@ import (
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/testutil"
 	"github.com/stratumn/go-indigocore/utils"
+	"github.com/stratumn/go-indigocore/validator"
 )
 
 type testCase struct {
@@ -72,7 +73,7 @@ func initTestCases(t *testing.T) (store.Adapter, []testCase) {
 			Type:    "init",
 		},
 	}
-	priv, _, err := keys.ParseSecretKey([]byte(AlicePrivateKey))
+	priv, _, err := keys.ParseSecretKey([]byte(validator.AlicePrivateKey))
 	require.NoError(t, err)
 	initAuctionLinkHash, err := store.CreateLink(context.Background(), cstesting.SignLinkWithKey(initAuctionLink, priv))
 	require.NoError(t, err)
@@ -134,16 +135,16 @@ func initTestCases(t *testing.T) (store.Adapter, []testCase) {
 }
 
 func TestValidator(t *testing.T) {
-	testFile := utils.CreateTempFile(t, ValidJSONConfig)
+	testFile := utils.CreateTempFile(t, validator.ValidJSONConfig)
 	defer os.Remove(testFile)
 
-	children, err := LoadConfig(&Config{
+	children, err := validator.LoadConfig(&validator.Config{
 		RulesPath:   testFile,
 		PluginsPath: pluginsPath,
 	}, nil)
 	require.NoError(t, err, "LoadConfig()")
 
-	v := NewMultiValidator(children)
+	v := validator.NewMultiValidator(children)
 
 	store, testCases := initTestCases(t)
 	for _, tt := range testCases {

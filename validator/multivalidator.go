@@ -18,7 +18,6 @@ import (
 	"context"
 	"crypto/sha256"
 
-	cj "github.com/gibson042/canonicaljson-go"
 	"github.com/pkg/errors"
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/store"
@@ -41,9 +40,13 @@ func (v multiValidator) ShouldValidate(link *cs.Link) bool {
 }
 
 func (v multiValidator) Hash() (*types.Bytes32, error) {
-	b, err := cj.Marshal(v.validators)
-	if err != nil {
-		return nil, errors.WithStack(err)
+	b := make([]byte, 0)
+	for _, validator := range v.validators {
+		validatorHash, err := validator.Hash()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		b = append(b, validatorHash[:]...)
 	}
 	validationsHash := types.Bytes32(sha256.Sum256(b))
 	return &validationsHash, nil

@@ -32,6 +32,7 @@ import (
 func TestScriptValidator(t *testing.T) {
 	testLink := cstesting.RandomLinkWithProcess("test")
 	testLink.Meta.Type = "init"
+	pluginFile := "testdata/custom_validator.so"
 
 	t.Run("New", func(t *testing.T) {
 
@@ -67,7 +68,7 @@ func TestScriptValidator(t *testing.T) {
 					Type: "bad",
 				},
 				valid: false,
-				err:   "Validation engine does not handle script of type bad, valid types are [go]",
+				err:   errors.Errorf(ErrBadScriptType, "bad", ValidScriptTypes).Error(),
 			},
 			{
 				name: "script-not-found",
@@ -80,7 +81,7 @@ func TestScriptValidator(t *testing.T) {
 					Type: "go",
 				},
 				valid: false,
-				err:   errors.Wrapf(errors.New("plugin.Open(\"test\"): realpath failed"), "Error while loading validation script for process %s and type %s", "test", "invalid").Error(),
+				err:   errors.Wrapf(errors.New("plugin.Open(\"test\"): realpath failed"), ErrLoadingPlugin, "test", "invalid").Error(),
 			},
 			{
 				name: "unknown-script-validator-for-linkType",
@@ -105,7 +106,7 @@ func TestScriptValidator(t *testing.T) {
 					Type: "go",
 				},
 				valid: false,
-				err:   errors.Wrapf(errors.New(ErrBadPlugin), "Error while loading validation script for process %s and type %s", "test", "badSignature").Error(),
+				err:   errors.Wrapf(errors.New(ErrBadPlugin), ErrLoadingPlugin, "test", "badSignature").Error(),
 			},
 		}
 

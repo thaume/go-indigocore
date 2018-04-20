@@ -27,6 +27,8 @@ import (
 
 func TestLoadConfig_Success(t *testing.T) {
 
+	pluginsPath = "testdata"
+
 	t.Run("schema & signatures & transitions & plugins", func(T *testing.T) {
 		testFile := utils.CreateTempFile(t, ValidJSONConfig)
 		defer os.Remove(testFile)

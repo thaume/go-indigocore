@@ -43,7 +43,8 @@ const (
 )
 
 var (
-	validScriptTypes = []string{golang}
+	// ValidScriptTypes contains the handled languages for validation scripts
+	ValidScriptTypes = []string{golang}
 )
 
 // ScriptValidatorFunc is the function called when enforcing a custom validation rule
@@ -51,8 +52,8 @@ type ScriptValidatorFunc = func(store.SegmentReader, *cs.Link) error
 
 type scriptValidator struct {
 	script     ScriptValidatorFunc
-	scriptHash [32]byte
-	config     *validatorBaseConfig
+	ScriptHash types.Bytes32
+	Config     *validatorBaseConfig
 }
 
 func checkScriptType(cfg *scriptConfig) error {
@@ -60,7 +61,7 @@ func checkScriptType(cfg *scriptConfig) error {
 	case golang:
 		return nil
 	default:
-		return errors.Errorf(ErrBadScriptType, cfg.Type, validScriptTypes)
+		return errors.Errorf(ErrBadScriptType, cfg.Type, ValidScriptTypes)
 	}
 }
 
@@ -87,20 +88,14 @@ func newScriptValidator(baseConfig *validatorBaseConfig, scriptCfg *scriptConfig
 	// here we ignore the error since there is no way we cannot read the file if the plugin has been loaded successfully
 	b, _ := ioutil.ReadFile(pluginFile)
 	return &scriptValidator{
-		config:     baseConfig,
+		Config:     baseConfig,
 		script:     customValidator,
-		scriptHash: sha256.Sum256(b),
+		ScriptHash: sha256.Sum256(b),
 	}, nil
 }
 
 func (sv scriptValidator) Hash() (*types.Bytes32, error) {
-	b, err := cj.Marshal(struct {
-		ScriptHash [32]byte
-		Config     *validatorBaseConfig
-	}{
-		ScriptHash: sv.scriptHash,
-		Config:     sv.config,
-	})
+	b, err := cj.Marshal(sv)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -109,7 +104,7 @@ func (sv scriptValidator) Hash() (*types.Bytes32, error) {
 }
 
 func (sv scriptValidator) ShouldValidate(link *cs.Link) bool {
-	return sv.config.ShouldValidate(link)
+	return sv.Config.ShouldValidate(link)
 }
 
 func (sv scriptValidator) Validate(_ context.Context, storeReader store.SegmentReader, link *cs.Link) error {

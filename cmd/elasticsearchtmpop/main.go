@@ -26,16 +26,15 @@ import (
 )
 
 var (
-	validatorFilename = flag.String("rules_filename", validator.DefaultFilename, "Path to filename containing validation rules")
-	pluginsPath       = flag.String("plugins_path", validator.DefaultPluginsDirectory, "Path to the directory containing validation plugins")
-	version           = "x.x.x"
-	commit            = "00000000000000000000000000000000"
+	version = "x.x.x"
+	commit  = "00000000000000000000000000000000"
 )
 
 func init() {
 	tendermint.RegisterFlags()
 	elasticsearchstore.RegisterFlags()
 	monitoring.RegisterFlags()
+	validator.RegisterFlags()
 }
 
 func main() {
@@ -43,12 +42,9 @@ func main() {
 
 	a := elasticsearchstore.InitializeWithFlags(version, commit)
 	tmpopConfig := &tmpop.Config{
-		Commit:  commit,
-		Version: version,
-		Validation: &validator.Config{
-			RulesPath:   *validatorFilename,
-			PluginsPath: *pluginsPath,
-		},
+		Commit:     commit,
+		Version:    version,
+		Validation: validator.ConfigurationFromFlags(),
 		Monitoring: monitoring.ConfigurationFromFlags(),
 	}
 	tmpop.Run(
