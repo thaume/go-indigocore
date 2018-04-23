@@ -198,9 +198,10 @@ func TestGetAllProcesses(t *testing.T) {
 	t.Run("Lot of processeses", func(t *testing.T) {
 		a := dummystore.New(nil)
 		for i := 0; i < store.MaxLimit+42; i++ {
-			link := cstesting.RandomLink()
-			link.Meta.Process = governanceProcessName
-			link.Meta.Tags = []string{fmt.Sprintf("p%d", i), validatorTag}
+			link := cstesting.NewLinkBuilder().
+				WithProcess(governanceProcessName).
+				WithTags([]string{fmt.Sprintf("p%d", i), validatorTag}).
+				Build()
 			_, err := a.CreateLink(context.Background(), link)
 			assert.NoErrorf(t, err, "Cannot insert link %+v", link)
 		}
@@ -234,14 +235,19 @@ func populateStoreWithValidData(t *testing.T, a store.LinkWriter) {
 }
 
 func createGovernanceLink(process string, pki, types json.RawMessage) *cs.Link {
-	link := cstesting.RandomLink()
-	link.Meta.Process = governanceProcessName
-	link.Meta.Priority = 0.
-	link.Meta.Tags = []string{process, validatorTag}
+	state := make(map[string]interface{}, 0)
+
 	var unmarshalledData interface{}
 	json.Unmarshal(pki, &unmarshalledData)
-	link.State["pki"] = unmarshalledData
+	state["pki"] = unmarshalledData
 	json.Unmarshal(types, &unmarshalledData)
-	link.State["types"] = unmarshalledData
+	state["types"] = unmarshalledData
+
+	link := cstesting.NewLinkBuilder().
+		WithProcess(governanceProcessName).
+		WithTags([]string{process, validatorTag}).
+		WithState(state).
+		Build()
+	link.Meta.Priority = 0.
 	return link
 }
