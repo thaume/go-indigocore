@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package validator
+package validation
 
 import (
 	"encoding/json"
@@ -21,6 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stratumn/go-crypto/keys"
+	"github.com/stratumn/go-indigocore/validation/validators"
 )
 
 var (
@@ -34,18 +35,19 @@ var (
 	ErrNoPKI = errors.New("rules.json needs a 'pki' field to list authorized public keys")
 )
 
-type processesRules map[string]rulesSchema
+type processesRules map[string]RulesSchema
 
-type rulesSchema struct {
-	PKI   json.RawMessage `json:"pki"`
-	Types json.RawMessage `json:"types"`
+// RulesSchema represents the structure of validation rules.
+type RulesSchema struct {
+	PKI   validators.PKI        `json:"pki"`
+	Types map[string]TypeSchema `json:"types"`
 }
 
-type rulesListener func(process string, schema rulesSchema, validators []Validator)
+type rulesListener func(process string, schema RulesSchema, validators validators.Validators)
 
 // LoadConfig loads the validators configuration from a json file.
 // The configuration returned can then be used in NewMultiValidator().
-func LoadConfig(validationCfg *Config, listener rulesListener) ([]Validator, error) {
+func LoadConfig(validationCfg *Config, listener rulesListener) (validators.Validators, error) {
 	f, err := os.Open(validationCfg.RulesPath)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -61,7 +63,7 @@ func LoadConfig(validationCfg *Config, listener rulesListener) ([]Validator, err
 
 // LoadConfigContent loads the validators configuration from json data.
 // The configuration returned can then be used in NewMultiValidator().
-func LoadConfigContent(data []byte, pluginsPath string, listener rulesListener) ([]Validator, error) {
+func LoadConfigContent(data []byte, pluginsPath string, listener rulesListener) (validators.Validators, error) {
 	var rules processesRules
 	err := json.Unmarshal(data, &rules)
 	if err != nil {
@@ -72,15 +74,14 @@ func LoadConfigContent(data []byte, pluginsPath string, listener rulesListener) 
 
 // LoadProcessRules loads the validators configuration from a slice of processRule.
 // The configuration returned can then be used in NewMultiValidator().
-func LoadProcessRules(rules processesRules, pluginsPath string, listener rulesListener) ([]Validator, error) {
-	var validators []Validator
+func LoadProcessRules(rules processesRules, pluginsPath string, listener rulesListener) (validators.Validators, error) {
+	var validators validators.Validators
 	for process, schema := range rules {
-		pki, err := loadPKIConfig(schema.PKI)
-		if err != nil {
+		if err := checkPKIConfig(schema.PKI); err != nil {
 			return nil, errors.WithStack(err)
 		}
 
-		processValidators, err := loadValidatorsConfig(process, pluginsPath, schema.Types, pki)
+		processValidators, err := loadValidatorsConfig(process, pluginsPath, schema.Types, &schema.PKI)
 		if err != nil {
 			return nil, err
 		}
@@ -92,58 +93,42 @@ func LoadProcessRules(rules processesRules, pluginsPath string, listener rulesLi
 	return validators, nil
 }
 
-// loadPKIConfig deserializes json into a PKI struct.
-// It checks that public keys are base64 encoded.
-func loadPKIConfig(data json.RawMessage) (*PKI, error) {
+// checkPKIConfig checks that public keys are base64 encoded.
+func checkPKIConfig(data validators.PKI) error {
 	if data == nil {
-		return nil, nil
-	}
-	var jsonData PKI
-	err := json.Unmarshal(data, &jsonData)
-	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil
 	}
 
-	for _, id := range jsonData {
+	for _, id := range data {
 		for _, key := range id.Keys {
 			if _, err := keys.ParsePublicKey([]byte(key)); err != nil {
-				return nil, errors.Wrapf(err, "error while parsing public key [%s]", key)
+				return errors.Wrapf(err, "error while parsing public key [%s]", key)
 			}
 		}
 	}
-	return &jsonData, nil
+	return nil
 }
 
-type jsonValidatorData struct {
-	Signatures  []string         `json:"signatures"`
-	Schema      *json.RawMessage `json:"schema"`
-	Transitions []string         `json:"transitions"`
-	Script      *scriptConfig    `json:"script"`
+// TypeSchema represent the structure of validation rules.
+type TypeSchema struct {
+	Signatures  []string                 `json:"signatures"`
+	Schema      map[string]interface{}   `json:"schema"`
+	Transitions []string                 `json:"transitions"`
+	Script      *validators.ScriptConfig `json:"script"`
 }
 
-type scriptConfig struct {
-	File string `json:"file"`
-	Type string `json:"type"`
-}
-
-func loadValidatorsConfig(process, pluginsPath string, data json.RawMessage, pki *PKI) ([]Validator, error) {
-	var jsonStruct map[string]jsonValidatorData
-	err := json.Unmarshal(data, &jsonStruct)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
+func loadValidatorsConfig(process, pluginsPath string, jsonStruct map[string]TypeSchema, pki *validators.PKI) (validators.Validators, error) {
 	missingTransitionValidation := make([]string, 0)
-	var validators []Validator
+	var validatorList validators.Validators
 	for linkType, val := range jsonStruct {
 		if linkType == "" {
-			return nil, ErrMissingLinkType
+			return nil, validators.ErrMissingLinkType
 		}
 		if len(val.Signatures) == 0 && val.Schema == nil && val.Transitions == nil {
 			return nil, ErrInvalidValidator
 		}
 
-		baseConfig, err := newValidatorBaseConfig(process, linkType)
+		baseConfig, err := validators.NewValidatorBaseConfig(process, linkType)
 		if err != nil {
 			return nil, err
 		}
@@ -152,28 +137,31 @@ func loadValidatorsConfig(process, pluginsPath string, data json.RawMessage, pki
 			if pki == nil {
 				return nil, ErrNoPKI
 			}
-			validators = append(validators, newPkiValidator(baseConfig, val.Signatures, pki))
+			validatorList = append(validatorList, validators.NewPKIValidator(baseConfig, val.Signatures, pki))
 		}
 
 		if val.Schema != nil {
-			schemaData, _ := val.Schema.MarshalJSON()
-			schemaValidator, err := newSchemaValidator(baseConfig, schemaData)
+			schemaData, err := json.Marshal(val.Schema)
 			if err != nil {
 				return nil, err
 			}
-			validators = append(validators, schemaValidator)
+			schemaValidator, err := validators.NewSchemaValidator(baseConfig, schemaData)
+			if err != nil {
+				return nil, err
+			}
+			validatorList = append(validatorList, schemaValidator)
 		}
 
 		if val.Script != nil {
-			scriptValidator, err := newScriptValidator(baseConfig, val.Script, pluginsPath)
+			scriptValidator, err := validators.NewScriptValidator(baseConfig, val.Script, pluginsPath)
 			if err != nil {
 				return nil, err
 			}
-			validators = append(validators, scriptValidator)
+			validatorList = append(validatorList, scriptValidator)
 		}
 
 		if len(val.Transitions) > 0 {
-			validators = append(validators, newTransitionValidator(baseConfig, val.Transitions))
+			validatorList = append(validatorList, validators.NewTransitionValidator(baseConfig, val.Transitions))
 		} else {
 			missingTransitionValidation = append(missingTransitionValidation, linkType)
 		}
@@ -183,5 +171,5 @@ func loadValidatorsConfig(process, pluginsPath string, data json.RawMessage, pki
 		return nil, errors.Errorf("missing transition definition for process %s and linkTypes %v", process, missingTransitionValidation)
 	}
 
-	return validators, nil
+	return validatorList, nil
 }

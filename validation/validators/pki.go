@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package validator
+package validators
 
 import (
 	"context"
@@ -73,22 +73,24 @@ type Identity struct {
 	Roles []string
 }
 
-// pkiValidator validates the json signature of a link's state.
-type pkiValidator struct {
-	Config             *validatorBaseConfig
+// PKIValidator validates the json signature of a link's state.
+type PKIValidator struct {
+	Config             *ValidatorBaseConfig
 	RequiredSignatures []string
 	PKI                *PKI
 }
 
-func newPkiValidator(baseConfig *validatorBaseConfig, required []string, pki *PKI) Validator {
-	return &pkiValidator{
+// NewPKIValidator returns a new PKIValidator
+func NewPKIValidator(baseConfig *ValidatorBaseConfig, required []string, pki *PKI) Validator {
+	return &PKIValidator{
 		Config:             baseConfig,
 		RequiredSignatures: required,
 		PKI:                pki,
 	}
 }
 
-func (pv pkiValidator) Hash() (*types.Bytes32, error) {
+// Hash implements github.com/stratumn/go-indigocore/validation/validators.Validator.Hash.
+func (pv PKIValidator) Hash() (*types.Bytes32, error) {
 	b, err := cj.Marshal(pv)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -97,13 +99,15 @@ func (pv pkiValidator) Hash() (*types.Bytes32, error) {
 	return &validationsHash, nil
 }
 
-func (pv pkiValidator) ShouldValidate(link *cs.Link) bool {
+// ShouldValidate implements github.com/stratumn/go-indigocore/validation/validators.Validator.ShouldValidate.
+func (pv PKIValidator) ShouldValidate(link *cs.Link) bool {
 	return pv.Config.ShouldValidate(link)
 }
 
-// Validate checks that the provided signatures match the required ones.
+// Validate implements github.com/stratumn/go-indigocore/validation/validators.Validator.Validate.
+// it checks that the provided signatures match the required ones.
 // a requirement can either be: a public key, a name defined in PKI, a role defined in PKI.
-func (pv pkiValidator) Validate(_ context.Context, _ store.SegmentReader, link *cs.Link) error {
+func (pv PKIValidator) Validate(_ context.Context, _ store.SegmentReader, link *cs.Link) error {
 	for _, required := range pv.RequiredSignatures {
 		fulfilled := false
 		for _, sig := range link.Signatures {

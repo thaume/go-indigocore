@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package validator
+package validators
 
 import (
 	"context"
@@ -24,22 +24,27 @@ import (
 	"github.com/stratumn/go-indigocore/types"
 )
 
-type multiValidator struct {
+// MultiValidator uses its internal validators to validate a link.
+// It should be the only validator to be called directly, since it will call other validators internally.
+type MultiValidator struct {
 	validators []Validator
 }
 
 // NewMultiValidator creates a validator that will simply be a collection
 // of single-purpose validators.
-// The slice of validators should be loaded from a JSON file via validator.LoadConfig().
+// The slice of validators should be loaded from a JSON file via validation.LoadConfig().
 func NewMultiValidator(validators []Validator) Validator {
-	return &multiValidator{validators}
+	return &MultiValidator{validators}
 }
 
-func (v multiValidator) ShouldValidate(link *cs.Link) bool {
+// ShouldValidate implements github.com/stratumn/go-indigocore/validation/validators.Validator.ShouldValidate.
+func (v MultiValidator) ShouldValidate(link *cs.Link) bool {
 	return true
 }
 
-func (v multiValidator) Hash() (*types.Bytes32, error) {
+// Hash implements github.com/stratumn/go-indigocore/validation/validators.Validator.Hash.
+// It concatenates the hashes from its sub-validators and hashes the result.
+func (v MultiValidator) Hash() (*types.Bytes32, error) {
 	b := make([]byte, 0)
 	for _, validator := range v.validators {
 		validatorHash, err := validator.Hash()
@@ -52,7 +57,7 @@ func (v multiValidator) Hash() (*types.Bytes32, error) {
 	return &validationsHash, nil
 }
 
-func (v multiValidator) matchValidators(l *cs.Link) (linkValidators []Validator) {
+func (v MultiValidator) matchValidators(l *cs.Link) (linkValidators []Validator) {
 	for _, child := range v.validators {
 		if child.ShouldValidate(l) {
 			linkValidators = append(linkValidators, child)
@@ -61,9 +66,10 @@ func (v multiValidator) matchValidators(l *cs.Link) (linkValidators []Validator)
 	return
 }
 
-// Validate runs the validation on every child validator matching the provided link.
+// Validate implements github.com/stratumn/go-indigocore/validation/validators.Validator.Validate.
+// It runs the validation on every child validator matching the provided link.
 // It is the multiValidator's responsability to call child.ShouldValidate() before running the validation.
-func (v multiValidator) Validate(ctx context.Context, r store.SegmentReader, l *cs.Link) error {
+func (v MultiValidator) Validate(ctx context.Context, r store.SegmentReader, l *cs.Link) error {
 	linkValidators := v.matchValidators(l)
 	if len(linkValidators) == 0 {
 		return errors.Errorf("Validation failed: link with process: [%s] and type: [%s] does not match any validator", l.Meta.Process, l.Meta.Type)
