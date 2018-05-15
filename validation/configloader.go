@@ -39,15 +39,15 @@ type processesRules map[string]RulesSchema
 
 // RulesSchema represents the structure of validation rules.
 type RulesSchema struct {
-	PKI   validators.PKI        `json:"pki"`
+	PKI   *validators.PKI       `json:"pki"`
 	Types map[string]TypeSchema `json:"types"`
 }
 
-type rulesListener func(process string, schema RulesSchema, validators validators.Validators)
+type rulesListener func(process string, schema *RulesSchema, validators validators.Validators)
 
 // LoadConfig loads the validators configuration from a json file.
 // The configuration returned can then be used in NewMultiValidator().
-func LoadConfig(validationCfg *Config, listener rulesListener) (validators.Validators, error) {
+func LoadConfig(validationCfg *Config, listener rulesListener) (validators.ProcessesValidators, error) {
 	f, err := os.Open(validationCfg.RulesPath)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -63,43 +63,48 @@ func LoadConfig(validationCfg *Config, listener rulesListener) (validators.Valid
 
 // LoadConfigContent loads the validators configuration from json data.
 // The configuration returned can then be used in NewMultiValidator().
-func LoadConfigContent(data []byte, pluginsPath string, listener rulesListener) (validators.Validators, error) {
+func LoadConfigContent(data []byte, pluginsPath string, listener rulesListener) (validators.ProcessesValidators, error) {
 	var rules processesRules
 	err := json.Unmarshal(data, &rules)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return LoadProcessRules(rules, pluginsPath, listener)
-}
 
-// LoadProcessRules loads the validators configuration from a slice of processRule.
-// The configuration returned can then be used in NewMultiValidator().
-func LoadProcessRules(rules processesRules, pluginsPath string, listener rulesListener) (validators.Validators, error) {
-	var validators validators.Validators
+	validators := make(validators.ProcessesValidators, 0)
 	for process, schema := range rules {
-		if err := checkPKIConfig(schema.PKI); err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		processValidators, err := loadValidatorsConfig(process, pluginsPath, schema.Types, &schema.PKI)
+		validators[process], err = LoadProcessRules(&schema, process, pluginsPath, listener)
 		if err != nil {
 			return nil, err
 		}
-		if listener != nil {
-			listener(process, schema, processValidators)
-		}
-		validators = append(validators, processValidators...)
 	}
+
 	return validators, nil
 }
 
+// LoadProcessRules loads the validators configuration for a single process.
+// The configuration returned can then be used in NewMultiValidator().
+func LoadProcessRules(schema *RulesSchema, process, pluginsPath string, listener rulesListener) (validators.Validators, error) {
+	if err := checkPKIConfig(schema.PKI); err != nil {
+		return nil, err
+	}
+
+	processValidators, err := loadValidatorsConfig(process, pluginsPath, schema.Types, schema.PKI)
+	if err != nil {
+		return nil, err
+	}
+	if listener != nil {
+		listener(process, schema, processValidators)
+	}
+	return processValidators, nil
+}
+
 // checkPKIConfig checks that public keys are base64 encoded.
-func checkPKIConfig(data validators.PKI) error {
+func checkPKIConfig(data *validators.PKI) error {
 	if data == nil {
 		return nil
 	}
 
-	for _, id := range data {
+	for _, id := range *data {
 		for _, key := range id.Keys {
 			if _, err := keys.ParsePublicKey([]byte(key)); err != nil {
 				return errors.Wrapf(err, "error while parsing public key [%s]", key)
