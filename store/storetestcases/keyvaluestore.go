@@ -25,6 +25,7 @@ import (
 
 	"github.com/stratumn/go-indigocore/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestKeyValueStore runs all tests for the store.KeyValueStore interface
@@ -54,7 +55,9 @@ func (f Factory) TestKeyValueStore(t *testing.T) {
 		k := testutil.RandomKey()
 		v1 := testutil.RandomValue()
 
-		a.SetValue(ctx, k, v1)
+		err := a.SetValue(ctx, k, v1)
+		require.NoError(t, err, "a.SetValue()")
+
 		v2, err := a.GetValue(ctx, k)
 		assert.NoError(t, err, "a.GetValue()")
 		assert.EqualValues(t, v1, v2, "a.GetValue()")
@@ -71,7 +74,8 @@ func (f Factory) TestKeyValueStore(t *testing.T) {
 		ctx := context.Background()
 		key := testutil.RandomKey()
 		value1 := testutil.RandomValue()
-		a.SetValue(ctx, key, value1)
+		err := a.SetValue(ctx, key, value1)
+		require.NoError(t, err, "a.SetValue()")
 
 		value2, err := a.DeleteValue(ctx, key)
 		assert.NoError(t, err, "a.DeleteValue()")
@@ -98,7 +102,11 @@ func (f Factory) BenchmarkGetValue(b *testing.B) {
 	values := make([][]byte, b.N)
 	for i := 0; i < b.N; i++ {
 		v := testutil.RandomKey()
-		a.SetValue(context.Background(), v, v)
+		err := a.SetValue(context.Background(), v, v)
+		if err != nil {
+			b.Fatal(err)
+		}
+
 		values[i] = v
 	}
 
@@ -122,7 +130,11 @@ func (f Factory) BenchmarkGetValueParallel(b *testing.B) {
 	values := make([][]byte, b.N)
 	for i := 0; i < b.N; i++ {
 		v := testutil.RandomKey()
-		a.SetValue(context.Background(), v, v)
+		err := a.SetValue(context.Background(), v, v)
+		if err != nil {
+			b.Fatal(err)
+		}
+
 		values[i] = v
 	}
 
@@ -207,7 +219,11 @@ func (f Factory) BenchmarkDeleteValue(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		k, strkey := searchNewKey(values)
 		v := testutil.RandomValue()
-		a.SetValue(context.Background(), k, v)
+		err := a.SetValue(context.Background(), k, v)
+		if err != nil {
+			b.Fatal(err)
+		}
+
 		values[strkey] = k
 	}
 
@@ -233,7 +249,11 @@ func (f Factory) BenchmarkDeleteValueParallel(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		k, strkey := searchNewKey(mapvalues)
 		v := testutil.RandomValue()
-		a.SetValue(context.Background(), k, v)
+		err := a.SetValue(context.Background(), k, v)
+		if err != nil {
+			b.Fatal(err)
+		}
+
 		mapvalues[strkey] = k
 	}
 	values := make([][]byte, 0, b.N)

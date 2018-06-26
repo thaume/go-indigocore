@@ -26,6 +26,7 @@ import (
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestGetMapIDs tests what happens when you get map IDs.
@@ -41,7 +42,8 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 				WithProcess(processNames[i%2]).
 				WithMapID(fmt.Sprintf("map%d", i)).
 				Build()
-			a.CreateLink(context.Background(), l)
+			_, err := a.CreateLink(context.Background(), l)
+			require.NoError(t, err)
 		}
 	}
 
@@ -102,7 +104,10 @@ func (f Factory) BenchmarkGetMapIDs(b *testing.B, numLinks int, createLinkFunc C
 	defer f.freeAdapter(a)
 
 	for i := 0; i < numLinks; i++ {
-		a.CreateLink(context.Background(), createLinkFunc(b, numLinks, i))
+		_, err := a.CreateLink(context.Background(), createLinkFunc(b, numLinks, i))
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 
 	filters := make([]*store.MapFilter, b.N)
@@ -143,7 +148,10 @@ func (f Factory) BenchmarkGetMapIDsParallel(b *testing.B, numLinks int, createLi
 	defer f.freeAdapter(a)
 
 	for i := 0; i < numLinks; i++ {
-		a.CreateLink(context.Background(), createLinkFunc(b, numLinks, i))
+		_, err := a.CreateLink(context.Background(), createLinkFunc(b, numLinks, i))
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 
 	filters := make([]*store.MapFilter, b.N)

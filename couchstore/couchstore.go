@@ -82,27 +82,27 @@ func New(config *Config) (*CouchStore, error) {
 		return nil, &CouchNotReadyError{originalError: err}
 	}
 
-	if couchResponseStatus.Ok == false {
+	if !couchResponseStatus.Ok {
 		return nil, couchResponseStatus.error()
 	}
 
 	// required couchdb system database
-	if err := couchstore.createDatabase("_users"); err != nil {
+	if err := couchstore.CreateDatabase("_users"); err != nil {
 		return nil, err
 	}
 
 	// required couchdb system database
-	if err := couchstore.createDatabase("_replicator"); err != nil {
+	if err := couchstore.CreateDatabase("_replicator"); err != nil {
 		return nil, err
 	}
 
-	if err := couchstore.createDatabase(dbLink); err != nil {
+	if err := couchstore.CreateDatabase(dbLink); err != nil {
 		return nil, err
 	}
-	if err := couchstore.createDatabase(dbEvidences); err != nil {
+	if err := couchstore.CreateDatabase(dbEvidences); err != nil {
 		return nil, err
 	}
-	if err := couchstore.createDatabase(dbValue); err != nil {
+	if err := couchstore.CreateDatabase(dbValue); err != nil {
 		return nil, err
 	}
 
@@ -183,7 +183,7 @@ func (c *CouchStore) FindSegments(ctx context.Context, filter *store.SegmentFilt
 		return nil, err
 	}
 
-	if couchResponseStatus.Ok == false {
+	if !couchResponseStatus.Ok {
 		return nil, couchResponseStatus.error()
 	}
 
@@ -213,7 +213,7 @@ func (c *CouchStore) GetMapIDs(ctx context.Context, filter *store.MapFilter) ([]
 		return nil, err
 	}
 
-	if couchResponseStatus.Ok == false {
+	if !couchResponseStatus.Ok {
 		return nil, couchResponseStatus.error()
 	}
 

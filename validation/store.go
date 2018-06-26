@@ -86,7 +86,7 @@ func NewStore(adapter store.Adapter, validationCfg *Config) *Store {
 // GetValidators returns the list of validators for each process by fetching them from the store.
 func (s *Store) GetValidators(ctx context.Context) (validators.ProcessesValidators, error) {
 	var err error
-	validators := make(validators.ProcessesValidators, 0)
+	validators := make(validators.ProcessesValidators)
 
 	for _, process := range s.GetAllProcesses(ctx) {
 		validators[process], err = s.getProcessValidators(ctx, process)
@@ -100,7 +100,7 @@ func (s *Store) GetValidators(ctx context.Context) (validators.ProcessesValidato
 
 // GetAllProcesses returns the list of processes for which governance rules have been found.
 func (s *Store) GetAllProcesses(ctx context.Context) []string {
-	processSet := make(map[string]interface{}, 0)
+	processSet := make(map[string]interface{})
 	for offset := 0; offset >= 0; {
 		segments, err := s.store.FindSegments(ctx, &store.SegmentFilter{
 			Pagination: store.Pagination{Offset: offset, Limit: store.MaxLimit},

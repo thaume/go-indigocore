@@ -90,10 +90,10 @@ func New(config *Config) (*FileStore, error) {
 	}
 
 	return &FileStore{
-		config,
-		nil,
-		sync.RWMutex{},
-		monitoring.NewKeyValueStoreAdapter(db, "leveldbstore"),
+		config:     config,
+		eventChans: nil,
+		mutex:      sync.RWMutex{},
+		kvDB:       monitoring.NewKeyValueStoreAdapter(db, "leveldbstore"),
 	}, nil
 }
 
@@ -224,12 +224,16 @@ func (a *FileStore) getSegment(ctx context.Context, linkHash *types.Bytes32) (_ 
 func (a *FileStore) FindSegments(ctx context.Context, filter *store.SegmentFilter) (cs.SegmentSlice, error) {
 	var segments cs.SegmentSlice
 
-	a.forEach(ctx, func(segment *cs.Segment) error {
+	err := a.forEach(ctx, func(segment *cs.Segment) error {
 		if filter.Match(segment) {
 			segments = append(segments, segment)
 		}
 		return nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	sort.Sort(segments)
 
@@ -239,12 +243,17 @@ func (a *FileStore) FindSegments(ctx context.Context, filter *store.SegmentFilte
 // GetMapIDs implements github.com/stratumn/go-indigocore/store.SegmentReader.GetMapIDs.
 func (a *FileStore) GetMapIDs(ctx context.Context, filter *store.MapFilter) ([]string, error) {
 	set := map[string]struct{}{}
-	a.forEach(ctx, func(segment *cs.Segment) error {
+	err := a.forEach(ctx, func(segment *cs.Segment) error {
 		if filter.Match(segment) {
 			set[segment.Link.Meta.MapID] = struct{}{}
 		}
+
 		return nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	var mapIDs []string
 	for mapID := range set {
@@ -264,7 +273,7 @@ func (a *FileStore) GetEvidences(ctx context.Context, linkHash *types.Bytes32) (
 	}
 
 	evidences := cs.Evidences{}
-	if evidencesData != nil && len(evidencesData) > 0 {
+	if len(evidencesData) > 0 {
 		if err := json.Unmarshal(evidencesData, &evidences); err != nil {
 			return nil, err
 		}
@@ -328,7 +337,7 @@ func (a *FileStore) getLinkPath(linkHash *types.Bytes32) string {
 	return path.Join(a.config.Path, linkHash.String()+".json")
 }
 
-var linkFileRegex = regexp.MustCompile("(.*)\\.json$")
+var linkFileRegex = regexp.MustCompile(`(.*)\.json$`)
 
 func (a *FileStore) forEach(ctx context.Context, fn func(*cs.Segment) error) error {
 	a.mutex.RLock()

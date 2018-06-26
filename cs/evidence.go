@@ -17,12 +17,13 @@ package cs
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 // DeserializeMethods maps a proof backend (like "TMPop") to a deserializer function returning a specific proof
-var DeserializeMethods = make(map[string]func(json.RawMessage) (Proof, error), 0)
+var DeserializeMethods = make(map[string]func(json.RawMessage) (Proof, error))
 
 // Evidences encapsulates a list of evidences contained in Segment.Meta
 type Evidences []*Evidence
@@ -70,7 +71,12 @@ func (e *Evidence) UnmarshalJSON(data []byte) error {
 		Provider string          `json:"provider"`
 		Proof    json.RawMessage `json:"proof"`
 	}{}
-	json.Unmarshal(data, &serialized)
+
+	err := json.Unmarshal(data, &serialized)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
 	deserializer, exists := DeserializeMethods[serialized.Backend]
 	if !exists {
 		return errors.New("Evidence type does not exist")

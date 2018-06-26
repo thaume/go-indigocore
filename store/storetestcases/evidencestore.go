@@ -20,6 +20,7 @@ import (
 
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/cs/cstesting"
+	"github.com/stretchr/testify/require"
 	// Needed to serialize fossilizers evidence types.
 	_ "github.com/stratumn/go-indigocore/fossilizer/evidences"
 	"github.com/stratumn/go-indigocore/store"
@@ -65,7 +66,9 @@ func (f Factory) TestEvidenceStore(t *testing.T) {
 		e1 := cs.Evidence{Backend: "TMPop", Provider: "42"}
 		e2 := cs.Evidence{Backend: "dummy", Provider: "42"}
 
-		s.AddEvidence(ctx, linkHash, &e1)
+		err := s.AddEvidence(ctx, linkHash, &e1)
+		require.NoError(t, err, "s.AddEvidence()")
+		// Add duplicate - some stores return an error, others silently ignore
 		s.AddEvidence(ctx, linkHash, &e2)
 
 		storedEvidences, err := s.GetEvidences(ctx, linkHash)

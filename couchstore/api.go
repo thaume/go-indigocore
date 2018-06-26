@@ -39,9 +39,8 @@ const (
 	dbEvidences = "pop_evidences"
 	dbValue     = "kv"
 
-	objectTypeLink      = "link"
-	objectTypeEvidences = "evidences"
-	objectTypeMap       = "map"
+	objectTypeLink = "link"
+	objectTypeMap  = "map"
 )
 
 // CouchResponseStatus contains couch specific response when querying the API.
@@ -81,7 +80,8 @@ type BulkDocuments struct {
 	Atomic    bool        `json:"all_or_nothing,omitempty"`
 }
 
-func (c *CouchStore) getDatabases() ([]string, error) {
+// GetDatabases lists available databases.
+func (c *CouchStore) GetDatabases() ([]string, error) {
 	body, _, err := c.get("/_all_dbs")
 	if err != nil {
 		return nil, err
@@ -94,13 +94,14 @@ func (c *CouchStore) getDatabases() ([]string, error) {
 	return *databases, nil
 }
 
-func (c *CouchStore) createDatabase(dbName string) error {
+// CreateDatabase creates a database.
+func (c *CouchStore) CreateDatabase(dbName string) error {
 	_, couchResponseStatus, err := c.put("/"+dbName, nil)
 	if err != nil {
 		return err
 	}
 
-	if couchResponseStatus.Ok == false {
+	if !couchResponseStatus.Ok {
 		if couchResponseStatus.StatusCode == statusDBExists {
 			return nil
 		}
@@ -111,7 +112,7 @@ func (c *CouchStore) createDatabase(dbName string) error {
 	return utils.Retry(func(attempt int) (bool, error) {
 		path := fmt.Sprintf("/%s", dbName)
 		_, couchResponseStatus, err := c.doHTTPRequest(http.MethodGet, path, nil)
-		if err != nil || couchResponseStatus.Ok == false {
+		if err != nil || !couchResponseStatus.Ok {
 			time.Sleep(200 * time.Millisecond)
 			return true, err
 		}
@@ -119,13 +120,14 @@ func (c *CouchStore) createDatabase(dbName string) error {
 	}, 10)
 }
 
-func (c *CouchStore) deleteDatabase(name string) error {
+// DeleteDatabase deletes a database.
+func (c *CouchStore) DeleteDatabase(name string) error {
 	_, couchResponseStatus, err := c.delete("/" + name)
 	if err != nil {
 		return err
 	}
 
-	if couchResponseStatus.Ok == false {
+	if !couchResponseStatus.Ok {
 		if couchResponseStatus.StatusCode != statusDBMissing {
 			return couchResponseStatus.error()
 		}
@@ -208,7 +210,7 @@ func (c *CouchStore) saveDocument(dbName string, key string, doc Document) error
 	if err != nil {
 		return err
 	}
-	if couchResponseStatus.Ok == false {
+	if !couchResponseStatus.Ok {
 		return couchResponseStatus.error()
 	}
 
@@ -243,7 +245,7 @@ func (c *CouchStore) getDocument(dbName string, key string) (*Document, error) {
 		return nil, nil
 	}
 
-	if couchResponseStatus.Ok == false {
+	if !couchResponseStatus.Ok {
 		return nil, couchResponseStatus.error()
 	}
 
@@ -270,7 +272,7 @@ func (c *CouchStore) deleteDocument(dbName string, key string) (*Document, error
 		return nil, err
 	}
 
-	if couchResponseStatus.Ok == false {
+	if !couchResponseStatus.Ok {
 		return nil, errors.New(couchResponseStatus.Reason)
 	}
 
