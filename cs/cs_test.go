@@ -16,6 +16,7 @@ package cs_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"math/rand"
 	"sort"
@@ -89,6 +90,110 @@ func TestSegmentValidate_invalidLinkHash(t *testing.T) {
 	}
 	err := s.Validate(context.Background(), nil)
 	assert.Error(t, err)
+}
+
+func TestLinkState(t *testing.T) {
+
+	type testStruct struct {
+		Test string `json:"test"`
+	}
+
+	t.Run("JSON encoding", func(t *testing.T) {
+		state := cs.LinkState{
+			Data: map[string]interface{}{
+				"test": "jean-pierre",
+			},
+		}
+		stateBytes, err := json.Marshal(state)
+		assert.NoError(t, err)
+		assert.Equal(t, []byte(`{"test":"jean-pierre"}`), stateBytes)
+
+		err = json.Unmarshal(stateBytes, &state)
+		assert.NoError(t, err)
+		assert.EqualValues(t, map[string]interface{}{"test": "jean-pierre"}, state.Data)
+
+		state.Data = func() {}
+		_, err = json.Marshal(state)
+		assert.Error(t, err)
+	})
+
+	t.Run("Structurize", func(t *testing.T) {
+		t.Run("transforms into custom type", func(t *testing.T) {
+			state := cs.LinkState{
+				Data: map[string]interface{}{
+					"test": "jean-pierre",
+				},
+			}
+			err := state.Structurize(&testStruct{})
+			assert.NoError(t, err)
+			assert.IsType(t, &testStruct{}, state.Data)
+			assert.Equal(t, "jean-pierre", state.Data.(*testStruct).Test)
+		})
+
+		t.Run("fails when type does not match", func(t *testing.T) {
+			state := cs.LinkState{
+				Data: map[string]interface{}{
+					"test": true,
+				},
+			}
+			err := state.Structurize(&testStruct{})
+			assert.Error(t, err)
+		})
+	})
+
+	t.Run("Get", func(t *testing.T) {
+		t.Run("retrieves a value from the state", func(t *testing.T) {
+			state := cs.LinkState{
+				Data: map[string]interface{}{
+					"test": "jean-pierre",
+				},
+			}
+			val, err := state.Get("test")
+			assert.NoError(t, err)
+			assert.Equal(t, "jean-pierre", val)
+		})
+
+		t.Run("returns nil when the key does not exist", func(t *testing.T) {
+			state := cs.LinkState{
+				Data: map[string]interface{}{
+					"test": "jean-pierre",
+				},
+			}
+			val, err := state.Get("none")
+			assert.NoError(t, err)
+			assert.Nil(t, val)
+		})
+
+		t.Run("fails when the state is not a map", func(t *testing.T) {
+			state := cs.LinkState{
+				Data: "test",
+			}
+			_, err := state.Get("test")
+			assert.EqualError(t, err, cs.ErrBadStateType.Error())
+		})
+	})
+
+	t.Run("Set", func(t *testing.T) {
+		t.Run("sets the value in the state ", func(t *testing.T) {
+			state := cs.LinkState{
+				Data: map[string]interface{}{},
+			}
+			err := state.Set("key", "value")
+			assert.NoError(t, err)
+
+			val, err := state.Get("key")
+			assert.NoError(t, err)
+			assert.Equal(t, "value", val)
+		})
+
+		t.Run("fails when the state is not a map", func(t *testing.T) {
+			state := cs.LinkState{
+				Data: "test",
+			}
+			err := state.Set("key", "value")
+			assert.EqualError(t, err, cs.ErrBadStateType.Error())
+		})
+	})
 }
 
 func TestLinkValidate_processEmpty(t *testing.T) {
