@@ -41,7 +41,7 @@ func (lb *LinkBuilder) Invalid() *LinkBuilder {
 
 // WithState fills the link's state.
 func (lb *LinkBuilder) WithState(state interface{}) *LinkBuilder {
-	lb.Link.State.Data = state
+	lb.Link.State = state
 	return lb
 }
 

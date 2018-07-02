@@ -141,11 +141,11 @@ func (s *Store) getProcessValidators(ctx context.Context, process string) (valid
 	}
 
 	lastSchemaLink := segments[0].Link
-	if err := lastSchemaLink.State.Structurize(&RulesSchema{}); err != nil {
+	if err := lastSchemaLink.StructurizeState(&RulesSchema{}); err != nil {
 		return nil, ErrBadGovernanceSegment
 	}
 
-	return LoadProcessRules(lastSchemaLink.State.Data.(*RulesSchema), process, s.validationCfg.PluginsPath, nil)
+	return LoadProcessRules(lastSchemaLink.State.(*RulesSchema), process, s.validationCfg.PluginsPath, nil)
 }
 
 // UpdateValidator replaces the current validation rules in the store by the provided ones.
@@ -242,7 +242,7 @@ func (s *Store) LinkFromSchema(ctx context.Context, process string, schema *Rule
 	}
 
 	return &cs.Link{
-		State:      cs.LinkState{Data: schema},
+		State:      schema,
 		Meta:       linkMeta,
 		Signatures: cs.Signatures{},
 	}, nil

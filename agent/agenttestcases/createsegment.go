@@ -33,7 +33,8 @@ func (f Factory) TestCreateSegmentOK(t *testing.T) {
 	segment, err := f.Client.CreateSegment(process, parent.GetLinkHash(), action, nil, "test")
 	assert.NoError(t, err)
 	assert.NotNil(t, segment)
-	title, _ := segment.Link.State.Get("title")
+	title, ok := segment.Link.State.(map[string]interface{})["title"]
+	assert.True(t, ok)
 	assert.EqualValues(t, "test", title)
 }
 

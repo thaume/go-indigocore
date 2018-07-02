@@ -28,12 +28,7 @@ import (
 	"github.com/stratumn/go-crypto/keys"
 	"github.com/stratumn/go-crypto/signatures"
 	"github.com/stratumn/go-indigocore/types"
-)
-
-var (
-	// ErrBadStateType is returned when trying to (de)serialize
-	// the link state from/to an incompatible type.
-	ErrBadStateType = errors.New("bad state type")
+	"github.com/stratumn/go-indigocore/utils"
 )
 
 // Segment contains a link and meta data about the link.
@@ -149,65 +144,9 @@ type LinkMeta struct {
 	Data         map[string]interface{} `json:"data"`
 }
 
-// LinkState contains arbitrary data.
-// It implements json.Marshaler and json.Unmarshaler.
-type LinkState struct {
-	Data interface{}
-}
-
-// Structurize transforms the state into a custom type.
-// The provided argument should be a pointer to struct (passing a literal type will fail).
-// On success, 'stateType' will be overriden with the state's data matching its JSON structure.
-func (ls *LinkState) Structurize(stateType interface{}) error {
-	stateBytes, err := json.Marshal(ls.Data)
-	if err != nil {
-		return errors.Wrap(err, ErrBadStateType.Error())
-	}
-	if err := json.Unmarshal(stateBytes, stateType); err != nil {
-		return errors.Wrap(err, ErrBadStateType.Error())
-	}
-	ls.Data = stateType
-	return nil
-}
-
-// Get tries to cast the state to a map[string]interface{}
-// and returns the value matching the key.
-// If the key does not exist, the returned value is nil.
-func (ls *LinkState) Get(key string) (interface{}, error) {
-	stateMap, ok := ls.Data.(map[string]interface{})
-	if !ok {
-		return nil, ErrBadStateType
-	}
-	value := stateMap[key]
-	return value, nil
-}
-
-// Set tries to cast the state to a map[string]interface{}
-// and assigns the value to the key.
-func (ls *LinkState) Set(key string, value interface{}) error {
-	stateMap, ok := ls.Data.(map[string]interface{})
-	if !ok {
-		return ErrBadStateType
-	}
-	stateMap[key] = value
-	return nil
-}
-
-// MarshalJSON is the method needed to implement json.Marshaler.
-// It allows not adding the "data" key to our struct.
-func (ls LinkState) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ls.Data)
-}
-
-// UnmarshalJSON is the method needed to implement json.Unmarshaler.
-// It allows parsing data without the "data" key.
-func (ls *LinkState) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &ls.Data)
-}
-
 // Link contains a state and meta data about the state.
 type Link struct {
-	State      LinkState    `json:"state"`
+	State      interface{}  `json:"state"`
 	Meta       LinkMeta     `json:"meta"`
 	Signatures []*Signature `json:"signatures"`
 }
@@ -359,6 +298,17 @@ func (l Link) Search(jsonQuery string) (interface{}, error) {
 		return nil, err
 	}
 	return jmespath.Search(jsonQuery, cloned)
+}
+
+// StructurizeState converts the interface into a concrete type,
+// filling the value pointed at by stateType.
+func (l *Link) StructurizeState(stateType interface{}) error {
+	err := utils.Structurize(l.State, stateType)
+	if err != nil {
+		return err
+	}
+	l.State = stateType
+	return nil
 }
 
 // SegmentSlice is a slice of segment pointers.
