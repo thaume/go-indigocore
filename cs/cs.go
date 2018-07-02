@@ -272,6 +272,27 @@ func (l Link) Segmentify() *Segment {
 	}
 }
 
+// StructurizeState converts the state into a concrete type,
+// filling the value pointed at by stateType.
+func (l *Link) StructurizeState(stateType interface{}) error {
+	err := utils.Structurize(l.State, stateType)
+	if err != nil {
+		return err
+	}
+	l.State = stateType
+	return nil
+}
+
+// DestructurizeState converts the state to a json object.
+func (l *Link) DestructurizeState() error {
+	stateMap, err := utils.Destructurize(l.State)
+	if err != nil {
+		return err
+	}
+	l.State = stateMap
+	return nil
+}
+
 // Clone returns a copy of the link.
 // Since it uses the json Marshaler, the state is automatically
 // converted to a map[string]interface if it is a custom struct.
@@ -298,17 +319,6 @@ func (l Link) Search(jsonQuery string) (interface{}, error) {
 		return nil, err
 	}
 	return jmespath.Search(jsonQuery, cloned)
-}
-
-// StructurizeState converts the interface into a concrete type,
-// filling the value pointed at by stateType.
-func (l *Link) StructurizeState(stateType interface{}) error {
-	err := utils.Structurize(l.State, stateType)
-	if err != nil {
-		return err
-	}
-	l.State = stateType
-	return nil
 }
 
 // SegmentSlice is a slice of segment pointers.

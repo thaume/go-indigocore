@@ -86,6 +86,20 @@ func TestNewSignature(t *testing.T) {
 		assert.Error(t, err)
 	})
 
+	t.Run("State is deserialized before signing", func(t *testing.T) {
+		type testStruct struct {
+			Test interface{} `json:"test"`
+		}
+		link := cstesting.NewLinkBuilder().
+			WithState(map[string]testStruct{
+				"one": testStruct{Test: 1},
+			}).Build()
+
+		payloadPath := "state.one.test"
+		_, err := cs.NewSignature(payloadPath, privPEM, link)
+		require.NoError(t, err)
+	})
+
 }
 
 func TestSignatureValidator(t *testing.T) {

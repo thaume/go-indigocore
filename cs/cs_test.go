@@ -392,7 +392,7 @@ func TestSearch(t *testing.T) {
 
 	t.Run("returns the matching payload", func(t *testing.T) {
 		link := cstesting.NewLinkBuilder().
-			WithState(map[string]interface{}{
+			WithState(map[string]testStruct{
 				"entry": testStruct{Value: testValue},
 			}).
 			WithProcess(testProcess).

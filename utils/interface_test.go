@@ -21,11 +21,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStructurize(t *testing.T) {
+type testStruct struct {
+	Test string `json:"test"`
+}
 
-	type testStruct struct {
-		Test string `json:"test"`
-	}
+func TestStructurize(t *testing.T) {
 
 	t.Run("transforms into custom type", func(t *testing.T) {
 		src := map[string]interface{}{
@@ -42,6 +42,22 @@ func TestStructurize(t *testing.T) {
 			"test": true,
 		}
 		err := utils.Structurize(src, &testStruct{})
+		assert.Error(t, err)
+	})
+}
+
+func TestDestructurize(t *testing.T) {
+
+	t.Run("transforms into json map", func(t *testing.T) {
+		src := testStruct{Test: "jean-pierre"}
+		dest, err := utils.Destructurize(src)
+		assert.NoError(t, err)
+		assert.Equal(t, "jean-pierre", dest["test"])
+	})
+
+	t.Run("fails when type does not match", func(t *testing.T) {
+		src := "fail"
+		_, err := utils.Destructurize(src)
 		assert.Error(t, err)
 	})
 }
