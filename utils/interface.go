@@ -39,3 +39,17 @@ func Structurize(src interface{}, dest interface{}) error {
 	}
 	return nil
 }
+
+// Destructurize deserializes the state into a map.
+// This is needed in case.
+func Destructurize(src interface{}) (map[string]interface{}, error) {
+	var destMap map[string]interface{}
+	srcBytes, err := json.Marshal(src)
+	if err != nil {
+		return nil, errors.Wrap(err, ErrBadTypeStructure.Error())
+	}
+	if err := json.Unmarshal(srcBytes, &destMap); err != nil {
+		return nil, errors.Wrap(err, ErrBadTypeStructure.Error())
+	}
+	return destMap, nil
+}
