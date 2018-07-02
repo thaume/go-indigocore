@@ -243,7 +243,7 @@ func fromLink(link *cs.Link) (*linkDoc, error) {
 		StateTokens: []string{},
 	}
 
-	doc.extractTokens(link.State.Data)
+	doc.extractTokens(link.State)
 
 	return &doc, nil
 }

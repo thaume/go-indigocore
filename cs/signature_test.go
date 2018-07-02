@@ -81,7 +81,7 @@ func TestNewSignature(t *testing.T) {
 			}).
 			Build()
 		payloadPath := "[state,meta]"
-		_ = link.State.Set("test", func() {})
+		link.State.(map[string]interface{})["test"] = func() {}
 		_, err := cs.NewSignature(payloadPath, privPEM, link)
 		assert.Error(t, err)
 	})

@@ -45,10 +45,8 @@ func createLink(process, linkType, mapID, prevLinkHash string, tags []string, pr
 	}
 
 	link := &cs.Link{
-		State: cs.LinkState{
-			Data: map[string]interface{}{
-				"random": testutil.RandomString(12),
-			},
+		State: map[string]interface{}{
+			"random": testutil.RandomString(12),
 		},
 		Meta:       linkMeta,
 		Signatures: cs.Signatures{},
@@ -81,7 +79,7 @@ func RandomEvidence() *cs.Evidence {
 func ChangeState(l *cs.Link) *cs.Link {
 	clone, _ := l.Clone()
 	// We assume that the link's state is already a map, so we ignore the error.
-	_ = clone.State.Set("random", testutil.RandomString(12))
+	clone.State.(map[string]interface{})["random"] = testutil.RandomString(12)
 	return clone
 }
 

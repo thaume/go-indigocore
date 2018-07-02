@@ -90,11 +90,9 @@ func initTestCases(t *testing.T) (store.Adapter, []testCase) {
 	}, {
 		name: "valid-link",
 		link: &cs.Link{
-			State: cs.LinkState{
-				Data: map[string]interface{}{
-					"buyer":    "alice",
-					"bidPrice": 42,
-				},
+			State: map[string]interface{}{
+				"buyer":    "alice",
+				"bidPrice": 42,
 			},
 			Meta: cs.LinkMeta{
 				Process:      "auction",
@@ -115,10 +113,8 @@ func initTestCases(t *testing.T) (store.Adapter, []testCase) {
 	}, {
 		name: "missing-required-field",
 		link: &cs.Link{
-			State: cs.LinkState{
-				Data: map[string]interface{}{
-					"to": "bob",
-				},
+			State: map[string]interface{}{
+				"to": "bob",
 			},
 			Meta: cs.LinkMeta{
 				Process: "chat",
@@ -129,11 +125,9 @@ func initTestCases(t *testing.T) (store.Adapter, []testCase) {
 	}, {
 		name: "invalid-field-value",
 		link: &cs.Link{
-			State: cs.LinkState{
-				Data: map[string]interface{}{
-					"buyer":    "alice",
-					"bidPrice": -10,
-				},
+			State: map[string]interface{}{
+				"buyer":    "alice",
+				"bidPrice": -10,
 			},
 			Meta: cs.LinkMeta{
 				Process: "auction",
