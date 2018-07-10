@@ -377,6 +377,28 @@ func (f Factory) TestFindSegments(t *testing.T) {
 		assert.True(t, len(got[0].Meta.Evidences) >= 4)
 	})
 
+	t.Run("Resists to SQL injections in process filter", func(t *testing.T) {
+		ctx := context.Background()
+		slice, err := a.FindSegments(ctx, &store.SegmentFilter{
+			Pagination: store.Pagination{
+				Limit: segmentsTotalCount,
+			},
+			Process: "Foo' or 'bar' = 'bar'--",
+		})
+		verifyResultsCount(t, err, slice, 0)
+	})
+
+	t.Run("Resists to SQL injections in mapIDs filter", func(t *testing.T) {
+		ctx := context.Background()
+		slice, err := a.FindSegments(ctx, &store.SegmentFilter{
+			Pagination: store.Pagination{
+				Limit: segmentsTotalCount,
+			},
+			MapIDs: []string{"Foo') or 'bar' = 'bar'--", "plap"},
+		})
+		verifyResultsCount(t, err, slice, 0)
+	})
+
 }
 
 // BenchmarkFindSegments benchmarks finding segments.

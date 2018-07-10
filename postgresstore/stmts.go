@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lib/pq"
+
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/types"
@@ -262,19 +264,10 @@ func newBatchStmts(tx *sql.Tx) (*batchStmts, error) {
 	return &s, nil
 }
 
-// FindSegments formats a read query and retrives segments according to the filter.
+// FindSegments formats a read query and retrieves segments according to the filter.
 func (s *readStmts) FindSegmentsWithFilters(filter *store.SegmentFilter) (*sql.Rows, error) {
-	query, err := formatFindSegmentsQuery(filter)
-	if err != nil {
-		return nil, err
-	}
-	return s.query(query)
-}
-
-func formatFindSegmentsQuery(filter *store.SegmentFilter) (string, error) {
-	sqlHead := `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
+	sqlHead := `SELECT l.link_hash, l.data, e.data FROM links l
+	LEFT JOIN evidences e ON l.link_hash = e.link_hash
 	`
 
 	sqlTail := fmt.Sprintf(`
@@ -286,42 +279,52 @@ func formatFindSegmentsQuery(filter *store.SegmentFilter) (string, error) {
 	)
 
 	filters := []string{}
+	values := []interface{}{}
+	cnt := 1
 
 	if len(filter.MapIDs) > 0 {
-		f := fmt.Sprintf("map_id IN ('%s')", strings.Join(filter.MapIDs, "','"))
-		filters = append(filters, f)
+		filters = append(filters, fmt.Sprintf("map_id = ANY($%d::text[])", cnt))
+		values = append(values, pq.Array(filter.MapIDs))
+		cnt++
 	}
 
 	if filter.Process != "" {
-		f := fmt.Sprintf("process = '%s'", filter.Process)
-		filters = append(filters, f)
+		filters = append(filters, fmt.Sprintf("process = $%d", cnt))
+		values = append(values, filter.Process)
+		cnt++
 	}
 
 	if filter.PrevLinkHash != nil {
-		var prevLinkHash []byte
-		if prevLinkHashBytes, err := types.NewBytes32FromString(*filter.PrevLinkHash); prevLinkHashBytes != nil && err == nil {
-			prevLinkHash = prevLinkHashBytes[:]
+
+		if *filter.PrevLinkHash == "" {
+			filters = append(filters, "prev_link_hash = '\\x'")
+		} else {
+			prevLinkHashBytes, err := types.NewBytes32FromString(*filter.PrevLinkHash)
+			if err != nil {
+				return nil, err
+			}
+
+			filters = append(filters, fmt.Sprintf("prev_link_hash = $%d", cnt))
+			values = append(values, prevLinkHashBytes[:])
+			cnt++
 		}
-		f := fmt.Sprintf("prev_link_hash = '\\x%x'", prevLinkHash)
-		filters = append(filters, f)
 	}
 
 	if len(filter.LinkHashes) > 0 {
 		linkHashes, err := cs.NewLinkHashesFromStrings(filter.LinkHashes)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		linkHashStrings := make([]string, len(linkHashes))
-		for i, lh := range linkHashes {
-			linkHashStrings[i] = fmt.Sprintf("'\\x%x'", lh[:])
-		}
-		f := fmt.Sprintf("l.link_hash IN (%s)", strings.Join(linkHashStrings, ","))
-		filters = append(filters, f)
+
+		filters = append(filters, fmt.Sprintf("l.link_hash = ANY($%d::bytea[])", cnt))
+		values = append(values, pq.Array(linkHashes))
+		cnt++
 	}
 
 	if len(filter.Tags) > 0 {
-		f := fmt.Sprintf("tags @> ARRAY['%s']::text[]", strings.Join(filter.Tags, "','"))
-		filters = append(filters, f)
+		filters = append(filters, fmt.Sprintf("tags @>  $%d", cnt))
+		values = append(values, pq.Array(filter.Tags))
+		cnt++
 	}
 
 	sqlBody := ""
@@ -329,5 +332,7 @@ func formatFindSegmentsQuery(filter *store.SegmentFilter) (string, error) {
 		sqlBody = "\nWHERE " + strings.Join(filters, "\n AND ")
 	}
 
-	return sqlHead + sqlBody + sqlTail, nil
+	query := sqlHead + sqlBody + sqlTail
+
+	return s.query(query, values...)
 }
