@@ -20,7 +20,6 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	"github.com/lib/pq"
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/types"
@@ -53,83 +52,13 @@ func (a *reader) GetSegment(ctx context.Context, linkHash *types.Bytes32) (*cs.S
 // FindSegments implements github.com/stratumn/go-indigocore/store.SegmentReader.FindSegments.
 func (a *reader) FindSegments(ctx context.Context, filter *store.SegmentFilter) (cs.SegmentSlice, error) {
 
-	var (
-		rows         *sql.Rows
-		err          error
-		limit        = filter.Limit
-		offset       = filter.Offset
-		segments     = make(cs.SegmentSlice, 0, limit)
-		process      = filter.Process
-		prevLinkHash []byte
-	)
-
-	if filter.PrevLinkHash != nil {
-
-		if prevLinkHashBytes, err := types.NewBytes32FromString(*filter.PrevLinkHash); prevLinkHashBytes != nil && err == nil {
-			prevLinkHash = prevLinkHashBytes[:]
-		}
-
-		if len(filter.MapIDs) > 0 {
-			mapIDs := pq.Array(filter.MapIDs)
-			if len(filter.Tags) > 0 {
-				tags := pq.Array(filter.Tags)
-				rows, err = a.stmts.FindSegmentsWithPrevLinkHashAndMapIDsAndTags.Query(prevLinkHash, mapIDs, tags, offset, limit, process)
-			} else {
-				rows, err = a.stmts.FindSegmentsWithPrevLinkHashAndMapIDs.Query(prevLinkHash, mapIDs, offset, limit, process)
-			}
-		} else {
-			if len(filter.Tags) > 0 {
-				tags := pq.Array(filter.Tags)
-				rows, err = a.stmts.FindSegmentsWithPrevLinkHashAndTags.Query(prevLinkHash, tags, offset, limit, process)
-			} else {
-				rows, err = a.stmts.FindSegmentsWithPrevLinkHash.Query(prevLinkHash, offset, limit, process)
-			}
-		}
-	} else if len(filter.LinkHashes) > 0 {
-
-		linkHashes, err1 := cs.NewLinkHashesFromStrings(filter.LinkHashes)
-		if err1 != nil {
-			return nil, err1
-		}
-
-		linkHashesArray := pq.Array(linkHashes)
-		if len(filter.MapIDs) > 0 {
-			mapIDs := pq.Array(filter.MapIDs)
-			if len(filter.Tags) > 0 {
-				tags := pq.Array(filter.Tags)
-				rows, err = a.stmts.FindSegmentsWithLinkHashesAndMapIDsAndTags.Query(linkHashesArray, mapIDs, tags, offset, limit, process)
-			} else {
-				rows, err = a.stmts.FindSegmentsWithLinkHashesAndMapIDs.Query(linkHashesArray, mapIDs, offset, limit, process)
-			}
-		} else {
-			if len(filter.Tags) > 0 {
-				tags := pq.Array(filter.Tags)
-				rows, err = a.stmts.FindSegmentsWithLinkHashesAndTags.Query(linkHashesArray, tags, offset, limit, process)
-			} else {
-				rows, err = a.stmts.FindSegmentsWithLinkHashes.Query(linkHashesArray, offset, limit, process)
-			}
-		}
-
-	} else if len(filter.MapIDs) > 0 {
-		mapIDs := pq.Array(filter.MapIDs)
-		if len(filter.Tags) > 0 {
-			tags := pq.Array(filter.Tags)
-			rows, err = a.stmts.FindSegmentsWithMapIDsAndTags.Query(mapIDs, tags, offset, limit, process)
-		} else {
-			rows, err = a.stmts.FindSegmentsWithMapIDs.Query(mapIDs, offset, limit, process)
-		}
-	} else if len(filter.Tags) > 0 {
-		tags := pq.Array(filter.Tags)
-		rows, err = a.stmts.FindSegmentsWithTags.Query(tags, offset, limit, process)
-	} else {
-		rows, err = a.stmts.FindSegments.Query(offset, limit, process)
-	}
-
+	rows, err := a.stmts.FindSegmentsWithFilters(filter)
 	if err != nil {
 		return nil, err
 	}
 
 	defer rows.Close()
+	segments := make(cs.SegmentSlice, 0, filter.Limit)
 	err = scanLinkAndEvidences(rows, &segments)
 
 	return segments, err
