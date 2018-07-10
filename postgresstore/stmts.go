@@ -14,7 +14,17 @@
 
 package postgresstore
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+	"strings"
+
+	"github.com/lib/pq"
+
+	"github.com/stratumn/go-indigocore/cs"
+	"github.com/stratumn/go-indigocore/store"
+	"github.com/stratumn/go-indigocore/types"
+)
 
 const (
 	sqlCreateLink = `
@@ -46,106 +56,6 @@ const (
 		DELETE FROM links
 		WHERE link_hash = $1
 		RETURNING data
-	`
-	sqlFindSegments = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE (length($3) = 0 OR process = $3)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $1 LIMIT $2
-	`
-	sqlFindSegmentsWithLinkHashes = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE l.link_hash = any($1::bytea[])
-		AND (length($4) = 0 OR process = $4)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $2 LIMIT $3
-	`
-	sqlFindSegmentsWithLinkHashesAndMapIDs = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE l.link_hash = any($1::bytea[])
-		AND map_id = any($2::text[])
-		AND (length($5) = 0 OR process = $5)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $3 LIMIT $4
-	`
-	sqlFindSegmentsWithLinkHashesAndTags = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE l.link_hash = any($1::bytea[])
-		AND tags @> $2
-		AND (length($5) = 0 OR process = $5)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $3 LIMIT $4
-	`
-	sqlFindSegmentsWithLinkHashesAndMapIDsAndTags = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE l.link_hash = any($1::bytea[])
-		AND map_id = any($2::text[]) AND tags @> $3
-		AND (length($6) = 0 OR process = $6)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $4 LIMIT $5
-	`
-	sqlFindSegmentsWithMapIDs = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE map_id = any($1::text[])
-		AND (length($4) = 0 OR process = $4)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $2 LIMIT $3
-	`
-	sqlFindSegmentsWithPrevLinkHash = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE prev_link_hash = $1
-		AND (length($4) = 0 OR process = $4)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $2 LIMIT $3
-	`
-	sqlFindSegmentsWithTags = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE tags @> $1
-		AND (length($4) = 0 OR process = $4)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $2 LIMIT $3
-	`
-	sqlFindSegmentsWithMapIDsAndTags = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE map_id = any($1::text[]) AND tags @> $2
-		AND (length($5) = 0 OR process = $5)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $3 LIMIT $4
-	`
-	sqlFindSegmentsWithPrevLinkHashAndTags = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE prev_link_hash = $1 AND tags @> $2
-		AND (length($5) = 0 OR process = $5)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $3 LIMIT $4
-	`
-	sqlFindSegmentsWithPrevLinkHashAndMapIDs = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE prev_link_hash = $1
-		AND map_id = any($2::text[])
-		AND (length($5) = 0 OR process = $5)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $3 LIMIT $4
-	`
-	sqlFindSegmentsWithPrevLinkHashAndMapIDsAndTags = `
-		SELECT l.link_hash, l.data, e.data FROM links l
-		LEFT JOIN evidences e ON l.link_hash = e.link_hash
-		WHERE prev_link_hash = $1
-		AND map_id = any($2::text[]) AND tags @> $3
-		AND (length($6) = 0 OR process = $6)
-		ORDER BY priority DESC, l.created_at DESC
-		OFFSET $4 LIMIT $5
 	`
 	sqlGetMapIDs = `
 		SELECT l.map_id FROM links l
@@ -274,24 +184,13 @@ type writeStmts struct {
 }
 
 type readStmts struct {
+	// DB.Query or Tx.Query depending on if we are in batch.
+	query func(query string, args ...interface{}) (*sql.Rows, error)
+
 	GetSegment   *sql.Stmt
-	FindSegments *sql.Stmt
 	GetMapIDs    *sql.Stmt
 	GetValue     *sql.Stmt
 	GetEvidences *sql.Stmt
-
-	FindSegmentsWithMapIDs                       *sql.Stmt
-	FindSegmentsWithPrevLinkHash                 *sql.Stmt
-	FindSegmentsWithTags                         *sql.Stmt
-	FindSegmentsWithLinkHashes                   *sql.Stmt
-	FindSegmentsWithLinkHashesAndMapIDs          *sql.Stmt
-	FindSegmentsWithLinkHashesAndTags            *sql.Stmt
-	FindSegmentsWithLinkHashesAndMapIDsAndTags   *sql.Stmt
-	FindSegmentsWithTagsAndLimit                 *sql.Stmt
-	FindSegmentsWithMapIDsAndTags                *sql.Stmt
-	FindSegmentsWithPrevLinkHashAndTags          *sql.Stmt
-	FindSegmentsWithPrevLinkHashAndMapIDs        *sql.Stmt
-	FindSegmentsWithPrevLinkHashAndMapIDsAndTags *sql.Stmt
 }
 
 type stmts struct {
@@ -315,24 +214,9 @@ func newStmts(db *sql.DB) (*stmts, error) {
 	}
 
 	s.GetSegment = prepare(sqlGetSegment)
-	s.FindSegments = prepare(sqlFindSegments)
 	s.GetMapIDs = prepare(sqlGetMapIDs)
 	s.GetValue = prepare(sqlGetValue)
 	s.GetEvidences = prepare(sqlGetEvidences)
-
-	s.FindSegmentsWithMapIDs = prepare(sqlFindSegmentsWithMapIDs)
-	s.FindSegmentsWithPrevLinkHash = prepare(sqlFindSegmentsWithPrevLinkHash)
-	s.FindSegmentsWithTags = prepare(sqlFindSegmentsWithTags)
-
-	s.FindSegmentsWithLinkHashes = prepare(sqlFindSegmentsWithLinkHashes)
-	s.FindSegmentsWithLinkHashesAndMapIDs = prepare(sqlFindSegmentsWithLinkHashesAndMapIDs)
-	s.FindSegmentsWithLinkHashesAndTags = prepare(sqlFindSegmentsWithLinkHashesAndTags)
-	s.FindSegmentsWithLinkHashesAndMapIDsAndTags = prepare(sqlFindSegmentsWithLinkHashesAndMapIDsAndTags)
-
-	s.FindSegmentsWithMapIDsAndTags = prepare(sqlFindSegmentsWithMapIDsAndTags)
-	s.FindSegmentsWithPrevLinkHashAndTags = prepare(sqlFindSegmentsWithPrevLinkHashAndTags)
-	s.FindSegmentsWithPrevLinkHashAndMapIDs = prepare(sqlFindSegmentsWithPrevLinkHashAndMapIDs)
-	s.FindSegmentsWithPrevLinkHashAndMapIDsAndTags = prepare(sqlFindSegmentsWithPrevLinkHashAndMapIDsAndTags)
 
 	s.CreateLink = prepare(sqlCreateLink)
 	s.DeleteLink = prepare(sqlDeleteLink)
@@ -343,6 +227,8 @@ func newStmts(db *sql.DB) (*stmts, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	s.query = db.Query
 
 	return &s, nil
 }
@@ -361,7 +247,6 @@ func newBatchStmts(tx *sql.Tx) (*batchStmts, error) {
 	}
 
 	s.GetSegment = prepare(sqlGetSegment)
-	s.FindSegments = prepare(sqlFindSegments)
 	s.GetMapIDs = prepare(sqlGetMapIDs)
 	s.GetValue = prepare(sqlGetValue)
 
@@ -374,5 +259,80 @@ func newBatchStmts(tx *sql.Tx) (*batchStmts, error) {
 		return nil, err
 	}
 
+	s.query = tx.Query
+
 	return &s, nil
+}
+
+// FindSegments formats a read query and retrieves segments according to the filter.
+func (s *readStmts) FindSegmentsWithFilters(filter *store.SegmentFilter) (*sql.Rows, error) {
+	sqlHead := `SELECT l.link_hash, l.data, e.data FROM links l
+	LEFT JOIN evidences e ON l.link_hash = e.link_hash
+	`
+
+	sqlTail := fmt.Sprintf(`
+		ORDER BY priority DESC, l.created_at DESC
+		OFFSET %d LIMIT %d
+		`,
+		filter.Pagination.Offset,
+		filter.Pagination.Limit,
+	)
+
+	filters := []string{}
+	values := []interface{}{}
+	cnt := 1
+
+	if len(filter.MapIDs) > 0 {
+		filters = append(filters, fmt.Sprintf("map_id = ANY($%d::text[])", cnt))
+		values = append(values, pq.Array(filter.MapIDs))
+		cnt++
+	}
+
+	if filter.Process != "" {
+		filters = append(filters, fmt.Sprintf("process = $%d", cnt))
+		values = append(values, filter.Process)
+		cnt++
+	}
+
+	if filter.PrevLinkHash != nil {
+
+		if *filter.PrevLinkHash == "" {
+			filters = append(filters, "prev_link_hash = '\\x'")
+		} else {
+			prevLinkHashBytes, err := types.NewBytes32FromString(*filter.PrevLinkHash)
+			if err != nil {
+				return nil, err
+			}
+
+			filters = append(filters, fmt.Sprintf("prev_link_hash = $%d", cnt))
+			values = append(values, prevLinkHashBytes[:])
+			cnt++
+		}
+	}
+
+	if len(filter.LinkHashes) > 0 {
+		linkHashes, err := cs.NewLinkHashesFromStrings(filter.LinkHashes)
+		if err != nil {
+			return nil, err
+		}
+
+		filters = append(filters, fmt.Sprintf("l.link_hash = ANY($%d::bytea[])", cnt))
+		values = append(values, pq.Array(linkHashes))
+		cnt++
+	}
+
+	if len(filter.Tags) > 0 {
+		filters = append(filters, fmt.Sprintf("tags @>  $%d", cnt))
+		values = append(values, pq.Array(filter.Tags))
+	}
+
+	sqlBody := ""
+	if len(filters) > 0 {
+		sqlBody = "\nWHERE "
+		sqlBody += strings.Join(filters, "\n AND ")
+	}
+
+	query := sqlHead + sqlBody + sqlTail
+
+	return s.query(query, values...)
 }
