@@ -367,17 +367,37 @@ func (a *Store) GetMapIDs(ctx context.Context, filter *store.MapFilter) ([]strin
 			LeftBound:  "closed",
 			RightBound: "closed",
 		})
-		q = q.OrderBy(rethink.OrderByOpts{Index: "processOrder"}).
-			Distinct(rethink.DistinctOpts{Index: "processOrder"}).
-			Map(func(row rethink.Term) interface{} {
-				return row.AtIndex(1)
-			})
 	} else {
 		q = q.Between(rethink.MinVal, rethink.MaxVal, rethink.BetweenOpts{
 			Index: "mapId",
-		}).
-			OrderBy(rethink.OrderByOpts{Index: "mapId"}).
-			Distinct(rethink.DistinctOpts{Index: "mapId"})
+		})
+	}
+
+	idFilter := false
+	if filter.Prefix != "" {
+		q = q.Filter(func(row rethink.Term) interface{} {
+			return row.Field("mapId").Match(fmt.Sprintf("^%s.*", filter.Prefix))
+		}).Field("mapId").Distinct()
+		idFilter = true
+	}
+	if filter.Suffix != "" {
+		q = q.Filter(func(row rethink.Term) interface{} {
+			return row.Field("mapId").Match(fmt.Sprintf(".*%s$", filter.Suffix))
+		}).Field("mapId").Distinct()
+		idFilter = true
+	}
+
+	if !idFilter {
+		if filter.Process != "" {
+			q = q.OrderBy(rethink.OrderByOpts{Index: "processOrder"}).
+				Distinct(rethink.DistinctOpts{Index: "processOrder"}).
+				Map(func(row rethink.Term) interface{} {
+					return row.AtIndex(1)
+				})
+		} else {
+			q = q.OrderBy(rethink.OrderByOpts{Index: "mapId"}).
+				Distinct(rethink.DistinctOpts{Index: "mapId"})
+		}
 	}
 
 	cur, err := q.Skip(filter.Pagination.Offset).Limit(filter.Limit).Run(a.session)

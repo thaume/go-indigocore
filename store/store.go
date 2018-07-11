@@ -17,6 +17,7 @@ package store
 
 import (
 	"context"
+	"strings"
 
 	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/types"
@@ -155,6 +156,12 @@ type SegmentFilter struct {
 type MapFilter struct {
 	Pagination `json:"pagination"`
 
+	// Filter to get maps with IDs starting with a given prefix.
+	Prefix string `json:"prefix" url:"prefix"`
+
+	// Filter to get maps with IDs ending with a given suffix.
+	Suffix string `json:"suffix" url:"suffix"`
+
 	// Process name is optionnal.
 	Process string `json:"process" url:"-"`
 }
@@ -273,6 +280,12 @@ func (filter MapFilter) MatchLink(link *cs.Link) bool {
 		return false
 	}
 	if filter.Process != "" && filter.Process != link.Meta.Process {
+		return false
+	}
+	if filter.Prefix != "" && !strings.HasPrefix(link.Meta.MapID, filter.Prefix) {
+		return false
+	}
+	if filter.Suffix != "" && !strings.HasSuffix(link.Meta.MapID, filter.Suffix) {
 		return false
 	}
 	return true

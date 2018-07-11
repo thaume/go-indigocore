@@ -112,7 +112,7 @@ func scanLinkAndEvidences(rows *sql.Rows, segments *cs.SegmentSlice) error {
 
 // GetMapIDs implements github.com/stratumn/go-indigocore/store.SegmentReader.GetMapIDs.
 func (a *reader) GetMapIDs(ctx context.Context, filter *store.MapFilter) ([]string, error) {
-	rows, err := a.stmts.GetMapIDs.Query(filter.Pagination.Offset, filter.Pagination.Limit, filter.Process)
+	rows, err := a.stmts.GetMapIDsWithFilters(filter)
 	if err != nil {
 		return nil, err
 	}

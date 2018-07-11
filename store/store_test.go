@@ -215,6 +215,8 @@ func TestMapFilter_Match(t *testing.T) {
 	type fields struct {
 		Pagination store.Pagination
 		Process    string
+		Prefix     string
+		Suffix     string
 	}
 	type args struct {
 		segment *cs.Segment
@@ -249,12 +251,38 @@ func TestMapFilter_Match(t *testing.T) {
 			args:   args{defaultTestingSegment()},
 			want:   false,
 		},
+		{
+			name:   "Good prefix",
+			fields: fields{Prefix: "TheMap"},
+			args:   args{defaultTestingSegment()},
+			want:   true,
+		},
+		{
+			name:   "Bad prefix",
+			fields: fields{Prefix: "TheMob"},
+			args:   args{defaultTestingSegment()},
+			want:   false,
+		},
+		{
+			name:   "Good suffix",
+			fields: fields{Suffix: "MapId"},
+			args:   args{defaultTestingSegment()},
+			want:   true,
+		},
+		{
+			name:   "Bad suffix",
+			fields: fields{Suffix: "MobId"},
+			args:   args{defaultTestingSegment()},
+			want:   false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			filter := store.MapFilter{
 				Pagination: tt.fields.Pagination,
 				Process:    tt.fields.Process,
+				Prefix:     tt.fields.Prefix,
+				Suffix:     tt.fields.Suffix,
 			}
 			if got := filter.Match(tt.args.segment); got != tt.want {
 				t.Errorf("MapFilter.Match() = %v, want %v", got, tt.want)
