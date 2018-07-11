@@ -40,8 +40,8 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 	testPageSize := 3
 	maps := make(map[string]*cs.Link, 4)
 	for i := 0; i < testPageSize; i++ {
+		mapID := fmt.Sprintf("map%d", i)
 		for j := 0; j < testPageSize; j++ {
-			mapID := fmt.Sprintf("map%d", i)
 			l := cstesting.NewLinkBuilder().
 				WithProcess(processNames[i%2]).
 				WithMapID(mapID).
@@ -60,17 +60,17 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 	require.NoError(t, err)
 	maps[mapID] = l
 
-	testPageSize++
+	linksCnt := testPageSize*testPageSize + 1
 
 	t.Run("Getting all map IDs should work", func(t *testing.T) {
 		ctx := context.Background()
 		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
-			Pagination: store.Pagination{Limit: testPageSize * testPageSize},
+			Pagination: store.Pagination{Limit: linksCnt},
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, testPageSize, len(slice), "Invalid number of map IDs")
+		assert.Equal(t, testPageSize+1, len(slice), "Invalid number of map IDs")
 
-		for i := 0; i < testPageSize-1; i++ {
+		for i := 0; i < testPageSize; i++ {
 			mapID := fmt.Sprintf("map%d", i)
 			assert.True(t, testutil.ContainsString(slice, mapID),
 				"slice does not contain %s", mapID)
@@ -101,7 +101,7 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 		ctx := context.Background()
 		processName := processNames[0]
 		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
-			Pagination: store.Pagination{Limit: testPageSize * testPageSize},
+			Pagination: store.Pagination{Limit: linksCnt},
 			Process:    processName,
 		})
 		assert.NoError(t, err)
@@ -118,11 +118,11 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 		ctx := context.Background()
 		prefix := "map"
 		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
-			Pagination: store.Pagination{Limit: testPageSize * testPageSize},
+			Pagination: store.Pagination{Limit: linksCnt},
 			Prefix:     prefix,
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, 3, len(slice))
+		assert.Equal(t, testPageSize, len(slice))
 
 		for _, mapID := range slice {
 			assert.True(t, strings.HasPrefix(mapID, prefix))
@@ -134,7 +134,7 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 		prefix := "map"
 		process := "Foo"
 		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
-			Pagination: store.Pagination{Limit: testPageSize * testPageSize},
+			Pagination: store.Pagination{Limit: linksCnt},
 			Prefix:     prefix,
 			Process:    process,
 		})
@@ -151,7 +151,7 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 		ctx := context.Background()
 		suffix := "ap2"
 		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
-			Pagination: store.Pagination{Limit: testPageSize * testPageSize},
+			Pagination: store.Pagination{Limit: linksCnt},
 			Suffix:     suffix,
 		})
 		assert.NoError(t, err)
@@ -167,7 +167,7 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 		suffix := "ap2"
 		process := "Foo"
 		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
-			Pagination: store.Pagination{Limit: testPageSize * testPageSize},
+			Pagination: store.Pagination{Limit: linksCnt},
 			Suffix:     suffix,
 			Process:    process,
 		})
