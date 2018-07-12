@@ -19,9 +19,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 	"sync/atomic"
 	"testing"
 
+	"github.com/stratumn/go-indigocore/cs"
 	"github.com/stratumn/go-indigocore/cs/cstesting"
 	"github.com/stratumn/go-indigocore/store"
 	"github.com/stratumn/go-indigocore/testutil"
@@ -36,30 +38,45 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 
 	processNames := [2]string{"Foo", "Bar"}
 	testPageSize := 3
+	maps := make(map[string]*cs.Link, 4)
 	for i := 0; i < testPageSize; i++ {
+		mapID := fmt.Sprintf("map%d", i)
 		for j := 0; j < testPageSize; j++ {
 			l := cstesting.NewLinkBuilder().
 				WithProcess(processNames[i%2]).
-				WithMapID(fmt.Sprintf("map%d", i)).
+				WithMapID(mapID).
 				Build()
 			_, err := a.CreateLink(context.Background(), l)
 			require.NoError(t, err)
+			maps[mapID] = l
 		}
 	}
+
+	mapID := "other-map2"
+	l := cstesting.NewLinkBuilder().
+		WithMapID(mapID).
+		Build()
+	_, err := a.CreateLink(context.Background(), l)
+	require.NoError(t, err)
+	maps[mapID] = l
+
+	linksCnt := testPageSize*testPageSize + 1
 
 	t.Run("Getting all map IDs should work", func(t *testing.T) {
 		ctx := context.Background()
 		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
-			Pagination: store.Pagination{Limit: testPageSize * testPageSize},
+			Pagination: store.Pagination{Limit: linksCnt},
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, testPageSize, len(slice), "Invalid number of map IDs")
+		assert.Equal(t, testPageSize+1, len(slice), "Invalid number of map IDs")
 
 		for i := 0; i < testPageSize; i++ {
 			mapID := fmt.Sprintf("map%d", i)
 			assert.True(t, testutil.ContainsString(slice, mapID),
 				"slice does not contain %s", mapID)
 		}
+		assert.True(t, testutil.ContainsString(slice, "other-map2"),
+			"slice does not contain %s", "other-map2")
 	})
 
 	t.Run("Map ID pagination should work", func(t *testing.T) {
@@ -84,7 +101,7 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 		ctx := context.Background()
 		processName := processNames[0]
 		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
-			Pagination: store.Pagination{Limit: testPageSize * testPageSize},
+			Pagination: store.Pagination{Limit: linksCnt},
 			Process:    processName,
 		})
 		assert.NoError(t, err)
@@ -96,6 +113,73 @@ func (f Factory) TestGetMapIDs(t *testing.T) {
 				"slice does not contain %q", expectedMapID)
 		}
 	})
+
+	t.Run("Filtering by prefix should work", func(t *testing.T) {
+		ctx := context.Background()
+		prefix := "map"
+		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
+			Pagination: store.Pagination{Limit: linksCnt},
+			Prefix:     prefix,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, testPageSize, len(slice))
+
+		for _, mapID := range slice {
+			assert.True(t, strings.HasPrefix(mapID, prefix))
+		}
+	})
+
+	t.Run("Filtering by prefix and process should work", func(t *testing.T) {
+		ctx := context.Background()
+		prefix := "map"
+		process := "Foo"
+		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
+			Pagination: store.Pagination{Limit: linksCnt},
+			Prefix:     prefix,
+			Process:    process,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 2, len(slice))
+
+		for _, mapID := range slice {
+			assert.True(t, strings.HasPrefix(mapID, prefix))
+			assert.Equal(t, process, maps[mapID].Meta.Process)
+		}
+	})
+
+	t.Run("Filtering by suffix should work", func(t *testing.T) {
+		ctx := context.Background()
+		suffix := "ap2"
+		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
+			Pagination: store.Pagination{Limit: linksCnt},
+			Suffix:     suffix,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 2, len(slice))
+
+		for _, mapID := range slice {
+			assert.True(t, strings.HasSuffix(mapID, suffix))
+		}
+	})
+
+	t.Run("Filtering by suffix and process should work", func(t *testing.T) {
+		ctx := context.Background()
+		suffix := "ap2"
+		process := "Foo"
+		slice, err := a.GetMapIDs(ctx, &store.MapFilter{
+			Pagination: store.Pagination{Limit: linksCnt},
+			Suffix:     suffix,
+			Process:    process,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(slice))
+
+		for _, mapID := range slice {
+			assert.True(t, strings.HasSuffix(mapID, suffix))
+			assert.Equal(t, process, maps[mapID].Meta.Process)
+		}
+	})
+
 }
 
 // BenchmarkGetMapIDs benchmarks getting map IDs.

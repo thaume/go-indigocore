@@ -57,13 +57,6 @@ const (
 		WHERE link_hash = $1
 		RETURNING data
 	`
-	sqlGetMapIDs = `
-		SELECT l.map_id FROM links l
-		WHERE (length($3) = 0 OR process = $3)
-		GROUP BY l.map_id
-		ORDER BY MAX(l.updated_at) DESC
-		OFFSET $1 LIMIT $2
-	`
 	sqlSaveValue = `
 		INSERT INTO values (
 			key,
@@ -124,7 +117,7 @@ var sqlCreate = []string{
 	`,
 	`
 		CREATE INDEX links_map_id_idx
-		ON links (map_id)
+		ON links (map_id text_pattern_ops)
 	`,
 	`
 		CREATE INDEX links_map_id_priority_created_at_idx
@@ -188,7 +181,6 @@ type readStmts struct {
 	query func(query string, args ...interface{}) (*sql.Rows, error)
 
 	GetSegment   *sql.Stmt
-	GetMapIDs    *sql.Stmt
 	GetValue     *sql.Stmt
 	GetEvidences *sql.Stmt
 }
@@ -214,7 +206,6 @@ func newStmts(db *sql.DB) (*stmts, error) {
 	}
 
 	s.GetSegment = prepare(sqlGetSegment)
-	s.GetMapIDs = prepare(sqlGetMapIDs)
 	s.GetValue = prepare(sqlGetValue)
 	s.GetEvidences = prepare(sqlGetEvidences)
 
@@ -247,7 +238,6 @@ func newBatchStmts(tx *sql.Tx) (*batchStmts, error) {
 	}
 
 	s.GetSegment = prepare(sqlGetSegment)
-	s.GetMapIDs = prepare(sqlGetMapIDs)
 	s.GetValue = prepare(sqlGetValue)
 
 	s.CreateLink = prepare(sqlCreateLink)
@@ -262,6 +252,52 @@ func newBatchStmts(tx *sql.Tx) (*batchStmts, error) {
 	s.query = tx.Query
 
 	return &s, nil
+}
+
+// GetMapIDsWithFilters retrieves maps ids from the store given some filters.
+func (s *readStmts) GetMapIDsWithFilters(filter *store.MapFilter) (*sql.Rows, error) {
+	sqlHead := `
+		SELECT l.map_id FROM links l
+	`
+	sqlTail := fmt.Sprintf(`
+		GROUP BY l.map_id
+		ORDER BY MAX(l.updated_at) DESC
+		OFFSET %d LIMIT %d
+	`,
+		filter.Pagination.Offset,
+		filter.Pagination.Limit,
+	)
+
+	filters := []string{}
+	values := []interface{}{}
+	cnt := 1
+
+	if filter.Prefix != "" {
+		filters = append(filters, fmt.Sprintf("map_id LIKE $%d", cnt))
+		values = append(values, fmt.Sprintf("%s%%", filter.Prefix))
+		cnt++
+	}
+
+	if filter.Suffix != "" {
+		filters = append(filters, fmt.Sprintf("map_id LIKE $%d", cnt))
+		values = append(values, fmt.Sprintf("%%%s", filter.Suffix))
+		cnt++
+	}
+
+	if filter.Process != "" {
+		filters = append(filters, fmt.Sprintf("process = $%d", cnt))
+		values = append(values, filter.Process)
+	}
+
+	sqlBody := ""
+	if len(filters) > 0 {
+		sqlBody = "\nWHERE "
+		sqlBody += strings.Join(filters, "\n AND ")
+	}
+
+	query := sqlHead + sqlBody + sqlTail
+
+	return s.query(query, values...)
 }
 
 // FindSegments formats a read query and retrieves segments according to the filter.

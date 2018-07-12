@@ -16,6 +16,7 @@ package couchstore
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/stratumn/go-indigocore/store"
 )
@@ -103,8 +104,20 @@ func NewSegmentQuery(filter *store.SegmentFilter) ([]byte, error) {
 
 // MapSelector used in MapQuery
 type MapSelector struct {
-	ObjectType string `json:"docType"`
-	Process    string `json:"process,omitempty"`
+	ObjectType string         `json:"docType"`
+	Process    string         `json:"process,omitempty"`
+	MapIds     *MapIdsFilters `json:"_id,omitempty"`
+}
+
+// MapIdsFilters contain the filters on the segment map ID.
+// MapIdsFilters.And is a list of MapIdsFilter.
+type MapIdsFilters struct {
+	Filters []MapIdsFilter `json:"$and,omitempty"`
+}
+
+// MapIdsFilter specifies that segment mapId should match a given regex.
+type MapIdsFilter struct {
+	MapIdsMatch string `json:"$regex,omitempty"`
 }
 
 // MapQuery used in CouchDB rich queries
@@ -119,6 +132,25 @@ func NewMapQuery(filter *store.MapFilter) ([]byte, error) {
 	mapSelector := MapSelector{}
 	mapSelector.ObjectType = objectTypeMap
 	mapSelector.Process = filter.Process
+
+	mapIdsFilters := &MapIdsFilters{Filters: []MapIdsFilter{}}
+
+	if filter.Prefix != "" {
+		mapIdsFilters.Filters = append(
+			mapIdsFilters.Filters,
+			MapIdsFilter{MapIdsMatch: fmt.Sprintf("^%s", filter.Prefix)},
+		)
+	}
+	if filter.Suffix != "" {
+		mapIdsFilters.Filters = append(
+			mapIdsFilters.Filters,
+			MapIdsFilter{MapIdsMatch: fmt.Sprintf("%s$", filter.Suffix)},
+		)
+	}
+
+	if len(mapIdsFilters.Filters) > 0 {
+		mapSelector.MapIds = mapIdsFilters
+	}
 
 	mapQuery := MapQuery{
 		Selector: mapSelector,

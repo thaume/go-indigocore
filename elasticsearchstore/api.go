@@ -414,13 +414,25 @@ func (es *ESStore) getMapIDs(filter *store.MapFilter) ([]string, error) {
 		Order("_key", true)
 	svc.Aggregation("mapIds", a)
 
-	// add process filtering.
+	filterQueries := []elastic.Query{}
+
 	if filter.Process != "" {
-		q := elastic.
-			NewBoolQuery().
-			Filter(elastic.
-				NewTermQuery("meta.process.keyword", filter.Process))
-		svc.Query(q)
+		q := elastic.NewTermQuery("meta.process.keyword", filter.Process)
+		filterQueries = append(filterQueries, q)
+	}
+
+	if filter.Prefix != "" {
+		q := elastic.NewPrefixQuery("meta.mapId.keyword", filter.Prefix)
+		filterQueries = append(filterQueries, q)
+	}
+	if filter.Suffix != "" {
+		// There is no efficient way to do suffix filter in ES better than regex filter.
+		q := elastic.NewRegexpQuery("meta.mapId", fmt.Sprintf(".*%s", filter.Suffix))
+		filterQueries = append(filterQueries, q)
+	}
+
+	if len(filterQueries) > 0 {
+		svc.Query(elastic.NewBoolQuery().Filter(filterQueries...))
 	}
 
 	// run search.
