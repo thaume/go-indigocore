@@ -100,6 +100,12 @@ func (lb *LinkBuilder) WithType(linkType string) *LinkBuilder {
 	return lb
 }
 
+// WithAction fills the link's action.
+func (lb *LinkBuilder) WithAction(linkAction string) *LinkBuilder {
+	lb.Link.Meta.Action = linkAction
+	return lb
+}
+
 // WithMetadata adds an entry in the Meta.Data map.
 func (lb *LinkBuilder) WithMetadata(key string, value interface{}) *LinkBuilder {
 	if lb.Link.Meta.Data == nil {
